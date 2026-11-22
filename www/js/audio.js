@@ -152,6 +152,23 @@ class AudioEngine {
     this.tone({ freq: 240, freqEnd: 70, dur: 0.24, type: 'square', vol: 0.07 });
   }
 
+  dash() {
+    this.noise({ dur: 0.22, vol: 0.12, type: 'bandpass', freq: 600, freqEnd: 2600, q: 1.4 });
+    this.tone({ freq: 180, freqEnd: 520, dur: 0.18, type: 'sawtooth', vol: 0.05 });
+  }
+
+  shard() {
+    this.tone({ freq: 1500, freqEnd: 2400, dur: 0.12, type: 'triangle', vol: 0.06 });
+    this.tone({ freq: 2200, freqEnd: 3200, dur: 0.1, type: 'sine', vol: 0.04, delay: 0.03 });
+    this.noise({ dur: 0.16, vol: 0.06, type: 'highpass', freq: 3200, q: 1.2 });
+  }
+
+  thunder() {
+    this.tone({ freq: 150, freqEnd: 34, dur: 0.75, type: 'sine', vol: 0.5 });
+    this.noise({ dur: 0.18, vol: 0.3, type: 'highpass', freq: 2400, q: 0.7 });
+    this.noise({ dur: 0.6, vol: 0.26, type: 'lowpass', freq: 1400, freqEnd: 100, q: 0.6 });
+  }
+
   ko() {
     this.tone({ freq: 170, freqEnd: 34, dur: 0.85, type: 'sine', vol: 0.5 });
     this.noise({ dur: 0.7, vol: 0.24, type: 'lowpass', freq: 900, freqEnd: 120, q: 0.6 });

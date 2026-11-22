@@ -685,13 +685,14 @@ export class Game {
     this.fx.clear();
     this.ai?.reset?.();
     const ctrl2 = mode === '1p' ? this.ai : this.p2;
+    const mirror = this.p1CharId === this.p2CharId;
     this.fighters = [
       new Fighter({
-        x: 408, facing: 1, charId: this.p1CharId,
+        x: 408, facing: 1, charId: this.p1CharId, variant: 0,
         controller: this.p1, index: 0
       }),
       new Fighter({
-        x: 872, facing: -1, charId: this.p2CharId,
+        x: 872, facing: -1, charId: this.p2CharId, variant: mirror ? 1 : 0,
         controller: ctrl2, index: 1
       })
     ];
@@ -886,6 +887,7 @@ export class Game {
   spawnProjectile(f) {
     const dir = f.facing;
     const attack = f.attack || ATTACKS.special;
+
     if (f.special === 'wave') {
       const x = f.x + dir * 74;
       const y = GROUND_Y - 52;
@@ -907,33 +909,134 @@ export class Game {
       this.fx.ring(x, GROUND_Y - 10, f.color, 8, 100, 0.32, 5);
       this.fx.dust(x - dir * 20, GROUND_Y, 14, f.color);
       this.fx.shakeIt(8);
-    } else {
-      const x = f.x + dir * 64;
-      const y = GROUND_Y - f.y - 128;
+      return;
+    }
+
+    if (f.special === 'fan') {
+      const x = f.x + dir * 58;
+      const y = GROUND_Y - f.y - 126;
+      for (const spread of [-1, 0, 1]) {
+        this.projectiles.push({
+          kind: 'shard',
+          x, y,
+          vx: dir * 760,
+          vy: spread * 175,
+          r: 11,
+          hitW: 14,
+          hitH: 16,
+          owner: f.index,
+          life: 1.8,
+          trailT: 0,
+          born: this.time,
+          color: f.color,
+          attack
+        });
+      }
+      audio.shard();
+      this.fx.ring(x, y, f.color, 6, 50, 0.24, 3);
+      this.fx.shakeIt(3);
+      return;
+    }
+
+    if (f.special === 'lightning') {
+      const foe = this.fighters[1 - f.index];
+      const x = clamp(foe ? foe.x : f.x + dir * 220, ARENA.left, ARENA.right);
       this.projectiles.push({
-        kind: 'plasma',
-        x, y,
-        vx: dir * 780,
-        r: 21,
-        hitW: 16,
-        hitH: 22,
+        kind: 'lightning',
+        x,
+        y: GROUND_Y - 160,
+        vx: 0,
+        vy: 0,
+        r: 20,
+        hitW: 46,
+        hitH: 200,
         owner: f.index,
-        life: 2.4,
-        trailT: 0,
+        life: 1.6,
+        delay: 0.5,
+        struck: false,
+        strikeT: 0,
+        hitDone: false,
+        hitDir: x >= f.x ? 1 : -1,
+        unblockable: true,
         born: this.time,
         color: f.color,
         attack
       });
-      audio.fire();
-      this.fx.ring(x, y, f.color, 8, 54, 0.25, 3);
-      this.fx.shakeIt(4);
+      audio.specialCharge();
+      this.fx.ring(x, GROUND_Y - 6, f.color, 8, 90, 0.35, 4);
+      this.fx.dust(x, GROUND_Y, 6, f.color);
+      this.fx.shakeIt(3);
+      return;
     }
+
+    const x = f.x + dir * 64;
+    const y = GROUND_Y - f.y - 128;
+    this.projectiles.push({
+      kind: 'plasma',
+      x, y,
+      vx: dir * 780,
+      vy: 0,
+      r: 21,
+      hitW: 16,
+      hitH: 22,
+      owner: f.index,
+      life: 2.4,
+      trailT: 0,
+      born: this.time,
+      color: f.color,
+      attack
+    });
+    audio.fire();
+    this.fx.ring(x, y, f.color, 8, 54, 0.25, 3);
+    this.fx.shakeIt(4);
   }
 
   updateProjectiles(dt) {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
+
+      if (p.kind === 'lightning') {
+        p.life -= dt;
+        const def = this.fighters[1 - p.owner];
+        if (!p.struck) {
+          p.delay -= dt;
+          if (Math.random() < 0.4) {
+            this.fx.trail(p.x + (Math.random() * 2 - 1) * 44, GROUND_Y - Math.random() * 26, p.color);
+          }
+          if (p.delay <= 0) {
+            p.struck = true;
+            p.strikeT = 0;
+            audio.thunder();
+            this.fx.shakeIt(13);
+            this.fx.screenFlash(p.color, 0.42);
+            this.fx.ring(p.x, GROUND_Y - 4, p.color, 8, 150, 0.38, 6);
+            this.fx.dust(p.x, GROUND_Y, 18, p.color);
+          }
+        } else {
+          p.strikeT += dt;
+          if (!p.hitDone && p.strikeT < 0.22 && def && def.health > 0 && def.state !== 'ko') {
+            const hb = this.hurtbox(def);
+            const hw = p.hitW;
+            const hh = p.hitH;
+            if (p.x + hw > hb.x && p.x - hw < hb.x + hb.w &&
+                p.y + hh > hb.y && p.y - hh < hb.y + hb.h) {
+              p.hitDone = true;
+              this.resolveHit(this.fighters[p.owner], def, p.attack, p);
+              if (this.phase !== 'fight') {
+                this.projectiles.length = 0;
+                return;
+              }
+            }
+          }
+        }
+        if (p.life <= 0 || (p.struck && p.strikeT > 0.5)) {
+          this.projectiles.splice(i, 1);
+        }
+        continue;
+      }
+
       p.x += p.vx * dt;
+      if (p.vy) p.y += p.vy * dt;
       p.life -= dt;
       p.trailT += dt;
 
@@ -943,6 +1046,11 @@ export class Game {
           this.fx.trail(p.x - Math.sign(p.vx) * (20 + Math.random() * 20), GROUND_Y - 10 - Math.random() * 34, p.color);
         }
         this.fx.dust(p.x - Math.sign(p.vx) * 24, GROUND_Y, 1, p.color);
+      } else if (p.kind === 'shard') {
+        if (p.trailT > 0.035) {
+          p.trailT = 0;
+          this.fx.trail(p.x - Math.sign(p.vx) * 10, p.y + (Math.random() * 2 - 1) * 6, p.color);
+        }
       } else if (p.trailT > 0.016) {
         p.trailT = 0;
         this.fx.trail(p.x - Math.sign(p.vx) * 12, p.y + (Math.random() * 2 - 1) * 8, p.color);
@@ -960,6 +1068,7 @@ export class Game {
             p.y + hh > hb.y && p.y - hh < hb.y + hb.h) {
           this.fx.ring(p.x, p.y, p.color || (owner ? owner.color : PINK), 10, p.kind === 'wave' ? 110 : 76, 0.3, 4);
           if (p.kind === 'wave') this.fx.dust(p.x, GROUND_Y, 12, p.color);
+          if (p.kind === 'shard') this.fx.blockSpark(p.x, p.y, p.color);
           this.resolveHit(owner, def, p.attack || ATTACKS.special, p);
           remove = true;
           if (this.phase !== 'fight') {
@@ -969,7 +1078,7 @@ export class Game {
         }
       }
 
-      if (remove || p.life <= 0 || p.x < -100 || p.x > W + 100) {
+      if (remove || p.life <= 0 || p.x < -100 || p.x > W + 100 || p.y < -140 || p.y > H + 140) {
         this.projectiles.splice(i, 1);
       }
     }
@@ -978,9 +1087,11 @@ export class Game {
   resolveHit(atk, def, a, projectile = null) {
     if (!atk || !def || def.health <= 0 || this.phase !== 'fight') return;
 
-    const dir = projectile ? Math.sign(projectile.vx) : (def.x >= atk.x ? 1 : -1);
-    const facingThreat = projectile ? -Math.sign(projectile.vx) : (atk.x >= def.x ? 1 : -1);
-    const blocked = def.isBlocking() && def.facing === facingThreat;
+    const dir = projectile
+      ? (projectile.hitDir ?? (Math.sign(projectile.vx) || 1))
+      : (def.x >= atk.x ? 1 : -1);
+    const facingThreat = projectile ? -dir : (atk.x >= def.x ? 1 : -1);
+    const blocked = !(projectile && projectile.unblockable) && def.isBlocking() && def.facing === facingThreat;
 
     const cx = projectile ? projectile.x : (atk.x + def.x) / 2;
     const cy = projectile ? projectile.y : GROUND_Y - def.y - def.getHurtHeight() * 0.58;
@@ -1130,6 +1241,124 @@ export class Game {
   drawProjectile(ctx, p) {
     const owner = this.fighters[p.owner];
     const col = p.color || (owner ? owner.color : PINK);
+
+    if (p.kind === 'shard') {
+      const ang = Math.atan2(p.vy || 0, p.vx);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(ang);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(-4, -7);
+      ctx.lineTo(16, 0);
+      ctx.lineTo(-4, 7);
+      ctx.closePath();
+      ctx.fillStyle = hexA(col, 0.16);
+      ctx.fill();
+      ctx.strokeStyle = hexA(col, 0.9);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(12, 0);
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-26, 0);
+      ctx.lineTo(-14, 0);
+      ctx.strokeStyle = hexA(col, 0.35);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
+
+    if (p.kind === 'lightning') {
+      const strikeA = p.struck ? Math.max(0, 1 - p.strikeT / 0.5) : 0;
+      const telegraph = p.struck ? 1 : clamp(1 - p.delay / 0.5, 0, 1);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+
+      // руна на земле
+      const runeR = 34 + telegraph * 10;
+      ctx.beginPath();
+      ctx.ellipse(p.x, GROUND_Y, runeR, runeR * 0.22, 0, 0, TAU);
+      ctx.strokeStyle = hexA(col, 0.3 + telegraph * 0.5);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(p.x, GROUND_Y, runeR * 0.55, runeR * 0.13, 0, 0, TAU);
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        const a = this.time * 2 + i * TAU / 3;
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(a) * runeR, GROUND_Y + Math.sin(a) * runeR * 0.22);
+        ctx.lineTo(p.x + Math.cos(a) * (runeR - 9), GROUND_Y + Math.sin(a) * (runeR - 9) * 0.22);
+        ctx.strokeStyle = hexA(col, 0.4 + telegraph * 0.4);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      if (!p.struck) {
+        // предупреждающий луч
+        const beam = ctx.createLinearGradient(0, 120, 0, GROUND_Y);
+        beam.addColorStop(0, hexA(col, 0));
+        beam.addColorStop(1, hexA(col, 0.10 + telegraph * 0.12));
+        ctx.fillStyle = beam;
+        ctx.fillRect(p.x - 26, 120, 52, GROUND_Y - 120);
+      } else {
+        // вспышка и молния
+        const boltTop = 70;
+        const boltBottom = GROUND_Y - 4;
+        const width = 12 * strikeA + 3;
+        const segs = 7;
+        const seed = Math.floor(this.time * 30);
+        const pts = [];
+        for (let i = 0; i <= segs; i++) {
+          const y = boltTop + (boltBottom - boltTop) * (i / segs);
+          const jitter = i === 0 || i === segs ? 0 : Math.sin(seed + i * 2.3) * (18 - i * 1.5);
+          pts.push([p.x + jitter, y]);
+        }
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.strokeStyle = hexA(col, 0.22 * strikeA);
+        ctx.lineWidth = width * 4;
+        ctx.stroke();
+        ctx.strokeStyle = hexA(col, 0.8 * strikeA);
+        ctx.lineWidth = width;
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${0.9 * strikeA})`;
+        ctx.lineWidth = Math.max(1.5, width * 0.3);
+        ctx.stroke();
+
+        // ветви
+        for (let i = 1; i < segs; i += 2) {
+          const [x, y] = pts[i];
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + 22 * Math.sin(seed + i), y + 26);
+          ctx.strokeStyle = hexA(col, 0.55 * strikeA);
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        // световой столб
+        const beam = ctx.createLinearGradient(0, 60, 0, GROUND_Y);
+        beam.addColorStop(0, hexA(col, 0));
+        beam.addColorStop(0.5, hexA(col, 0.12 * strikeA));
+        beam.addColorStop(1, hexA(col, 0.28 * strikeA));
+        ctx.fillStyle = beam;
+        ctx.fillRect(p.x - 40, 60, 80, GROUND_Y - 60);
+      }
+      ctx.restore();
+      return;
+    }
+
     if (p.kind === 'wave') {
       const dir = Math.sign(p.vx) || 1;
       const t = this.time;

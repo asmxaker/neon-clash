@@ -2,7 +2,7 @@
 
 import { Game } from './game.js';
 import { Fighter, drawFighter } from './fighter.js';
-import { CHARACTERS, getCharacter, otherCharacter } from './characters.js';
+import { CHARACTERS, getCharacter, randomCharacterExcept } from './characters.js';
 import { makePlayerControllers } from './input.js';
 import { AIController } from './ai.js';
 import { audio } from './audio.js';
@@ -31,6 +31,14 @@ const resultKicker = $('resultKicker');
 const resultTitle = $('resultTitle');
 const resultSub = $('resultSub');
 const selectKicker = $('selectKicker');
+const selectTitle = $('selectTitle');
+const selectTabs = $('selectTabs');
+const selectTabEls = [...document.querySelectorAll('.select-tab')];
+const selectDetail = document.querySelector('.select-detail');
+const sdName = $('sdName');
+const sdTag = $('sdTag');
+const sdSpecial = $('sdSpecial');
+const sdStats = [...document.querySelectorAll('.sd-stat u')];
 const selectSummary = $('selectSummary');
 const btnSelectBack = $('btnSelectBack');
 const btnSelectFight = $('btnSelectFight');
@@ -52,11 +60,15 @@ window.__audio = audio;
 let resultTimer = null;
 let wakeLock = null;
 let selectMode = '1p';
-let selectedCharId = 'volt';
+let selectActive = 0;
+let aiPick = 'storm';
+const selectPicks = ['volt', 'blaze'];
 try {
   const saved = localStorage.getItem('nc_char');
-  if (saved && CHARACTERS[saved]) selectedCharId = saved;
+  if (saved && CHARACTERS[saved]) selectPicks[0] = saved;
 } catch (e) { /* ignore */ }
+selectPicks[1] = randomCharacterExcept(selectPicks[0]).id;
+aiPick = randomCharacterExcept(selectPicks[0]).id;
 
 // ---------------------------------------------------------------- портреты
 
@@ -112,29 +124,81 @@ function hideAllOverlays() {
 }
 
 function updateSelectUI() {
-  const p1 = getCharacter(selectedCharId);
-  const p2 = otherCharacter(p1.id);
+  if (selectMode !== '2p') selectActive = 0;
+  const p1 = getCharacter(selectPicks[0]);
+  const p2 = getCharacter(selectPicks[1]);
+  const ai = getCharacter(aiPick);
+  const activeChar = getCharacter(selectPicks[selectActive] || selectPicks[0]);
+
   for (const card of fighterCards) {
-    const active = card.dataset.char === p1.id;
-    card.classList.toggle('selected', active);
-    card.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const id = card.dataset.char;
+    const isP1 = p1.id === id;
+    const isP2 = selectMode === '2p' && p2.id === id;
+    const isAI = selectMode !== '2p' && ai.id === id;
+    const isActive = activeChar.id === id;
+    card.classList.toggle('selected', isActive);
+    card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     const role = card.querySelector('.fc-role');
     if (role) {
-      role.textContent = selectMode === '2p'
-        ? (active ? 'P1' : 'P2')
-        : (active ? 'ТЫ' : 'ИИ');
+      role.className = 'fc-role';
+      if (selectMode === '2p') {
+        if (isP1 && isP2) {
+          role.textContent = 'P1·P2';
+          role.classList.add('both');
+        } else if (isP1) {
+          role.textContent = 'P1';
+          role.classList.add('p1');
+        } else if (isP2) {
+          role.textContent = 'P2';
+          role.classList.add('p2');
+        } else {
+          role.textContent = '';
+        }
+      } else if (isP1) {
+        role.textContent = 'ТЫ';
+        role.classList.add('p1');
+      } else if (isAI) {
+        role.textContent = 'ИИ';
+        role.classList.add('ai');
+      } else {
+        role.textContent = '';
+      }
     }
   }
+
   selectKicker.textContent = selectMode === '2p'
-    ? '2 ИГРОКА · ВЫБЕРИ СТОРОНУ'
+    ? '2 ИГРОКА · ВЫБЕРИТЕ БОЙЦОВ'
     : '1 ИГРОК · ПРОТИВ ИИ';
-  selectSummary.innerHTML = selectMode === '2p'
-    ? `P1: <b>${p1.name}</b> · P2: <b>${p2.name}</b>`
-    : `ИГРОК: <b>${p1.name}</b> · ИИ: <b>${p2.name}</b>`;
+  selectTitle.textContent = selectMode === '2p' ? 'ВЫБЕРИТЕ БОЙЦОВ' : 'ВЫБЕРИ БОЙЦА';
+  selectTabs.hidden = selectMode !== '2p';
+  for (const tab of selectTabEls) {
+    tab.classList.toggle('active', Number(tab.dataset.player) === selectActive);
+  }
+
+  sdName.textContent = activeChar.name;
+  sdTag.textContent = activeChar.tagline;
+  sdSpecial.innerHTML = `<b>СПЕЦ</b> ${activeChar.specialName} — ${activeChar.specialDesc}`;
+  selectDetail.style.setProperty('--sel-color', activeChar.color);
+  for (const bar of sdStats) {
+    const stat = bar.dataset.stat;
+    bar.style.width = `${((activeChar.stats[stat] || 3) / 5) * 100}%`;
+  }
+
+  if (selectMode === '2p') {
+    const mirror = p1.id === p2.id;
+    selectSummary.innerHTML = `P1: <b>${p1.name}</b> · P2: <b>${p2.name}</b>${mirror ? '<span class="mirror"> · ЗЕРКАЛО</span>' : ''}`;
+  } else {
+    selectSummary.innerHTML = `ИГРОК: <b>${p1.name}</b> · ИИ: <b>${ai.name}</b>`;
+  }
 }
 
 function openSelect(mode) {
   selectMode = mode;
+  selectActive = 0;
+  const p1 = getCharacter(selectPicks[0]);
+  selectPicks[0] = p1.id;
+  selectPicks[1] = randomCharacterExcept(p1.id).id;
+  aiPick = randomCharacterExcept(p1.id).id;
   updateSelectUI();
   audio.unlock();
   audio.ui();
@@ -151,9 +215,9 @@ function closeSelect() {
   audio.ui();
 }
 
-function startGame(mode, charId) {
-  const p1 = getCharacter(charId);
-  const p2 = otherCharacter(p1.id);
+function startGame(mode, p1CharId, p2CharId) {
+  const p1 = getCharacter(p1CharId);
+  const p2 = getCharacter(p2CharId);
   try { localStorage.setItem('nc_char', p1.id); } catch (e) { /* ignore */ }
   audio.unlock();
   audio.ui();
@@ -169,9 +233,28 @@ function startGame(mode, charId) {
   requestWakeLock();
 }
 
+function startSelectedMatch() {
+  const p2 = selectMode === '2p' ? selectPicks[1] : aiPick;
+  startGame(selectMode, selectPicks[0], p2);
+}
+
 for (const card of fighterCards) {
   card.addEventListener('click', () => {
-    selectedCharId = card.dataset.char;
+    const id = card.dataset.char;
+    if (selectMode === '2p') {
+      selectPicks[selectActive] = id;
+    } else {
+      selectPicks[0] = id;
+      if (aiPick === id) aiPick = randomCharacterExcept(id).id;
+    }
+    updateSelectUI();
+    audio.ui();
+  });
+}
+
+for (const tab of selectTabEls) {
+  tab.addEventListener('click', () => {
+    selectActive = Number(tab.dataset.player);
     updateSelectUI();
     audio.ui();
   });
@@ -180,7 +263,7 @@ for (const card of fighterCards) {
 btn1p.addEventListener('click', () => openSelect('1p'));
 btn2p.addEventListener('click', () => openSelect('2p'));
 btnSelectBack.addEventListener('click', closeSelect);
-btnSelectFight.addEventListener('click', () => startGame(selectMode, selectedCharId));
+btnSelectFight.addEventListener('click', startSelectedMatch);
 
 btnHelp.addEventListener('click', () => {
   audio.unlock();
@@ -256,7 +339,7 @@ document.addEventListener('keydown', (e) => {
     else if (game.inMatch) openPause();
   } else if (e.code === 'Enter') {
     if (!select.classList.contains('hidden')) {
-      startGame(selectMode, selectedCharId);
+      startSelectedMatch();
       return;
     }
     if (game.screen === 'menu' && help.classList.contains('hidden')) {

@@ -37,6 +37,22 @@ export const ATTACKS = {
     kind: 'shockwave', startup: 0.29, active: 0.06, recovery: 0.46,
     projectile: true, cost: 50, damage: 16, y0: 0, y1: 100, kb: 520,
     hitstun: 0.42, blockstun: 0.28, meterGain: 0
+  },
+  dashStrike: {
+    kind: 'dash', startup: 0.12, active: 0.18, recovery: 0.34,
+    projectile: false, cost: 50, damage: 20, reach: 96, y0: 20, y1: 180,
+    kb: 560, hitstun: 0.46, blockstun: 0.32, meterGain: 0,
+    dash: true, dashSpeed: 900
+  },
+  fan: {
+    kind: 'fan', startup: 0.24, active: 0.06, recovery: 0.4,
+    projectile: true, cost: 50, damage: 8, y0: 0, y1: 100, kb: 260,
+    hitstun: 0.26, blockstun: 0.18, meterGain: 0
+  },
+  lightning: {
+    kind: 'lightning', startup: 0.32, active: 0.06, recovery: 0.5,
+    projectile: true, cost: 50, damage: 22, y0: 0, y1: 100, kb: 420,
+    hitstun: 0.5, blockstun: 0.32, meterGain: 0
   }
 };
 
@@ -51,15 +67,16 @@ function hexA(hex, a) {
 }
 
 export class Fighter {
-  constructor({ x = 380, facing = 1, charId = 'volt', controller = null, index = 0 } = {}) {
+  constructor({ x = 380, facing = 1, charId = 'volt', variant = 0, controller = null, index = 0 } = {}) {
     const char = getCharacter(charId);
     this.index = index;
     this.char = char;
     this.charId = char.id;
+    this.variant = variant;
     this.style = char.style;
     this.special = char.special;
-    this.color = char.color;
-    this.accent = char.accent;
+    this.color = variant === 1 && char.altColor ? char.altColor : char.color;
+    this.accent = variant === 1 && char.altAccent ? char.altAccent : char.accent;
     this.name = char.name;
     this.maxHealth = char.hp;
     this.walkSpeed = char.walkSpeed;
@@ -154,6 +171,16 @@ export class Fighter {
     return this.isCrouching() ? CROUCH_H : STAND_H;
   }
 
+  getSpecialDef() {
+    switch (this.special) {
+      case 'wave': return ATTACKS.shockwave;
+      case 'dash': return ATTACKS.dashStrike;
+      case 'fan': return ATTACKS.fan;
+      case 'lightning': return ATTACKS.lightning;
+      default: return ATTACKS.special;
+    }
+  }
+
   getAttackBox() {
     const a = this.attack;
     if (!a || a.projectile) return null;
@@ -171,9 +198,7 @@ export class Fighter {
   }
 
   startAttack(kind) {
-    const base = kind === 'special'
-      ? (this.special === 'wave' ? ATTACKS.shockwave : ATTACKS.special)
-      : ATTACKS[kind];
+    const base = kind === 'special' ? this.getSpecialDef() : ATTACKS[kind];
     if (!base) return false;
     if (base.projectile) {
       if (this.meter < base.cost) return false;
@@ -193,8 +218,12 @@ export class Fighter {
     this.setState('attack');
     if (a.air) this.airAttackUsed = true;
     this.kb *= 0.35;
-    if (kind === 'special') audio.specialCharge();
-    else audio.whiff();
+    if (kind === 'special') {
+      if (this.special === 'dash') audio.dash();
+      else audio.specialCharge();
+    } else {
+      audio.whiff();
+    }
     return true;
   }
 
@@ -243,6 +272,12 @@ export class Fighter {
       if (a.projectile && !this.fired && prev < a.startup && this.attackT >= a.startup) {
         this.fired = true;
         if (game?.spawnProjectile) game.spawnProjectile(this);
+      }
+      if (a.dash && !this.attackHit && this.attackT <= a.startup + a.active) {
+        this.x = clamp(this.x + this.facing * a.dashSpeed * dt, ARENA.left, ARENA.right);
+        if (game?.fx && Math.random() < 0.65) {
+          game.fx.trail(this.x - this.facing * (12 + Math.random() * 24), GROUND_Y - this.y - 40 - Math.random() * 90, this.color);
+        }
       }
       const total = a.startup + a.active + a.recovery;
       this.applyPhysics(dt);
@@ -299,7 +334,7 @@ export class Fighter {
     const punch = c.consume('punch');
     const kick = c.consume('kick');
     const special = c.consume('special');
-    const specialCost = (this.special === 'wave' ? ATTACKS.shockwave : ATTACKS.special).cost;
+    const specialCost = this.getSpecialDef().cost;
 
     if (special && this.y <= 0 && this.meter >= specialCost) {
       this.startAttack('special');
@@ -578,6 +613,53 @@ function buildPose(f) {
         p.ftF = [38, -2];
         p.ftB = [-42, -2];
       }
+    } else if (a.kind === 'dash') {
+      const rush = smooth(clamp(f.attackT / (a.startup + a.active), 0, 1));
+      upper(9 * rush, 3 * rush);
+      p.hip[1] += 5 * rush;
+      p.chest[1] += 5 * rush;
+      p.elF = lerp2([32, -128], [54, -136], rush);
+      p.haF = lerp2([30, -156], [96, -132], rush);
+      p.elB = lerp2([-32, -128], [-44, -120], rush);
+      p.haB = lerp2([-16, -150], [-42, -126], rush);
+      p.knF = [36, -44];
+      p.ftF = [50, -2];
+      p.knB = [-34, -42];
+      p.ftB = [-54, -2];
+    } else if (a.kind === 'fan') {
+      const charge = clamp(f.attackT / a.startup, 0, 1);
+      upper(2 * charge, 0);
+      p.elF = lerp2([32, -128], [48, -140], charge);
+      p.haF = lerp2([30, -156], [64, -142], charge);
+      p.elB = lerp2([-32, -128], [22, -134], charge);
+      p.haB = lerp2([-16, -150], [46, -132], charge);
+      p.knF = [26, -48];
+      p.knB = [-26, -48];
+      p.ftF = [32, -2];
+      p.ftB = [-34, -2];
+    } else if (a.kind === 'lightning') {
+      const st = a.startup;
+      if (f.attackT < st) {
+        const charge = clamp(f.attackT / st, 0, 1);
+        upper(-2 * charge, -4 * charge);
+        p.elF = lerp2([32, -128], [38, -170], charge);
+        p.haF = lerp2([30, -156], [42, -206], charge);
+        p.elB = lerp2([-32, -128], [-30, -168], charge);
+        p.haB = lerp2([-16, -150], [-24, -202], charge);
+        p.ftF = [30, -2];
+        p.ftB = [-34, -2];
+      } else {
+        const strike = smooth(clamp((f.attackT - st) / 0.12, 0, 1));
+        upper(6 * strike, 2 * strike);
+        p.elF = lerp2([38, -170], [52, -150], strike);
+        p.haF = lerp2([42, -206], [70, -160], strike);
+        p.elB = lerp2([-30, -168], [-20, -150], strike);
+        p.haB = lerp2([-24, -202], [-8, -164], strike);
+        p.knF = [28, -48];
+        p.knB = [-28, -48];
+        p.ftF = [34, -2];
+        p.ftB = [-38, -2];
+      }
     }
   }
 
@@ -600,6 +682,99 @@ function buildPose(f) {
 function drawScarf(ctx, f, color) {
   const t = f.animT;
   const speed = Math.min(1, Math.abs(f.kb) / 500 + (f.y > 0 ? 0.5 : 0));
+
+  if (f.style === 'nyx') {
+    // две угловатые ленты
+    for (let strand = 0; strand < 2; strand++) {
+      let prev = [-3, -158 + strand * 7];
+      for (let i = 1; i <= 4; i++) {
+        const x = -3 - i * (13 + speed * 4);
+        const y = -158 + strand * 7 + Math.sin(t * 6 + i * 1.2 + strand) * 2.5 + i * 2.6 + (i % 2 ? -5 : 4);
+        const width = (4.6 - strand * 0.8) - i * 0.55;
+        ctx.beginPath();
+        ctx.moveTo(prev[0], prev[1]);
+        ctx.lineTo(x, y);
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = hexA(color, 0.12 * (1 - i / 6));
+        ctx.lineWidth = width * 3;
+        ctx.stroke();
+        ctx.strokeStyle = hexA(color, 0.66 * (1 - i / 5.4));
+        ctx.lineWidth = Math.max(1, width);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${0.35 * (1 - i / 5)})`;
+        ctx.lineWidth = Math.max(0.6, width * 0.28);
+        ctx.stroke();
+        prev = [x, y];
+      }
+    }
+    return;
+  }
+
+  if (f.style === 'mira') {
+    // плотная ледяная вуаль
+    let prev = [-4, -156];
+    for (let i = 1; i <= 7; i++) {
+      const x = -4 - i * (12 + speed * 5);
+      const y = -156 + Math.sin(t * 4.4 + i * 0.7) * (3 + i * 1.35) + i * 1.1;
+      const width = 10 - i * 1.05;
+      ctx.beginPath();
+      ctx.moveTo(prev[0], prev[1]);
+      ctx.lineTo(x, y);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = hexA(color, 0.09 * (1 - i / 9));
+      ctx.lineWidth = width * 3.8;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(color, 0.5 * (1 - i / 8));
+      ctx.lineWidth = Math.max(1, width);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${0.32 * (1 - i / 8)})`;
+      ctx.lineWidth = Math.max(0.7, width * 0.25);
+      ctx.stroke();
+      prev = [x, y];
+    }
+    return;
+  }
+
+  if (f.style === 'storm') {
+    // молниевая лента + раздвоенный «хвост плаща»
+    let prev = [-3, -156];
+    for (let i = 1; i <= 5; i++) {
+      const x = -3 - i * (12 + speed * 4);
+      const y = -156 + (i % 2 ? -9 : 8) + Math.sin(t * 8 + i) * 2 + i * 1.5;
+      const width = 5 - i * 0.55;
+      ctx.beginPath();
+      ctx.moveTo(prev[0], prev[1]);
+      ctx.lineTo(x, y);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = hexA(color, 0.12 * (1 - i / 6));
+      ctx.lineWidth = width * 3.4;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(color, 0.72 * (1 - i / 6));
+      ctx.lineWidth = Math.max(1, width);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${0.45 * (1 - i / 6)})`;
+      ctx.lineWidth = Math.max(0.6, width * 0.28);
+      ctx.stroke();
+      prev = [x, y];
+    }
+    // длинный раздвоенный плащ
+    for (let s = -1; s <= 1; s += 2) {
+      ctx.beginPath();
+      ctx.moveTo(-4, -96);
+      ctx.quadraticCurveTo(-34 - Math.abs(s) * 8, -70, -58 - speed * 14, -18 + s * 8);
+      ctx.strokeStyle = hexA(color, 0.1);
+      ctx.lineWidth = 16;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(color, 0.45);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    return;
+  }
+
   const n = f.style === 'heavy' ? 4 : 6;
   let prev = [-2, -156];
   for (let i = 1; i <= n; i++) {
@@ -626,9 +801,12 @@ function drawScarf(ctx, f, color) {
 function drawTorso(ctx, f, col, p) {
   const a = 0.95;
   const heavy = f.style === 'heavy';
-  const chestW = heavy ? 22 : 19;
-  const hipW = heavy ? 15 : 13;
-  const shOut = heavy ? 7 : 5;
+  const nyx = f.style === 'nyx';
+  const mira = f.style === 'mira';
+  const storm = f.style === 'storm';
+  const chestW = heavy ? 22 : nyx ? 17 : mira ? 20 : 19;
+  const hipW = heavy ? 15 : nyx ? 12 : mira ? 14 : 13;
+  const shOut = heavy ? 7 : nyx ? 5 : mira ? 6 : storm ? 7 : 5;
   ctx.beginPath();
   ctx.moveTo(p.shB[0] - shOut, p.shB[1] + 5);
   ctx.lineTo(p.shF[0] + shOut, p.shF[1] + 5);
@@ -643,12 +821,64 @@ function drawTorso(ctx, f, col, p) {
   ctx.lineWidth = heavy ? 9 : 7;
   ctx.stroke();
   ctx.strokeStyle = hexA(col, 0.9 * a);
-  ctx.lineWidth = heavy ? 3.2 : 2.6;
+  ctx.lineWidth = heavy ? 3.2 : nyx ? 2.2 : 2.6;
   ctx.stroke();
 
-  // наплечники
-  limb(ctx, [p.shB, [p.shB[0] - (heavy ? 13 : 9), p.shB[1] - (heavy ? 8 : 5)]], col, heavy ? 8 : 5.5, 0.75);
-  limb(ctx, [p.shF, [p.shF[0] + (heavy ? 13 : 9), p.shF[1] - (heavy ? 8 : 5)]], col, heavy ? 8 : 5.5, 0.9);
+  if (nyx) {
+    // острые наплечники-клинки
+    for (const s of [-1, 1]) {
+      const sh = s > 0 ? p.shF : p.shB;
+      ctx.beginPath();
+      ctx.moveTo(sh[0], sh[1] + 3);
+      ctx.lineTo(sh[0] + s * 17, sh[1] - 13);
+      ctx.strokeStyle = hexA(col, 0.14);
+      ctx.lineWidth = 10;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(col, 0.9);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  } else if (mira) {
+    // кристаллы на плечах
+    for (const s of [-1, 1]) {
+      const sh = s > 0 ? p.shF : p.shB;
+      const cx = sh[0] + s * 7;
+      const cy = sh[1] - 7;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 7);
+      ctx.lineTo(cx + 4, cy);
+      ctx.lineTo(cx, cy + 7);
+      ctx.lineTo(cx - 4, cy);
+      ctx.closePath();
+      ctx.fillStyle = hexA(col, 0.25);
+      ctx.fill();
+      ctx.strokeStyle = hexA(col, 0.85);
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+    }
+  } else if (storm) {
+    // высокий воротник и разряд на плече
+    ctx.beginPath();
+    ctx.moveTo(p.shB[0] - 2, p.shB[1] + 2);
+    ctx.lineTo(p.shB[0] - 12, p.shB[1] - 16);
+    ctx.lineTo(p.shB[0] + 4, p.shB[1] - 6);
+    ctx.strokeStyle = hexA(col, 0.7);
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(p.shF[0] + 2, p.shF[1] + 2);
+    ctx.lineTo(p.shF[0] + 12, p.shF[1] - 14);
+    ctx.strokeStyle = hexA(col, 0.75);
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+  } else {
+    // наплечники
+    limb(ctx, [p.shB, [p.shB[0] - (heavy ? 13 : 9), p.shB[1] - (heavy ? 8 : 5)]], col, heavy ? 8 : 5.5, 0.75);
+    limb(ctx, [p.shF, [p.shF[0] + (heavy ? 13 : 9), p.shF[1] - (heavy ? 8 : 5)]], col, heavy ? 8 : 5.5, 0.9);
+  }
 
   // энергетическая линия по центру
   ctx.beginPath();
@@ -686,11 +916,43 @@ function drawTorso(ctx, f, col, p) {
   ctx.arc(ex, ey, heavy ? 2.5 : 1.8, 0, TAU);
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fill();
+
+  if (nyx) {
+    ctx.beginPath();
+    ctx.moveTo(ex - 6, ey);
+    ctx.lineTo(ex + 6, ey);
+    ctx.strokeStyle = hexA(col, 0.8);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(ex, ey, 2.2, 0, TAU);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fill();
+  } else if (mira) {
+    ctx.strokeStyle = hexA(col, 0.7);
+    ctx.lineWidth = 1;
+    for (const ang of [-0.6, 0.6, 1.9]) {
+      ctx.beginPath();
+      ctx.moveTo(ex - Math.cos(ang) * 7, ey - Math.sin(ang) * 7);
+      ctx.lineTo(ex + Math.cos(ang) * 7, ey + Math.sin(ang) * 7);
+      ctx.stroke();
+    }
+  } else if (storm) {
+    ctx.beginPath();
+    ctx.moveTo(ex - 4, ey - 6);
+    ctx.lineTo(ex + 1, ey - 1);
+    ctx.lineTo(ex - 2, ey + 1);
+    ctx.lineTo(ex + 5, ey + 7);
+    ctx.strokeStyle = hexA(col, 0.95);
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+  }
 }
 
 function drawHead(ctx, f, col, accent, p) {
   const [hx, hy] = p.head;
-  const heavy = f.style === 'heavy';
+  const style = f.style;
+  const heavy = style === 'heavy';
   const r = heavy ? 19 : 18;
 
   if (heavy) {
@@ -707,6 +969,72 @@ function drawHead(ctx, f, col, accent, p) {
     ctx.lineTo(hx + 15, hy - r - 8);
     ctx.strokeStyle = hexA(col, 0.85);
     ctx.lineWidth = 4;
+    ctx.stroke();
+  } else if (style === 'nyx') {
+    // капюшон с острым верхом
+    ctx.beginPath();
+    ctx.moveTo(hx - 18, hy + 10);
+    ctx.quadraticCurveTo(hx - 16, hy - r - 8, hx - 1, hy - r - 16);
+    ctx.quadraticCurveTo(hx + 15, hy - r - 7, hx + 17, hy + 10);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(9,4,20,0.96)';
+    ctx.fill();
+    ctx.strokeStyle = hexA(col, 0.18);
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.8);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // маленький шип на капюшоне
+    ctx.beginPath();
+    ctx.moveTo(hx + 4, hy - r - 14);
+    ctx.lineTo(hx + 14, hy - r - 24);
+    ctx.strokeStyle = hexA(col, 0.8);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else if (style === 'mira') {
+    // мягкий капюшон и кристалл
+    ctx.beginPath();
+    ctx.moveTo(hx - 19, hy + 10);
+    ctx.quadraticCurveTo(hx - 15, hy - r - 5, hx, hy - r - 13);
+    ctx.quadraticCurveTo(hx + 15, hy - r - 5, hx + 18, hy + 10);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(6,15,18,0.95)';
+    ctx.fill();
+    ctx.strokeStyle = hexA(col, 0.2);
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.75);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(hx, hy - r - 20);
+    ctx.lineTo(hx + 5, hy - r - 12);
+    ctx.lineTo(hx, hy - r - 5);
+    ctx.lineTo(hx - 5, hy - r - 12);
+    ctx.closePath();
+    ctx.fillStyle = hexA(accent, 0.35);
+    ctx.fill();
+    ctx.strokeStyle = hexA(accent, 0.9);
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+  } else if (style === 'storm') {
+    // молниевый гребень и полукольцо
+    ctx.beginPath();
+    ctx.moveTo(hx - 7, hy - r + 2);
+    ctx.lineTo(hx - 1, hy - r - 12);
+    ctx.lineTo(hx + 2, hy - r - 1);
+    ctx.lineTo(hx + 9, hy - r - 15);
+    ctx.strokeStyle = hexA(col, 0.2);
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.95);
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(hx, hy, r + 7, -2.5, -0.65);
+    ctx.strokeStyle = hexA(accent, 0.4);
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   } else {
     // короткий гребень-плавник
@@ -727,20 +1055,22 @@ function drawHead(ctx, f, col, accent, p) {
   ctx.lineWidth = heavy ? 10 : 8;
   ctx.stroke();
   ctx.strokeStyle = hexA(col, 0.95);
-  ctx.lineWidth = heavy ? 3.2 : 2.6;
+  ctx.lineWidth = heavy ? 3.2 : style === 'nyx' ? 2.2 : 2.6;
   ctx.stroke();
 
   // визор
   const vy = hy + 1;
+  const vL = heavy ? 7 : style === 'nyx' ? 4 : style === 'storm' ? 7 : 5;
+  const vR = heavy ? 11 : style === 'nyx' ? 10 : style === 'storm' ? 11 : 9;
   ctx.beginPath();
-  ctx.moveTo(hx - (heavy ? 7 : 5), vy);
-  ctx.lineTo(hx + (heavy ? 11 : 9), vy - 1);
+  ctx.moveTo(hx - vL, vy);
+  ctx.lineTo(hx + vR, vy - 1);
   ctx.lineCap = 'round';
   ctx.strokeStyle = hexA(accent, 0.25);
-  ctx.lineWidth = heavy ? 12 : 9;
+  ctx.lineWidth = heavy ? 12 : style === 'nyx' ? 7 : 9;
   ctx.stroke();
   ctx.strokeStyle = hexA(accent, 0.95);
-  ctx.lineWidth = heavy ? 5 : 4;
+  ctx.lineWidth = heavy ? 5 : style === 'nyx' ? 3 : 4;
   ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,0.95)';
   ctx.lineWidth = 1.4;
@@ -758,6 +1088,38 @@ function drawHead(ctx, f, col, accent, p) {
     ctx.arc(hx - 1, hy + 13, 2, 0, TAU);
     ctx.fillStyle = hexA(accent, 0.9);
     ctx.fill();
+  } else if (style === 'nyx') {
+    // закрытая маска
+    ctx.beginPath();
+    ctx.moveTo(hx - 13, hy + 8);
+    ctx.lineTo(hx + 9, hy + 9);
+    ctx.strokeStyle = hexA(col, 0.7);
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(hx - 12, hy - 2, 1.8, 0, TAU);
+    ctx.fillStyle = hexA(accent, 0.9);
+    ctx.fill();
+  } else if (style === 'mira') {
+    // осколок на лбу
+    ctx.beginPath();
+    ctx.moveTo(hx + 2, hy - 8);
+    ctx.lineTo(hx + 6, hy - 3);
+    ctx.lineTo(hx + 2, hy + 2);
+    ctx.lineTo(hx - 2, hy - 3);
+    ctx.closePath();
+    ctx.strokeStyle = hexA(accent, 0.8);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  } else if (style === 'storm') {
+    // искра у виска
+    ctx.beginPath();
+    ctx.moveTo(hx - 12, hy + 5);
+    ctx.lineTo(hx - 8, hy + 8);
+    ctx.lineTo(hx - 11, hy + 11);
+    ctx.strokeStyle = hexA(accent, 0.85);
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
   } else {
     // бровь / маска
     ctx.beginPath();
@@ -776,28 +1138,100 @@ function drawHead(ctx, f, col, accent, p) {
 }
 
 function drawExtremities(ctx, f, col, accent, p) {
-  const heavy = f.style === 'heavy';
-  // кулаки
-  const hands = [
-    { pt: p.haB, r: heavy ? 6 : 4.4, a: 0.62 },
-    { pt: p.haF, r: heavy ? 7 : 5.2, a: 1 }
-  ];
-  for (const h of hands) {
-    ctx.beginPath();
-    ctx.arc(h.pt[0], h.pt[1], h.r + (heavy ? 5 : 3.5), 0, TAU);
-    ctx.fillStyle = hexA(col, 0.13 * h.a);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(h.pt[0], h.pt[1], h.r, 0, TAU);
-    ctx.fillStyle = hexA(col, 0.85 * h.a);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(h.pt[0], h.pt[1], h.r * 0.42, 0, TAU);
-    ctx.fillStyle = `rgba(255,255,255,${0.9 * h.a})`;
-    ctx.fill();
+  const style = f.style;
+  const heavy = style === 'heavy';
+  const nyx = style === 'nyx';
+  const mira = style === 'mira';
+  const storm = style === 'storm';
+
+  if (nyx) {
+    // клинки от кистей
+    const blades = [
+      { pt: p.haB, len: 14, a: 0.6 },
+      { pt: p.haF, len: 22, a: 1 }
+    ];
+    for (const b of blades) {
+      ctx.beginPath();
+      ctx.moveTo(b.pt[0], b.pt[1]);
+      ctx.lineTo(b.pt[0] + b.len, b.pt[1] - 3);
+      ctx.strokeStyle = hexA(col, 0.16 * b.a);
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.strokeStyle = hexA(col, 0.9 * b.a);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255,255,255,${0.7 * b.a})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(b.pt[0], b.pt[1], 3.4, 0, TAU);
+      ctx.fillStyle = hexA(col, 0.8 * b.a);
+      ctx.fill();
+    }
+  } else if (mira) {
+    // кристаллы в ладонях
+    const hands = [
+      { pt: p.haB, a: 0.6, r: 4.4 },
+      { pt: p.haF, a: 1, r: 5.4 }
+    ];
+    for (const h of hands) {
+      ctx.beginPath();
+      ctx.arc(h.pt[0], h.pt[1], h.r + 4, 0, TAU);
+      ctx.fillStyle = hexA(col, 0.12 * h.a);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(h.pt[0], h.pt[1] - h.r);
+      ctx.lineTo(h.pt[0] + h.r * 0.7, h.pt[1]);
+      ctx.lineTo(h.pt[0], h.pt[1] + h.r);
+      ctx.lineTo(h.pt[0] - h.r * 0.7, h.pt[1]);
+      ctx.closePath();
+      ctx.fillStyle = hexA(col, 0.25 * h.a);
+      ctx.fill();
+      ctx.strokeStyle = hexA(col, 0.9 * h.a);
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(h.pt[0], h.pt[1], 1.8, 0, TAU);
+      ctx.fillStyle = `rgba(255,255,255,${0.9 * h.a})`;
+      ctx.fill();
+    }
+  } else {
+    // кулаки
+    const hands = [
+      { pt: p.haB, r: heavy ? 6 : 4.4, a: 0.62 },
+      { pt: p.haF, r: heavy ? 7 : 5.2, a: 1 }
+    ];
+    for (const h of hands) {
+      ctx.beginPath();
+      ctx.arc(h.pt[0], h.pt[1], h.r + (heavy ? 5 : 3.5), 0, TAU);
+      ctx.fillStyle = hexA(col, 0.13 * h.a);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(h.pt[0], h.pt[1], h.r, 0, TAU);
+      ctx.fillStyle = hexA(col, 0.85 * h.a);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(h.pt[0], h.pt[1], h.r * 0.42, 0, TAU);
+      ctx.fillStyle = `rgba(255,255,255,${0.9 * h.a})`;
+      ctx.fill();
+    }
+    if (storm) {
+      for (const h of hands) {
+        ctx.beginPath();
+        ctx.moveTo(h.pt[0] - 7, h.pt[1] - 8);
+        ctx.lineTo(h.pt[0] - 2, h.pt[1] - 3);
+        ctx.lineTo(h.pt[0] - 5, h.pt[1] + 1);
+        ctx.strokeStyle = hexA(accent, 0.75);
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+      }
+    }
   }
 
   // ботинки
+  const shoeW = heavy ? 15 : nyx ? 10 : mira ? 10 : 12;
+  const shoeCore = heavy ? 8 : nyx ? 4.5 : mira ? 5 : 6;
   const feet = [
     { pt: p.ftB, a: 0.55 },
     { pt: p.ftF, a: 0.95 }
@@ -807,11 +1241,11 @@ function drawExtremities(ctx, f, col, accent, p) {
     ctx.moveTo(ft.pt[0] - (heavy ? 10 : 8), ft.pt[1] - 2);
     ctx.lineTo(ft.pt[0] + (heavy ? 13 : 11), ft.pt[1] - 2);
     ctx.strokeStyle = hexA(col, 0.12 * ft.a);
-    ctx.lineWidth = heavy ? 15 : 12;
+    ctx.lineWidth = shoeW;
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.strokeStyle = hexA(col, 0.95 * ft.a);
-    ctx.lineWidth = heavy ? 8 : 6;
+    ctx.lineWidth = shoeCore;
     ctx.stroke();
     ctx.strokeStyle = `rgba(255,255,255,${0.55 * ft.a})`;
     ctx.lineWidth = 1.8;
@@ -839,6 +1273,75 @@ function drawShield(ctx, f, col) {
   ctx.lineWidth = heavy ? 20 : 16;
   ctx.stroke();
   ctx.restore();
+}
+
+function drawStyleCharge(ctx, f, col, accent) {
+  const a = f.attack;
+  if (!a) return;
+  if (f.attackT > a.startup + 0.04) return;
+  const charge = clamp(f.attackT / a.startup, 0, 1);
+  if (a.kind === 'fan') {
+    const x = 54;
+    const y = -140;
+    const r = 4 + charge * 8;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.6);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)');
+    g.addColorStop(0.4, hexA(col, 0.8));
+    g.addColorStop(1, hexA(col, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 2.6, 0, TAU);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y - r);
+    ctx.lineTo(x + r * 0.7, y);
+    ctx.lineTo(x, y + r);
+    ctx.lineTo(x - r * 0.7, y);
+    ctx.closePath();
+    ctx.strokeStyle = hexA(accent, 0.9);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  } else if (a.kind === 'lightning') {
+    const x = 38;
+    const y = -196;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const r = 3 + charge * 6;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(0.35, hexA(col, 0.9));
+    g.addColorStop(1, hexA(col, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 3, 0, TAU);
+    ctx.fill();
+    for (let i = 0; i < 3; i++) {
+      const ang = f.animT * 9 + i * 2.1;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(ang) * 5, y + Math.sin(ang) * 5);
+      ctx.lineTo(x + Math.cos(ang) * (12 + charge * 8), y + Math.sin(ang) * (12 + charge * 8));
+      ctx.strokeStyle = hexA(accent, 0.7);
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (a.kind === 'dash') {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 1; i <= 3; i++) {
+      const y = -60 - i * 26;
+      ctx.beginPath();
+      ctx.moveTo(18, y);
+      ctx.lineTo(58 + i * 10, y + 4);
+      ctx.strokeStyle = hexA(col, 0.22 - i * 0.04);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 
 function drawSpecialOrb(ctx, f, col) {
@@ -905,13 +1408,18 @@ function drawAttackTrail(ctx, f, col) {
 }
 
 export function drawFighter(ctx, f) {
-  const heavy = f.style === 'heavy';
+  const style = f.style;
+  const heavy = style === 'heavy';
+  const nyx = style === 'nyx';
+  const mira = style === 'mira';
+  const storm = style === 'storm';
+  const shadowW = heavy ? 50 : nyx ? 42 : 46;
   const shadowScale = 1 - Math.min(0.62, f.y / 360);
   ctx.save();
   ctx.globalAlpha = 0.5 * shadowScale;
   ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.ellipse(f.x, GROUND_Y + 5, (heavy ? 50 : 44) * shadowScale + 10, (heavy ? 12 : 10) * shadowScale + 2, 0, 0, TAU);
+  ctx.ellipse(f.x, GROUND_Y + 5, shadowW * shadowScale + 10, (heavy ? 12 : 10) * shadowScale + 2, 0, 0, TAU);
   ctx.fill();
   ctx.restore();
 
@@ -939,30 +1447,51 @@ export function drawFighter(ctx, f) {
     g.addColorStop(1, hexA(col, 0));
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.ellipse(0, -100, heavy ? 74 : 66, 106, 0, 0, TAU);
+    ctx.ellipse(0, -100, heavy ? 74 : nyx ? 58 : 66, 106, 0, 0, TAU);
     ctx.fill();
     ctx.restore();
   }
 
   drawScarf(ctx, f, col);
 
+  // скоростные линии при рывке
+  if (f.attack?.dash && !f.attackHit) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 1; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-28 - i * 14, -40 - i * 34);
+      ctx.lineTo(-6 - i * 8, -38 - i * 34);
+      ctx.strokeStyle = hexA(col, 0.3 - i * 0.07);
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  const armW = heavy ? 13 : nyx ? 8.5 : mira ? 9 : storm ? 9.5 : 10.5;
+  const legW = heavy ? 14.5 : nyx ? 10.5 : mira ? 11 : storm ? 11.5 : 12;
+  const armBackW = heavy ? 11.5 : nyx ? 7.5 : 8;
+  const legBackW = heavy ? 13 : nyx ? 9.5 : 10;
+
   // задняя нога
-  limb(ctx, [p.hipB, p.knB, p.ftB], col, heavy ? 13 : 10.5, 0.62);
+  limb(ctx, [p.hipB, p.knB, p.ftB], col, legBackW, 0.62);
   // задняя рука
-  limb(ctx, [p.shB, p.elB, p.haB], col, heavy ? 11.5 : 9, 0.62);
+  limb(ctx, [p.shB, p.elB, p.haB], col, armBackW, 0.62);
   // передняя нога
-  limb(ctx, [p.hipF, p.knF, p.ftF], col, heavy ? 14.5 : 12, 0.95);
+  limb(ctx, [p.hipF, p.knF, p.ftF], col, legW, 0.95);
   // торс
   drawTorso(ctx, f, col, p);
   // голова
   drawHead(ctx, f, col, accent, p);
   // передняя рука
-  limb(ctx, [p.shF, p.elF, p.haF], col, heavy ? 13 : 10.5, 1);
-  // кулаки и ботинки
+  limb(ctx, [p.shF, p.elF, p.haF], col, armW, 1);
+  // кулаки, клинки, кристаллы и ботинки
   drawExtremities(ctx, f, col, accent, p);
 
   if (f.state === 'block') drawShield(ctx, f, col);
   drawSpecialOrb(ctx, f, col);
+  drawStyleCharge(ctx, f, col, accent);
   drawAttackTrail(ctx, f, col);
 
   ctx.restore();

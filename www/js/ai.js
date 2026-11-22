@@ -53,6 +53,13 @@ export class AIController extends Controller {
     // ---- реакция на снаряд ----
     for (const p of game.projectiles || []) {
       if (p.owner === self.index) continue;
+      if (p.kind === 'lightning' && !p.struck && Math.abs(self.x - p.x) < 95) {
+        const away = self.x >= p.x ? 'right' : 'left';
+        this.state.left = this.state.right = this.state.up = this.state.down = false;
+        this.state[away] = true;
+        this.state.block = false;
+        return;
+      }
       const dirToSelf = Math.sign(self.x - p.x);
       if (dirToSelf === Math.sign(p.vx) && Math.abs(self.x - p.x) < 430 && self.y <= 0) {
         if (Math.random() < dt * 1.1) {
@@ -153,6 +160,22 @@ export class AIController extends Controller {
     // добить, если соперник рядом и мы свободны
     if (d < 145 && this.cool <= 0 && Math.random() < dt * 1.4) {
       this.tryAttack(d, foe);
+    }
+
+    // использовать спец по назначению бойца
+    if (self.meter >= 50 && this.cool <= 0 && Math.random() < dt * 1.2) {
+      const want =
+        (self.special === 'dash' && d > 70 && d < 360) ||
+        (self.special === 'wave' && d > 80) ||
+        (self.special === 'fan' && d > 70) ||
+        (self.special === 'lightning' && d > 30) ||
+        (self.special === 'plasma' && d > 80);
+      if (want) {
+        this.press('special');
+        this.cool = 0.9;
+        this.state.left = this.state.right = this.state.up = this.state.down = false;
+        return;
+      }
     }
   }
 
