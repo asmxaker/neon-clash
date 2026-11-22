@@ -61,6 +61,15 @@ npm run serve
 
 Нужны: Node.js 22+, JDK 21, Android SDK с platform 36 и build-tools 36.
 
+Самый простой путь (сам найдёт Homebrew JDK 21 и Android SDK):
+
+```bash
+npm install
+npm run apk
+```
+
+Либо вручную:
+
 ```bash
 export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home"
 export ANDROID_HOME="$HOME/Library/Android/sdk"

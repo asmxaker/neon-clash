@@ -12,7 +12,7 @@
     "cap:sync": "cap sync android",
     "cap:add": "cap add android",
     "android": "cap open android",
-    "apk": "cd android && ./gradlew assembleDebug"
+    "apk": "bash scripts/build-apk.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
