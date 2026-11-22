@@ -1,6 +1,7 @@
 // Сетевой режим «рядом»: Nearby Connections (Bluetooth/Wi-Fi), хост-авторитетная синхронизация.
 
 import { Controller } from './input.js';
+import { t } from './i18n.js';
 
 const SERVICE_ID = 'com.neonclash.game';
 const ENDPOINT_NAME = 'Neon Clash';
@@ -173,7 +174,7 @@ export class LinkManager {
   async ensureReady() {
     if (!this.plugin) {
       const ok = await this.prepare();
-      if (!ok || !this.plugin) throw new Error('BLUETOOTH-РЕЖИМ ДОСТУПЕН ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ');
+      if (!ok || !this.plugin) throw new Error(t('link.androidOnly'));
     }
     if (this.ready) return;
 
@@ -183,7 +184,7 @@ export class LinkManager {
       const need = ['bluetoothNearby', 'wifiNearby', 'location', 'locationCoarse', 'bluetoothLegacy', 'wifiState'];
       const missing = !perm ? need : need.filter((k) => perm[k] && perm[k] !== 'granted');
       if (missing.length) {
-        this.status('ЗАПРАШИВАЕМ РАЗРЕШЕНИЯ...');
+        this.status(t('status.permissions'));
         try {
           perm = await p.requestPermissions({ permissions: need });
         } catch (e) {
@@ -191,14 +192,14 @@ export class LinkManager {
         }
       }
       if (perm && perm.bluetoothNearby === 'denied' && perm.wifiNearby === 'denied') {
-        throw new Error('НУЖНЫ РАЗРЕШЕНИЯ НА BLUETOOTH И УСТРОЙСТВА РЯДОМ');
+        throw new Error(t('status.permissionsNeeded'));
       }
     } catch (e) {
       // На старых Android разрешение location может быть не выдано — пробуем инициализацию.
-      if (String(e?.message || '').includes('НУЖНЫ')) throw e;
+      if (String(e?.message || '') === t('status.permissionsNeeded')) throw e;
     }
 
-    this.status('ВКЛЮЧАЕМ СВЯЗЬ...');
+    this.status(t('status.enabling'));
     await p.initialize({
       serviceID: SERVICE_ID,
       endpointName: ENDPOINT_NAME,
@@ -244,7 +245,7 @@ export class LinkManager {
     add('onEndpointInitiated', async (ep) => {
       if (!ep || !ep.endpointID) return;
       if (!this.endpointID) this.endpointID = ep.endpointID;
-      this.status('ПОДТВЕРЖДАЕМ СОЕДИНЕНИЕ...');
+      this.status(t('status.confirm'));
       try { await this.plugin.acceptConnection({ endpointID: ep.endpointID }); } catch (e) { /* ignore */ }
     });
 
@@ -254,31 +255,31 @@ export class LinkManager {
       this.connected = true;
       this.found.clear();
       this.endpoints();
-      this.status(this.reconnecting ? 'ПЕРЕПОДКЛЮЧЕНИЕ...' : 'СОЕДИНЕНИЕ УСТАНОВЛЕНО', this.reconnecting ? 'warn' : 'ok');
+      this.status(this.reconnecting ? t('link.reconnecting') : t('status.connected'), this.reconnecting ? 'warn' : 'ok');
       await this.stopScanning();
       this.sendHello();
       this.callbacks.onConnected?.({ endpointID: this.endpointID });
     });
 
     add('onEndpointRejected', () => {
-      this.status('СОЕДИНЕНИЕ ОТКЛОНЕНО', 'error');
+      this.status(t('status.rejected'), 'error');
       this.callbacks.onConnected?.({ rejected: true });
     });
 
     add('onEndpointFailed', () => {
-      this.status('НЕ УДАЛОСЬ СОЕДИНИТЬСЯ', 'error');
+      this.status(t('status.failed'), 'error');
     });
 
     add('onEndpointDisconnected', () => {
-      this.handleDisconnected('СОЕДИНЕНИЕ ПОТЕРЯНО');
+      this.handleDisconnected(t('link.connectionLost'));
     });
 
     add('onPayloadReceived', (ev) => this.onPayload(ev));
 
     add('onBluetoothStateChanged', (state) => {
-      if (state === 'poweredOff') this.status('ВКЛЮЧИТЕ BLUETOOTH', 'warn');
-      else if (state === 'unauthorized') this.status('НЕТ ДОСТУПА К BLUETOOTH', 'error');
-      else if (state === 'poweredOn' && this.role) this.status('BLUETOOTH ВКЛЮЧЁН');
+      if (state === 'poweredOff') this.status(t('status.bluetoothOff'), 'warn');
+      else if (state === 'unauthorized') this.status(t('status.noAccess'), 'error');
+      else if (state === 'poweredOn' && this.role) this.status(t('status.bluetoothOn'));
     });
   }
 
@@ -295,14 +296,14 @@ export class LinkManager {
     this.peerChar = null;
     this.hostGame = null;
     this.connected = false;
-    this.status('СОЗДАЁМ КОМНАТУ...');
+    this.status(t('status.creatingRoom'));
     await this.ensureReady();
     await this.stopScanning();
     try {
       await this.plugin.startAdvertising({ endpointName: ENDPOINT_NAME, connectionType: 'balanced' });
-      this.status('ОЖИДАНИЕ ИГРОКА...');
+      this.status(t('status.waiting'));
     } catch (e) {
-      this.status('BLUETOOTH НЕДОСТУПЕН: ' + (e?.message || 'ОШИБКА'), 'error');
+      this.status(t('status.btUnavailable', { msg: e?.message || t('status.failed') }), 'error');
       throw e;
     }
   }
@@ -315,21 +316,21 @@ export class LinkManager {
     this.peerChar = null;
     this.guestGame = null;
     this.connected = false;
-    this.status('ИЩЕМ ИГРОКА РЯДОМ...');
+    this.status(t('status.searching'));
     await this.ensureReady();
     await this.stopScanning();
     try {
       await this.plugin.startDiscovery({});
-      this.status('ИЩЕМ ИГРОКА РЯДОМ...');
+      this.status(t('status.searching'));
     } catch (e) {
-      this.status('ПОИСК НЕДОСТУПЕН: ' + (e?.message || 'ОШИБКА'), 'error');
+      this.status(t('status.searchUnavailable', { msg: e?.message || t('status.failed') }), 'error');
       throw e;
     }
   }
 
   async connect(ep) {
     if (this.role !== 'guest' || !ep) return;
-    this.status('ПОДКЛЮЧАЕМСЯ К ' + (ep.endpointName || 'ИГРОКУ') + '...');
+    this.status(t('status.connectingTo', { name: ep.endpointName || t('link.player') }));
     try {
       await this.plugin.stopDiscovery();
       await this.plugin.requestConnection({
@@ -337,7 +338,7 @@ export class LinkManager {
         endpointName: ep.endpointName || ENDPOINT_NAME
       });
     } catch (e) {
-      this.status('НЕ УДАЛОСЬ ПОДКЛЮЧИТЬСЯ', 'error');
+      this.status(t('status.connectFailed'), 'error');
     }
   }
 
@@ -351,7 +352,7 @@ export class LinkManager {
     this.matchActive = true;
     this.sendControl({ t: 'start', hostChar, guestChar });
     this.stopScanning();
-    this.status('БОЙ');
+    this.status(t('status.fight'));
   }
 
   sendResume() {
@@ -364,7 +365,7 @@ export class LinkManager {
       guestChar,
       snap: this.buildSnapshot()
     });
-    this.status('БОЙ');
+    this.status(t('status.fight'));
   }
 
   requestRematch() {
@@ -407,7 +408,7 @@ export class LinkManager {
     try {
       await this.sendRaw(JSON.stringify(msg));
     } catch (e) {
-      this.status('ОШИБКА ОТПРАВКИ', 'warn');
+      this.status(t('status.sendError'), 'warn');
     } finally {
       this.sending = false;
       if (this.outbox.length || this.pendingInput || this.pendingSnap) this.pump();
@@ -490,12 +491,12 @@ export class LinkManager {
 
     if (msg.t === 'hello') {
       this.peerChar = msg.char || 'volt';
-      this.peerName = msg.name || 'ИГРОК';
+      this.peerName = msg.name || t('link.player');
       if (this.reconnecting && this.role === 'host') {
         this.finishReconnect();
         return;
       }
-      this.status(this.role === 'host' ? 'ИГРОК ПОДКЛЮЧЁН · МОЖНО НАЧИНАТЬ' : 'ПОДКЛЮЧЕНО · ЖДЁМ ХОСТА');
+      this.status(this.role === 'host' ? t('status.peerHost') : t('status.peerGuest'));
       this.callbacks.onPeer?.({ char: this.peerChar, name: this.peerName });
       return;
     }
@@ -513,7 +514,7 @@ export class LinkManager {
       if (this.role !== 'guest') return;
       this.peerChar = msg.hostChar;
       this.ownChar = msg.guestChar;
-      this.status('БОЙ');
+      this.status(t('status.fight'));
       this.stopTimers();
       this.lastSnap = null;
       this.callbacks.onStart?.(msg);
@@ -537,7 +538,7 @@ export class LinkManager {
     }
 
     if (msg.t === 'bye') {
-      this.handleDisconnected('СОПЕРНИК ВЫШЕЛ', false);
+      this.handleDisconnected(t('link.opponentLeft'), false);
     }
   }
 
@@ -572,7 +573,7 @@ export class LinkManager {
       this.lastSnap = null;
       this.disconnecting = false;
       this.endpoints();
-      if (!silent) this.status('СВЯЗЬ ЗАВЕРШЕНА');
+      if (!silent) this.status(t('status.ended'));
     }
   }
 
@@ -601,10 +602,10 @@ export class LinkManager {
     if (this.reconnecting) return;
     this.reconnecting = true;
     this.reconnectAttempts = 0;
-    this.reconnectReason = reason || 'СВЯЗЬ ПОТЕРЯНА';
+    this.reconnectReason = reason || t('link.connectionLost');
     this.reconnectUntil = Date.now() + 15000;
     this.autoJoin = this.role === 'guest';
-    this.status('ПЕРЕПОДКЛЮЧЕНИЕ...', 'warn');
+    this.status(t('link.reconnecting'), 'warn');
     this.callbacks.onReconnecting?.(this.reconnectReason);
     this.scheduleReconnect(350);
   }
@@ -621,7 +622,7 @@ export class LinkManager {
       return;
     }
     this.reconnectAttempts++;
-    this.status(`ПЕРЕПОДКЛЮЧЕНИЕ... ${this.reconnectAttempts}`, 'warn');
+    this.status(t('status.reconnectAttempt', { n: this.reconnectAttempts }), 'warn');
     try {
       await this.restartTransport();
     } catch (e) { /* следующая попытка */ }
@@ -645,7 +646,7 @@ export class LinkManager {
     this.autoJoin = false;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
-    this.status('СВЯЗЬ ВОССТАНОВЛЕНА', 'ok');
+    this.status(t('status.reconnected'), 'ok');
     if (this.role === 'host' && this.hostGame) {
       this.bindHostGame(this.hostGame);
       this.callbacks.onReconnected?.({ role: 'host' });
@@ -665,7 +666,7 @@ export class LinkManager {
     this.guestController = null;
     this.matchActive = false;
     this.stopTimers();
-    this.status('НЕ УДАЛОСЬ ПЕРЕПОДКЛЮЧИТЬСЯ', 'error');
+    this.status(t('status.reconnectFailed'), 'error');
     this.callbacks.onReconnectFailed?.();
   }
 

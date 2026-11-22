@@ -9,6 +9,7 @@ const ATTACK_BY_KIND = Object.values(ATTACKS).reduce((map, a) => {
 }, {});
 import { FX } from './fx.js';
 import { audio } from './audio.js';
+import { t as tr, hitsText } from './i18n.js';
 
 const W = 1280;
 const H = 720;
@@ -441,7 +442,7 @@ function drawHUD(ctx, game) {
   setFont(ctx, 10, false);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
   ctx.fillStyle = 'rgba(190,205,245,0.55)';
-  ctx.fillText(`РАУНД ${game.round}`, cx, 101);
+  ctx.fillText(tr('hud.round', { n: game.round }), cx, 101);
   ctx.restore();
 
   // ---- серии ----
@@ -592,11 +593,6 @@ function drawCombo(ctx, f, x, y, align) {
   const a = clamp(f.comboTimer / 0.35, 0, 1);
   const grow = 1 + Math.max(0, 1.35 - f.comboTimer) * 0.35;
   const n = f.combo;
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  const word = (mod10 === 1 && mod100 !== 11) ? 'ХИТ'
-    : (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) ? 'ХИТА'
-    : 'ХИТОВ';
   ctx.save();
   ctx.globalAlpha = a;
   ctx.translate(x, y);
@@ -607,17 +603,17 @@ function drawCombo(ctx, f, x, y, align) {
   ctx.shadowColor = f.color;
   ctx.shadowBlur = 18;
   ctx.fillStyle = f.accent;
-  ctx.fillText(`${n} ${word}`, 0, 0);
+  ctx.fillText(hitsText(n), 0, 0);
   ctx.shadowBlur = 0;
   ctx.font = '700 12px system-ui, sans-serif';
   ctx.fillStyle = 'rgba(220,230,255,0.6)';
-  ctx.fillText('СЕРИЯ', 0, 24);
+  ctx.fillText(tr('hud.series'), 0, 24);
   if (f.comboLabel && f.comboLabelT > 0) {
     ctx.font = '900 13px "Arial Black", system-ui, sans-serif';
     ctx.fillStyle = f.accent;
     ctx.shadowColor = f.color;
     ctx.shadowBlur = 10;
-    ctx.fillText(`КОМБО «${f.comboLabel}»`, 0, 43);
+    ctx.fillText(tr('hud.combo', { name: tr(`combo.${f.comboLabel}`) }), 0, 43);
   }
   ctx.restore();
 }
@@ -1713,15 +1709,15 @@ export class Game {
       if (t < 1.02) {
         const a = clamp(t / 0.18, 0, 1) * clamp((1.02 - t) / 0.2, 0, 1);
         const sc = 1.12 - clamp(t / 1.02, 0, 1) * 0.08;
-        banner(ctx, `РАУНД ${this.round}`, W / 2, 298, 56, '#e9fbff', a, sc, 5);
+        banner(ctx, tr('hud.round', { n: this.round }), W / 2, 298, 56, '#e9fbff', a, sc, 5);
       } else {
         const tt = t - 1.02;
         const a = clamp(tt / 0.08, 0, 1);
-        banner(ctx, 'БОЙ!', W / 2, 300, 104, YELLOW, a, 1 + Math.sin(tt * 30) * 0.03, 4);
+        banner(ctx, tr('hud.fight'), W / 2, 300, 104, YELLOW, a, 1 + Math.sin(tt * 30) * 0.03, 4);
       }
     } else if (this.phase === 'fight' && this.phaseT < 0.38) {
       const a = 1 - this.phaseT / 0.38;
-      banner(ctx, 'БОЙ!', W / 2, 300, 104, YELLOW, a, 1.08 - this.phaseT * 0.2, 4);
+      banner(ctx, tr('hud.fight'), W / 2, 300, 104, YELLOW, a, 1.08 - this.phaseT * 0.2, 4);
     } else if (this.phase === 'roundEnd') {
       const t = this.phaseT;
       if (t < 0.95) {
@@ -1730,29 +1726,29 @@ export class Game {
           const glitch = Math.sin(t * 70) * 3;
           ctx.save();
           ctx.globalAlpha = a * 0.75;
-          banner(ctx, 'K.O.', W / 2 + glitch, 300, 126, CYAN, 0.8, 1, 6);
-          banner(ctx, 'K.O.', W / 2 - glitch, 300, 126, PINK, 0.8, 1, 6);
+          banner(ctx, tr('hud.ko'), W / 2 + glitch, 300, 126, CYAN, 0.8, 1, 6);
+          banner(ctx, tr('hud.ko'), W / 2 - glitch, 300, 126, PINK, 0.8, 1, 6);
           ctx.restore();
-          banner(ctx, 'K.O.', W / 2, 300, 126, '#ffffff', a, 1.06, 6);
+          banner(ctx, tr('hud.ko'), W / 2, 300, 126, '#ffffff', a, 1.06, 6);
         } else {
-          banner(ctx, 'ВРЕМЯ', W / 2, 300, 84, YELLOW, a, 1, 6);
+          banner(ctx, tr('hud.time'), W / 2, 300, 84, YELLOW, a, 1, 6);
         }
       } else {
         const tt = t - 0.95;
         const a = clamp(tt / 0.2, 0, 1);
         if (this.roundWinner >= 0) {
           const f = this.fighters[this.roundWinner];
-          banner(ctx, `${f.name} ПОБЕЖДАЕТ`, W / 2, 292, 46, f.accent, a, 1, 2);
-          banner(ctx, 'РАУНД ВЫИГРАН', W / 2, 342, 18, f.color, a * 0.8, 1, 5);
+          banner(ctx, tr('hud.roundWin', { name: f.name }), W / 2, 292, 46, f.accent, a, 1, 2);
+          banner(ctx, tr('hud.roundWon'), W / 2, 342, 18, f.color, a * 0.8, 1, 5);
         } else {
-          banner(ctx, 'НИЧЬЯ', W / 2, 298, 64, '#cfd8ff', a, 1, 6);
+          banner(ctx, tr('hud.draw'), W / 2, 298, 64, '#cfd8ff', a, 1, 6);
         }
       }
     } else if (this.phase === 'matchEnd') {
       const w = this.fighters[this.matchWinner];
       const col = w ? w.accent : '#ffffff';
       const name = w ? w.name : '';
-      banner(ctx, 'ПОБЕДА', W / 2, 270, 76 + Math.min(20, this.phaseT * 30), col, clamp(this.phaseT / 0.25, 0, 1), 1, 6);
+      banner(ctx, tr('hud.victory'), W / 2, 270, 76 + Math.min(20, this.phaseT * 30), col, clamp(this.phaseT / 0.25, 0, 1), 1, 6);
       banner(ctx, name, W / 2, 344, 30, w ? w.color : '#ffffff', clamp((this.phaseT - 0.15) / 0.25, 0, 1), 1, 3);
     }
   }

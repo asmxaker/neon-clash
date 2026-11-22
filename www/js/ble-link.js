@@ -2,6 +2,7 @@
 // Использует @capgo/capacitor-bluetooth-low-energy и тот же хост-авторитетный протокол.
 
 import { LinkManager } from './link.js';
+import { t } from './i18n.js';
 
 const SERVICE = '6e6f6e65-636c-6173-6801-000000000001';
 const CHAR_RX = '6e6f6e65-636c-6173-6801-000000000002'; // гость → хост
@@ -13,7 +14,7 @@ const PHASES = ['idle', 'intro', 'fight', 'roundEnd', 'matchEnd'];
 const STATES = ['idle', 'walk', 'jump', 'crouch', 'block', 'hit', 'attack', 'ko', 'win'];
 const ATTACK_CODES = [null, 'punch', 'kick', 'airkick', 'special', 'shockwave', 'dash', 'fan', 'lightning'];
 const PROJ_CODES = [null, 'plasma', 'wave', 'shard', 'lightning'];
-const COMBO_CODES = [null, 'ДВОЙКА', 'КРЮК', 'СМЕНА', 'ШКВАЛ'];
+const COMBO_CODES = [null, 'double', 'hook', 'switch', 'flurry'];
 
 const TX_PROPS = {
   broadcast: false, read: false, writeWithoutResponse: false, write: false,
@@ -124,7 +125,7 @@ export class BleLinkManager extends LinkManager {
   async ensureReady(mode) {
     if (!this.plugin) {
       const ok = await this.prepare();
-      if (!ok || !this.plugin) throw new Error('BLE-РЕЖИМ ДОСТУПЕН ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ');
+      if (!ok || !this.plugin) throw new Error(t('link.bleAndroidOnly'));
     }
     if (this.ready && this.bleMode === mode) return;
     if (this.ready) {
@@ -136,17 +137,17 @@ export class BleLinkManager extends LinkManager {
       this.bleMode = null;
     }
     const p = this.plugin;
-    this.status('ЗАПРАШИВАЕМ РАЗРЕШЕНИЯ BLE...');
+    this.status(t('status.blePermissions'));
     try { await p.requestPermissions(); } catch (e) { /* пользователь мог уже выдать */ }
     try {
       const av = await p.isAvailable();
-      if (av && av.available === false) throw new Error('BLE НЕ ПОДДЕРЖИВАЕТСЯ');
+      if (av && av.available === false) throw new Error(t('status.bleUnsupported'));
       const en = await p.isEnabled();
-      if (en && en.enabled === false) throw new Error('ВКЛЮЧИТЕ BLUETOOTH');
+      if (en && en.enabled === false) throw new Error(t('status.bluetoothOff'));
     } catch (e) {
-      if (String(e?.message || '').includes('ВКЛЮЧИТЕ') || String(e?.message || '').includes('НЕ ПОДДЕРЖ')) throw e;
+      if (String(e?.message || '') === t('status.bluetoothOff') || String(e?.message || '') === t('status.bleUnsupported')) throw e;
     }
-    this.status(mode === 'peripheral' ? 'ЗАПУСКАЕМ BLE-СЕРВЕР...' : 'ЗАПУСКАЕМ BLE...');
+    this.status(mode === 'peripheral' ? t('status.bleServerStart') : t('status.bleStart'));
     await p.initialize({ mode });
     await this.attachBle();
     this.bleMode = mode;
@@ -170,7 +171,7 @@ export class BleLinkManager extends LinkManager {
       if (!d || this.role !== 'guest') return;
       this.found.set(d.deviceId, {
         endpointID: d.deviceId,
-        endpointName: d.name || 'BLE-игрок',
+        endpointName: d.name || t('link.blePlayer'),
         deviceId: d.deviceId
       });
       this.endpoints();
@@ -181,10 +182,10 @@ export class BleLinkManager extends LinkManager {
     });
 
     add('deviceConnected', (ev) => this.onBleConnected(ev?.deviceId));
-    add('deviceDisconnected', () => this.onBleDisconnected('BLE-СОЕДИНЕНИЕ ПОТЕРЯНО'));
+    add('deviceDisconnected', () => this.onBleDisconnected(t('link.connectionLost')));
     add('characteristicChanged', (ev) => this.onBleBytes(ev?.value));
     add('centralConnected', (ev) => this.onBleCentralConnected(ev?.deviceId));
-    add('centralDisconnected', () => this.onBleDisconnected('ГОСТЬ ОТКЛЮЧИЛСЯ'));
+    add('centralDisconnected', () => this.onBleDisconnected(t('link.connectionLost')));
     add('gattCharacteristicWriteRequest', (ev) => this.onBleBytes(ev?.value));
   }
 
@@ -198,7 +199,7 @@ export class BleLinkManager extends LinkManager {
     this.connected = false;
     this.centralId = null;
     this.endpointID = null;
-    this.status('СОЗДАЁМ BLE-СЕРВЕР...');
+    this.status(t('status.bleServerCreate'));
     await this.ensureReady('peripheral');
     try {
       try {
@@ -220,9 +221,9 @@ export class BleLinkManager extends LinkManager {
         });
       }
       await this.plugin.startAdvertising({ name: 'Neon Clash', services: [SERVICE], includeName: true });
-      this.status('ОЖИДАНИЕ ИГРОКА (BLE)...');
+      this.status(t('status.bleWaiting'));
     } catch (e) {
-      this.status('BLE НЕДОСТУПЕН: ' + (e?.message || 'ОШИБКА'), 'error');
+      this.status(t('status.bleUnavailable', { msg: e?.message || t('status.failed') }), 'error');
       throw e;
     }
   }
@@ -237,13 +238,13 @@ export class BleLinkManager extends LinkManager {
     this.connected = false;
     this.deviceId = null;
     this.endpointID = null;
-    this.status('ИЩЕМ BLE-УСТРОЙСТВО...');
+    this.status(t('status.bleSearching'));
     await this.ensureReady('central');
     try {
       await this.plugin.startScan({ services: [SERVICE], timeout: 0, allowDuplicates: false });
-      this.status('ИЩЕМ BLE-УСТРОЙСТВО...');
+      this.status(t('status.bleSearching'));
     } catch (e) {
-      this.status('BLE-ПОИСК НЕДОСТУПЕН: ' + (e?.message || 'ОШИБКА'), 'error');
+      this.status(t('status.bleSearchUnavailable', { msg: e?.message || t('status.failed') }), 'error');
       throw e;
     }
   }
@@ -253,12 +254,12 @@ export class BleLinkManager extends LinkManager {
     const deviceId = ep.deviceId || ep.endpointID;
     if (!deviceId) return;
     this.deviceId = deviceId;
-    this.status('ПОДКЛЮЧАЕМСЯ ПО BLE...');
+    this.status(t('status.bleConnecting'));
     try {
       await this.plugin.stopScan();
       await this.plugin.connect({ deviceId, autoConnect: true });
     } catch (e) {
-      this.status('BLE-ПОДКЛЮЧЕНИЕ НЕ УДАЛОСЬ', 'error');
+      this.status(t('status.bleConnectFailed'), 'error');
     }
   }
 
@@ -267,7 +268,7 @@ export class BleLinkManager extends LinkManager {
     this.deviceId = deviceId;
     this.endpointID = deviceId;
     this.connected = true;
-    this.status(this.reconnecting ? 'ПЕРЕПОДКЛЮЧЕНИЕ ПО BLE...' : 'BLE-СОЕДИНЕНИЕ УСТАНОВЛЕНО', this.reconnecting ? 'warn' : 'ok');
+    this.status(this.reconnecting ? t('status.bleReconnecting') : t('status.bleConnected'), this.reconnecting ? 'warn' : 'ok');
     try { this.found.clear(); this.endpoints(); } catch (e) { /* ignore */ }
     try { await this.plugin.stopScan(); } catch (e) { /* ignore */ }
     try {
@@ -280,7 +281,7 @@ export class BleLinkManager extends LinkManager {
         deviceId, service: SERVICE, characteristic: CHAR_TX
       });
     } catch (e) {
-      this.status('BLE-СЕРВИС НЕ НАЙДЕН', 'error');
+      this.status(t('status.bleServiceMissing'), 'error');
       return;
     }
     this.sendHello();
@@ -293,7 +294,7 @@ export class BleLinkManager extends LinkManager {
     this.centralId = deviceId;
     this.endpointID = deviceId;
     this.connected = true;
-    this.status(this.reconnecting ? 'ПЕРЕПОДКЛЮЧЕНИЕ ПО BLE...' : 'ГОСТЬ ПОДКЛЮЧЁН ПО BLE', this.reconnecting ? 'warn' : 'ok');
+    this.status(this.reconnecting ? t('status.bleReconnecting') : t('status.bleGuestConnected'), this.reconnecting ? 'warn' : 'ok');
     this.callbacks.onConnected?.({ endpointID: deviceId });
     // Гость подписывается на TX чуть позже; отправим hello повторно.
     setTimeout(() => {
@@ -449,7 +450,7 @@ export class BleLinkManager extends LinkManager {
       this.rxMsgs.clear();
       this.disconnecting = false;
       this.endpoints();
-      if (!silent) this.status('BLE-СВЯЗЬ ЗАВЕРШЕНА');
+      if (!silent) this.status(t('status.bleEnded'));
     }
   }
 }

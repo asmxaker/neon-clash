@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1, minimum-scale=1">
@@ -7,8 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Neon Clash — неоновый 2D-файтинг для телефона. Один игрок против ИИ или двое на одном экране.">
-  <title>NEON CLASH — файтинг</title>
+  <meta name="description" content="Neon Clash — a neon 2D fighting game for phone. One player vs AI or two players on one screen.">
+  <title>NEON CLASH — fighting game</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -17,47 +17,47 @@
 <body>
   <div id="app">
     <div id="stage">
-      <canvas id="game" width="1280" height="720" aria-label="Арена файтинга Neon Clash"></canvas>
+      <canvas id="game" width="1280" height="720" data-i18n-aria="app.arena" aria-label="Neon Clash fight arena"></canvas>
 
       <!-- Сенсорное управление -->
       <div id="touch">
         <div class="pad" id="pad1">
-          <div class="dpad" id="dpad1" role="group" aria-label="Крестовина игрока 1">
-            <button class="dpad-btn dpad-up" data-dir="up" aria-label="Прыжок">▲</button>
-            <button class="dpad-btn dpad-left" data-dir="left" aria-label="Влево">◀</button>
+          <div class="dpad" id="dpad1" role="group" data-i18n-aria="controls.pad1" aria-label="Player 1 D-pad">
+            <button class="dpad-btn dpad-up" data-dir="up" data-i18n-aria="controls.jump" aria-label="Jump">▲</button>
+            <button class="dpad-btn dpad-left" data-dir="left" data-i18n-aria="controls.left" aria-label="Left">◀</button>
             <span class="dpad-center" aria-hidden="true"></span>
-            <button class="dpad-btn dpad-right" data-dir="right" aria-label="Вправо">▶</button>
-            <button class="dpad-btn dpad-down" data-dir="down" aria-label="Присед">▼</button>
+            <button class="dpad-btn dpad-right" data-dir="right" data-i18n-aria="controls.right" aria-label="Right">▶</button>
+            <button class="dpad-btn dpad-down" data-dir="down" data-i18n-aria="controls.crouch" aria-label="Crouch">▼</button>
           </div>
           <div class="btns">
-            <button class="tbtn tblock" data-action="block"><span>БЛОК</span></button>
-            <button class="tbtn tspecial" data-action="special"><span>СПЕЦ</span></button>
-            <button class="tbtn tkick" data-action="kick"><span>НОГА</span></button>
-            <button class="tbtn tpunch" data-action="punch"><span>РУКА</span></button>
+            <button class="tbtn tblock" data-action="block"><span data-i18n="controls.block">BLOCK</span></button>
+            <button class="tbtn tspecial" data-action="special"><span data-i18n="controls.special">SPEC</span></button>
+            <button class="tbtn tkick" data-action="kick"><span data-i18n="controls.kick">KICK</span></button>
+            <button class="tbtn tpunch" data-action="punch"><span data-i18n="controls.punch">PUNCH</span></button>
           </div>
         </div>
 
         <div class="pad" id="pad2">
-          <div class="dpad" id="dpad2" role="group" aria-label="Крестовина игрока 2">
-            <button class="dpad-btn dpad-up" data-dir="up" aria-label="Прыжок">▲</button>
-            <button class="dpad-btn dpad-left" data-dir="left" aria-label="Влево">◀</button>
+          <div class="dpad" id="dpad2" role="group" data-i18n-aria="controls.pad2" aria-label="Player 2 D-pad">
+            <button class="dpad-btn dpad-up" data-dir="up" data-i18n-aria="controls.jump" aria-label="Jump">▲</button>
+            <button class="dpad-btn dpad-left" data-dir="left" data-i18n-aria="controls.left" aria-label="Left">◀</button>
             <span class="dpad-center" aria-hidden="true"></span>
-            <button class="dpad-btn dpad-right" data-dir="right" aria-label="Вправо">▶</button>
-            <button class="dpad-btn dpad-down" data-dir="down" aria-label="Присед">▼</button>
+            <button class="dpad-btn dpad-right" data-dir="right" data-i18n-aria="controls.right" aria-label="Right">▶</button>
+            <button class="dpad-btn dpad-down" data-dir="down" data-i18n-aria="controls.crouch" aria-label="Crouch">▼</button>
           </div>
           <div class="btns">
-            <button class="tbtn tblock" data-action="block"><span>БЛОК</span></button>
-            <button class="tbtn tspecial" data-action="special"><span>СПЕЦ</span></button>
-            <button class="tbtn tkick" data-action="kick"><span>НОГА</span></button>
-            <button class="tbtn tpunch" data-action="punch"><span>РУКА</span></button>
+            <button class="tbtn tblock" data-action="block"><span data-i18n="controls.block">BLOCK</span></button>
+            <button class="tbtn tspecial" data-action="special"><span data-i18n="controls.special">SPEC</span></button>
+            <button class="tbtn tkick" data-action="kick"><span data-i18n="controls.kick">KICK</span></button>
+            <button class="tbtn tpunch" data-action="punch"><span data-i18n="controls.punch">PUNCH</span></button>
           </div>
         </div>
       </div>
 
       <!-- Служебные кнопки -->
       <div id="sysBtns" class="hidden">
-        <button id="pauseBtn" class="sys-btn" aria-label="Пауза">❚❚</button>
-        <button id="soundBtn" class="sys-btn" aria-label="Звук">♪</button>
+        <button id="pauseBtn" class="sys-btn" data-i18n-aria="pause.title" aria-label="Pause">❚❚</button>
+        <button id="soundBtn" class="sys-btn" data-i18n-aria="sound.mute" aria-label="Sound">♪</button>
       </div>
 
       <!-- Главное меню -->
@@ -65,59 +65,63 @@
         <div class="menu-inner">
           <div class="logo" aria-label="Neon Clash">
             <div class="logo-line"><span class="logo-neon">NEON</span><span class="logo-clash">CLASH</span></div>
-            <div class="logo-sub">НЕОНОВЫЙ ФАЙТИНГ <b>·</b> MVP</div>
+            <div class="logo-sub" data-i18n-html="menu.tagline">NEON FIGHTING <b>·</b> MVP</div>
           </div>
 
           <div class="menu-buttons">
             <button class="menu-btn primary" id="btn1p">
-              <span class="mb-main">1 ИГРОК</span>
-              <span class="mb-sub">против ИИ</span>
+              <span class="mb-main" data-i18n="menu.p1">1 PLAYER</span>
+              <span class="mb-sub" data-i18n="menu.p1sub">vs AI</span>
             </button>
             <button class="menu-btn" id="btn2p">
-              <span class="mb-main">2 ИГРОКА</span>
-              <span class="mb-sub">на одном экране</span>
+              <span class="mb-main" data-i18n="menu.p2">2 PLAYERS</span>
+              <span class="mb-sub" data-i18n="menu.p2sub">on one screen</span>
             </button>
             <button class="menu-btn link" id="btnLink">
-              <span class="mb-main">ПО BLUETOOTH</span>
-              <span class="mb-sub">игра рядом</span>
+              <span class="mb-main" data-i18n="menu.link">VIA BLUETOOTH</span>
+              <span class="mb-sub" data-i18n="menu.linksub">play nearby</span>
             </button>
             <button class="menu-btn ghost" id="btnHelp">
-              <span class="mb-main">КАК ИГРАТЬ</span>
+              <span class="mb-main" data-i18n="menu.help">HOW TO PLAY</span>
             </button>
           </div>
 
-          <div class="menu-foot">Поверни телефон горизонтально · надень наушники</div>
+          <div class="menu-lang">
+            <label for="langSelect" data-i18n="menu.language">LANGUAGE</label>
+            <select id="langSelect" data-i18n-aria="menu.language" aria-label="Language"></select>
+          </div>
+
+          <div class="menu-foot" data-i18n="menu.footer">Turn your phone horizontal · headphones on</div>
         </div>
       </div>
 
       <!-- Помощь -->
       <div id="help" class="overlay hidden">
         <div class="panel">
-          <h2>КАК ИГРАТЬ</h2>
+          <h2 data-i18n="help.title">HOW TO PLAY</h2>
           <div class="help-cols">
             <div class="help-col">
-              <h3>1 ИГРОК</h3>
-              <p><b>Крестовина</b> — движение. Вверх — прыжок, вниз — присед.</p>
-              <p><b>РУКА</b> — быстрый удар. Не попадает по присевшему сопернику.</p>
-              <p><b>НОГА</b> — сильный удар. Пробивает присед.</p>
-              <p><b>БЛОК</b> — держи, чтобы защищаться. В воздухе не работает.</p>
-              <p><b>СПЕЦ</b> — особая атака. Нужно 50 энергии.</p>
-              <p><b>КОМБО</b> — РУКА→РУКА «Двойка», РУКА→РУКА→НОГА «Шквал», НОГА→РУКА «Смена». Главное — попасть первым ударом.</p>
-              <p><b>ВОЛЬТ</b> — плазма. <b>БЛЕЙЗ</b> — ударная волна.</p>
-              <p><b>НИКС</b> — рывок. <b>МИРА</b> — веер осколков. <b>СТОРМ</b> — молния.</p>
+              <h3 data-i18n="help.p1title">1 PLAYER</h3>
+              <p data-i18n-html="help.move"><b>D-PAD</b> — move. Up to jump, down to crouch.</p>
+              <p data-i18n-html="help.punch"><b>PUNCH</b> — fast strike. Whiffs on a crouching opponent.</p>
+              <p data-i18n-html="help.kick"><b>KICK</b> — heavy strike. Breaks crouch.</p>
+              <p data-i18n-html="help.block"><b>BLOCK</b> — hold to defend. Does not work in the air.</p>
+              <p data-i18n-html="help.special"><b>SPECIAL</b> — unique attack. Costs 50 energy.</p>
+              <p data-i18n-html="help.combo"><b>COMBO</b> — PUNCH→PUNCH “Double”, PUNCH→PUNCH→KICK “Flurry”, KICK→PUNCH “Switch”. Land the first hit to continue.</p>
+              <p data-i18n-html="help.roster"><b>VOLT</b> — plasma. <b>BLAZE</b> — shockwave. <b>NYX</b> — dash. <b>MIRA</b> — shard fan. <b>STORM</b> — lightning.</p>
             </div>
             <div class="help-col">
-              <h3>2 ИГРОКА</h3>
-              <p>Экран делится пополам: у каждого своя крестовина и кнопки.</p>
-              <p>Игрок 1 — слева, игрок 2 — справа. Цвета зависят от выбранного бойца.</p>
-              <p>Каждый выбирает бойца на вкладке P1 или P2. Можно выбрать одного и того же — будет зеркальный бой.</p>
-              <h3>КЛАВИАТУРА</h3>
-              <p>P1: <b>A D W S</b> + <b>F</b> рука, <b>G</b> нога, <b>H</b> блок, <b>T</b> спец.</p>
-              <p>P2: <b>← → ↑ ↓</b> + <b>1</b> рука, <b>2</b> нога, <b>3</b> блок, <b>4</b> спец.</p>
-              <p class="help-tip">Энергия растёт, когда ты бьёшь или получаешь урон. Бой — до двух побед.</p>
+              <h3 data-i18n="help.p2title">2 PLAYERS</h3>
+              <p data-i18n="help.split">The screen splits in half: each player gets a D-pad and buttons.</p>
+              <p data-i18n="help.sides">Player 1 is on the left, player 2 on the right. Colors follow the chosen fighter.</p>
+              <p data-i18n="help.mirror">Each player picks a fighter on the P1 or P2 tab. Pick the same one for a mirror match.</p>
+              <h3 data-i18n="help.keyboard">KEYBOARD</h3>
+              <p data-i18n-html="help.keyp1">P1: <b>A D W S</b> + <b>F</b> punch, <b>G</b> kick, <b>H</b> block, <b>T</b> special.</p>
+              <p data-i18n-html="help.keyp2">P2: <b>← → ↑ ↓</b> + <b>1</b> punch, <b>2</b> kick, <b>3</b> block, <b>4</b> special.</p>
+              <p class="help-tip" data-i18n="help.tip">Energy builds when you hit or take damage. First to two round wins takes the fight.</p>
             </div>
           </div>
-          <button class="menu-btn primary wide" id="btnHelpClose">ПОНЯТНО</button>
+          <button class="menu-btn primary wide" id="btnHelpClose" data-i18n="help.close">GOT IT</button>
         </div>
       </div>
 
@@ -125,8 +129,8 @@
       <div id="select" class="overlay hidden">
         <div class="panel select-panel">
           <div class="select-head">
-            <div class="select-kicker" id="selectKicker">1 ИГРОК · ПРОТИВ ИИ</div>
-            <h2 id="selectTitle">ВЫБЕРИ БОЙЦА</h2>
+            <div class="select-kicker" id="selectKicker"></div>
+            <h2 id="selectTitle"></h2>
             <div class="select-tabs" id="selectTabs" hidden>
               <button class="select-tab active" data-player="0">P1</button>
               <button class="select-tab" data-player="1">P2</button>
@@ -135,57 +139,57 @@
 
           <div class="fighter-grid">
             <button class="fighter-card" data-char="volt" aria-pressed="true">
-              <span class="fc-top"><span class="fc-badge">БЫСТРЫЙ</span><span class="fc-role"></span></span>
+              <span class="fc-top"><span class="fc-badge" data-i18n="char.volt.badge">FAST</span><span class="fc-role"></span></span>
               <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
-              <span class="fc-name">ВОЛЬТ</span>
-              <span class="fc-special">ПЛАЗМА</span>
+              <span class="fc-name" data-i18n="char.volt.name">VOLT</span>
+              <span class="fc-special" data-i18n="char.volt.short">PLASMA</span>
             </button>
 
             <button class="fighter-card" data-char="blaze" aria-pressed="false">
-              <span class="fc-top"><span class="fc-badge">ТЯЖЁЛЫЙ</span><span class="fc-role"></span></span>
+              <span class="fc-top"><span class="fc-badge" data-i18n="char.blaze.badge">HEAVY</span><span class="fc-role"></span></span>
               <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
-              <span class="fc-name">БЛЕЙЗ</span>
-              <span class="fc-special">ВОЛНА</span>
+              <span class="fc-name" data-i18n="char.blaze.name">BLAZE</span>
+              <span class="fc-special" data-i18n="char.blaze.short">WAVE</span>
             </button>
 
             <button class="fighter-card" data-char="nyx" aria-pressed="false">
-              <span class="fc-top"><span class="fc-badge">СКРЫТНЫЙ</span><span class="fc-role"></span></span>
+              <span class="fc-top"><span class="fc-badge" data-i18n="char.nyx.badge">STEALTHY</span><span class="fc-role"></span></span>
               <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
-              <span class="fc-name">НИКС</span>
-              <span class="fc-special">РЫВОК</span>
+              <span class="fc-name" data-i18n="char.nyx.name">NYX</span>
+              <span class="fc-special" data-i18n="char.nyx.short">DASH</span>
             </button>
 
             <button class="fighter-card" data-char="mira" aria-pressed="false">
-              <span class="fc-top"><span class="fc-badge">ЛЕДЯНОЙ</span><span class="fc-role"></span></span>
+              <span class="fc-top"><span class="fc-badge" data-i18n="char.mira.badge">ICY</span><span class="fc-role"></span></span>
               <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
-              <span class="fc-name">МИРА</span>
-              <span class="fc-special">ВЕЕР</span>
+              <span class="fc-name" data-i18n="char.mira.name">MIRA</span>
+              <span class="fc-special" data-i18n="char.mira.short">FAN</span>
             </button>
 
             <button class="fighter-card" data-char="storm" aria-pressed="false">
-              <span class="fc-top"><span class="fc-badge">ГРОЗОВОЙ</span><span class="fc-role"></span></span>
+              <span class="fc-top"><span class="fc-badge" data-i18n="char.storm.badge">STORMBORN</span><span class="fc-role"></span></span>
               <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
-              <span class="fc-name">СТОРМ</span>
-              <span class="fc-special">МОЛНИЯ</span>
+              <span class="fc-name" data-i18n="char.storm.name">STORM</span>
+              <span class="fc-special" data-i18n="char.storm.short">LIGHTNING</span>
             </button>
           </div>
 
           <div class="select-detail">
-            <span class="sd-name" id="sdName">ВОЛЬТ</span>
-            <span class="sd-tag" id="sdTag">СКОРОСТЬ · ПЛАЗМА</span>
+            <span class="sd-name" id="sdName"></span>
+            <span class="sd-tag" id="sdTag"></span>
             <span class="sd-special" id="sdSpecial"></span>
             <span class="sd-stats" id="sdStats">
-              <span class="sd-stat"><i>СКОР</i><b><u data-stat="speed"></u></b></span>
-              <span class="sd-stat"><i>СИЛА</i><b><u data-stat="power"></u></b></span>
-              <span class="sd-stat"><i>ДАЛЬН</i><b><u data-stat="range"></u></b></span>
+              <span class="sd-stat"><i data-i18n="select.speed">SPD</i><b><u data-stat="speed"></u></b></span>
+              <span class="sd-stat"><i data-i18n="select.power">PWR</i><b><u data-stat="power"></u></b></span>
+              <span class="sd-stat"><i data-i18n="select.range">RNG</i><b><u data-stat="range"></u></b></span>
             </span>
           </div>
 
           <div class="select-summary" id="selectSummary"></div>
 
           <div class="select-actions">
-            <button class="menu-btn ghost" id="btnSelectBack"><span class="mb-main">НАЗАД</span></button>
-            <button class="menu-btn primary" id="btnSelectFight"><span class="mb-main">В БОЙ</span></button>
+            <button class="menu-btn ghost" id="btnSelectBack"><span class="mb-main" data-i18n="select.back">BACK</span></button>
+            <button class="menu-btn primary" id="btnSelectFight"><span class="mb-main">FIGHT</span></button>
           </div>
         </div>
       </div>
@@ -193,40 +197,40 @@
       <!-- Bluetooth / рядом -->
       <div id="link" class="overlay hidden">
         <div class="panel link-panel">
-          <div class="link-kicker" id="linkKicker">ИГРА РЯДОМ · BLUETOOTH / WI-FI</div>
-          <h2>ПО BLUETOOTH</h2>
-          <div class="link-char" id="linkChar">ТВОЙ БОЁЦ: ВОЛЬТ</div>
+          <div class="link-kicker" id="linkKicker" data-i18n="link.kicker">PLAY NEARBY · BLUETOOTH / WI-FI</div>
+          <h2 data-i18n="link.title">VIA BLUETOOTH</h2>
+          <div class="link-char" id="linkChar"></div>
 
-          <div class="link-transport" id="linkTransport" role="group" aria-label="Способ связи">
+          <div class="link-transport" id="linkTransport" role="group" aria-label="Connection method">
             <button class="link-transport-btn active" data-transport="nearby">
-              <b>NEARBY</b><span>Bluetooth + Wi-Fi</span>
+              <b data-i18n="link.nearby">NEARBY</b><span data-i18n="link.nearbySub">Bluetooth + Wi-Fi</span>
             </button>
             <button class="link-transport-btn" data-transport="ble">
-              <b>ПРЯМОЕ BLE</b><span>без Wi-Fi</span>
+              <b data-i18n="link.ble">DIRECT BLE</b><span data-i18n="link.bleSub">no Wi-Fi</span>
             </button>
           </div>
 
-          <div class="link-status" id="linkStatus">ПРОВЕРКА СВЯЗИ...</div>
+          <div class="link-status" id="linkStatus"></div>
 
           <div class="link-roles" id="linkRoles">
             <button class="menu-btn primary" id="btnHost">
-              <span class="mb-main">СОЗДАТЬ ИГРУ</span>
-              <span class="mb-sub">стать хостом</span>
+              <span class="mb-main" data-i18n="link.host">CREATE GAME</span>
+              <span class="mb-sub" data-i18n="link.hostSub">become host</span>
             </button>
             <button class="menu-btn" id="btnJoin">
-              <span class="mb-main">ПОДКЛЮЧИТЬСЯ</span>
-              <span class="mb-sub">найти рядом</span>
+              <span class="mb-main" data-i18n="link.join">JOIN</span>
+              <span class="mb-sub" data-i18n="link.joinSub">find nearby</span>
             </button>
           </div>
 
           <div class="link-endpoints hidden" id="linkEndpoints"></div>
 
           <div class="link-actions">
-            <button class="menu-btn ghost" id="btnLinkBack"><span class="mb-main">НАЗАД</span></button>
-            <button class="menu-btn primary hidden" id="btnLinkStart"><span class="mb-main">НАЧАТЬ БОЙ</span></button>
+            <button class="menu-btn ghost" id="btnLinkBack"><span class="mb-main" data-i18n="link.back">BACK</span></button>
+            <button class="menu-btn primary hidden" id="btnLinkStart"><span class="mb-main" data-i18n="link.start">START FIGHT</span></button>
           </div>
 
-          <p class="link-note" id="linkNote">Нужны два Android-телефона с включённым Bluetooth. NEARBY использует Bluetooth + Wi-Fi; ПРЯМОЕ BLE работает по Bluetooth без Wi-Fi. При обрыве связь восстанавливается автоматически.</p>
+          <p class="link-note" id="linkNote" data-i18n="link.note">Two Android phones with Bluetooth on are required. NEARBY uses Bluetooth + Wi-Fi; DIRECT BLE uses Bluetooth only. The match reconnects automatically after a dropout.</p>
         </div>
       </div>
 
@@ -234,19 +238,19 @@
       <div id="linkNotice" class="hidden">
         <div class="link-notice-card">
           <div class="link-spinner"></div>
-          <div id="linkNoticeText">ПЕРЕПОДКЛЮЧЕНИЕ...</div>
-          <small>не выключай Bluetooth · бой продолжится сам</small>
+          <div id="linkNoticeText" data-i18n="link.reconnecting">RECONNECTING...</div>
+          <small data-i18n="link.reconnectHint">keep Bluetooth on · the fight will resume</small>
         </div>
       </div>
 
       <!-- Пауза -->
       <div id="pause" class="overlay hidden">
         <div class="panel narrow">
-          <h2>ПАУЗА</h2>
+          <h2 data-i18n="pause.title">PAUSE</h2>
           <div class="menu-buttons">
-            <button class="menu-btn primary" id="btnResume">ПРОДОЛЖИТЬ</button>
-            <button class="menu-btn" id="btnRestart">ЗАНОВО</button>
-            <button class="menu-btn ghost" id="btnQuit">В МЕНЮ</button>
+            <button class="menu-btn primary" id="btnResume" data-i18n="pause.resume">RESUME</button>
+            <button class="menu-btn" id="btnRestart" data-i18n="pause.restart">RESTART</button>
+            <button class="menu-btn ghost" id="btnQuit" data-i18n="pause.quit">MENU</button>
           </div>
         </div>
       </div>
@@ -254,12 +258,12 @@
       <!-- Итог боя -->
       <div id="result" class="overlay hidden">
         <div class="panel narrow">
-          <div class="result-kicker" id="resultKicker">БОЙ ОКОНЧЕН</div>
-          <h2 id="resultTitle">ПОБЕДА</h2>
+          <div class="result-kicker" id="resultKicker"></div>
+          <h2 id="resultTitle"></h2>
           <p class="result-sub" id="resultSub"></p>
           <div class="menu-buttons">
-            <button class="menu-btn primary" id="btnRematch">РЕВАНШ</button>
-            <button class="menu-btn ghost" id="btnResultMenu">В МЕНЮ</button>
+            <button class="menu-btn primary" id="btnRematch" data-i18n="result.rematch">REMATCH</button>
+            <button class="menu-btn ghost" id="btnResultMenu" data-i18n="result.menu">MENU</button>
           </div>
         </div>
       </div>
@@ -267,8 +271,8 @@
       <!-- Поверни телефон -->
       <div id="rotate">
         <div class="rotate-icon">▯</div>
-        <div class="rotate-text">ПОВЕРНИ ТЕЛЕФОН</div>
-        <div class="rotate-sub">игра создана для горизонтального экрана</div>
+        <div class="rotate-text" data-i18n="rotate.title">ROTATE YOUR PHONE</div>
+        <div class="rotate-sub" data-i18n="rotate.sub">this game is made for landscape</div>
       </div>
     </div>
   </div>

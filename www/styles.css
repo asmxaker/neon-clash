@@ -437,6 +437,46 @@ body {
 
 .menu-btn.wide { width: 100%; }
 
+.menu-lang {
+  position: absolute;
+  top: clamp(8px, 2vh, 18px);
+  right: clamp(10px, 2vw, 22px);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.menu-lang label {
+  font-size: clamp(7px, 1.2vh, 9px);
+  font-weight: 800;
+  letter-spacing: .16em;
+  color: rgba(170, 185, 225, 0.55);
+}
+
+.menu-lang select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 112px;
+  padding: 5px 24px 5px 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(53, 240, 255, 0.34);
+  background:
+    linear-gradient(45deg, transparent 50%, rgba(53, 240, 255, 0.9) 50%) calc(100% - 12px) 50% / 5px 5px no-repeat,
+    linear-gradient(135deg, rgba(53, 240, 255, 0.9) 50%, transparent 50%) calc(100% - 7px) 50% / 5px 5px no-repeat,
+    rgba(6, 10, 22, 0.9);
+  color: #d8fbff;
+  font-family: inherit;
+  font-size: clamp(9px, 1.5vh, 11px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.menu-lang select:focus { outline: 1px solid rgba(53, 240, 255, 0.6); }
+.menu-lang select option { background: #0a0618; color: #e8fbff; }
+
 .menu-foot {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: clamp(8px, 1.4vh, 12px);

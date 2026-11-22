@@ -8,6 +8,7 @@ import { AIController } from './ai.js';
 import { LinkManager } from './link.js';
 import { BleLinkManager } from './ble-link.js';
 import { audio } from './audio.js';
+import { initI18n, getLang, setLang, LANGS, t, charText, onLangChange } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -60,6 +61,9 @@ const btnLinkBack = $('btnLinkBack');
 const linkNotice = $('linkNotice');
 const linkNoticeText = $('linkNoticeText');
 const transportBtns = [...document.querySelectorAll('.link-transport-btn')];
+const langSelect = $('langSelect');
+
+initI18n();
 
 const controllers = makePlayerControllers();
 const ai = new AIController();
@@ -136,10 +140,10 @@ function bindLinkEvents(mgr) {
       updateLinkCharLine();
       if (mgr.role === 'host') {
         btnLinkStart.classList.remove('hidden');
-        linkStatus.textContent = 'ИГРОК ПОДКЛЮЧЁН · МОЖНО НАЧИНАТЬ';
+        linkStatus.textContent = t('status.peerHost');
         linkStatus.className = 'link-status ok';
       } else {
-        linkStatus.textContent = 'ПОДКЛЮЧЕНО · ЖДЁМ ХОСТА';
+        linkStatus.textContent = t('status.peerGuest');
         linkStatus.className = 'link-status ok';
       }
       if (char) audio.ui();
@@ -149,11 +153,11 @@ function bindLinkEvents(mgr) {
     onDisconnected: (reason) => handleLinkDisconnected(reason),
     onReconnecting: (reason) => {
       if (linkNotice) {
-        linkNoticeText.textContent = 'ПЕРЕПОДКЛЮЧЕНИЕ...';
+        linkNoticeText.textContent = t('link.reconnecting');
         linkNotice.classList.remove('hidden');
       }
       if (linkStatus) {
-        linkStatus.textContent = reason || 'ПЕРЕПОДКЛЮЧЕНИЕ...';
+        linkStatus.textContent = reason || t('link.reconnecting');
         linkStatus.className = 'link-status warn';
       }
       if (game.netHost) game.setPaused(true);
@@ -164,18 +168,40 @@ function bindLinkEvents(mgr) {
     },
     onReconnectFailed: () => {
       linkNotice?.classList.add('hidden');
-      handleLinkDisconnected('НЕ УДАЛОСЬ ПЕРЕПОДКЛЮЧИТЬСЯ');
+      handleLinkDisconnected(t('link.reconnectFailed'));
     }
   });
   window.__link = mgr;
 }
 bindLinkEvents(link);
 
+// ---------------------------------------------------------------- язык
+
+if (langSelect) {
+  for (const l of LANGS) {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = l.label;
+    langSelect.appendChild(opt);
+  }
+  langSelect.value = getLang();
+  langSelect.addEventListener('change', () => {
+    setLang(langSelect.value);
+    audio.ui();
+  });
+}
+
+onLangChange(() => {
+  updateSelectUI();
+  updateSoundIcon();
+  updateLinkCharLine();
+});
+
 // ---------------------------------------------------------------- звук
 
 function updateSoundIcon() {
   soundBtn.textContent = audio.muted ? '✕' : '♪';
-  soundBtn.title = audio.muted ? 'Включить звук' : 'Выключить звук';
+  soundBtn.title = audio.muted ? t('sound.unmute') : t('sound.mute');
 }
 updateSoundIcon();
 
@@ -198,16 +224,20 @@ function hideAllOverlays() {
 
 function updateSelectUI() {
   if (selectMode !== '2p') selectActive = 0;
-  const p1 = getCharacter(selectPicks[0]);
-  const p2 = getCharacter(selectPicks[1]);
-  const ai = getCharacter(aiPick);
+  const p1Char = getCharacter(selectPicks[0]);
+  const p2Char = getCharacter(selectPicks[1]);
+  const aiChar = getCharacter(aiPick);
   const activeChar = getCharacter(selectPicks[selectActive] || selectPicks[0]);
+  const p1 = charText(p1Char.id);
+  const p2 = charText(p2Char.id);
+  const ai = charText(aiChar.id);
+  const activeText = charText(activeChar.id);
 
   for (const card of fighterCards) {
     const id = card.dataset.char;
-    const isP1 = p1.id === id;
-    const isP2 = selectMode === '2p' && p2.id === id;
-    const isAI = selectMode === '1p' && ai.id === id;
+    const isP1 = p1Char.id === id;
+    const isP2 = selectMode === '2p' && p2Char.id === id;
+    const isAI = selectMode === '1p' && aiChar.id === id;
     const isActive = activeChar.id === id;
     card.classList.toggle('selected', isActive);
     card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -228,10 +258,10 @@ function updateSelectUI() {
           role.textContent = '';
         }
       } else if (isP1) {
-        role.textContent = 'ТЫ';
+        role.textContent = t('select.you');
         role.classList.add('p1');
       } else if (isAI) {
-        role.textContent = 'ИИ';
+        role.textContent = t('select.ai');
         role.classList.add('ai');
       } else {
         role.textContent = '';
@@ -240,23 +270,23 @@ function updateSelectUI() {
   }
 
   if (selectMode === 'link') {
-    selectKicker.textContent = 'ИГРА РЯДОМ · BLUETOOTH / WI-FI';
-    selectTitle.textContent = 'ВЫБЕРИ БОЙЦА';
+    selectKicker.textContent = t('select.kLink');
+    selectTitle.textContent = t('select.tLink');
   } else if (selectMode === '2p') {
-    selectKicker.textContent = '2 ИГРОКА · ВЫБЕРИТЕ БОЙЦОВ';
-    selectTitle.textContent = 'ВЫБЕРИТЕ БОЙЦОВ';
+    selectKicker.textContent = t('select.k2');
+    selectTitle.textContent = t('select.t2');
   } else {
-    selectKicker.textContent = '1 ИГРОК · ПРОТИВ ИИ';
-    selectTitle.textContent = 'ВЫБЕРИ БОЙЦА';
+    selectKicker.textContent = t('select.k1');
+    selectTitle.textContent = t('select.t1');
   }
   selectTabs.hidden = selectMode !== '2p';
   for (const tab of selectTabEls) {
     tab.classList.toggle('active', Number(tab.dataset.player) === selectActive);
   }
 
-  sdName.textContent = activeChar.name;
-  sdTag.textContent = activeChar.tagline;
-  sdSpecial.innerHTML = `<b>СПЕЦ</b> ${activeChar.specialName} — ${activeChar.specialDesc}`;
+  sdName.textContent = activeText.name;
+  sdTag.textContent = activeText.tagline;
+  sdSpecial.innerHTML = t('select.special', { name: activeText.specialName, desc: activeText.specialDesc });
   selectDetail.style.setProperty('--sel-color', activeChar.color);
   for (const bar of sdStats) {
     const stat = bar.dataset.stat;
@@ -264,12 +294,14 @@ function updateSelectUI() {
   }
 
   if (selectMode === '2p') {
-    const mirror = p1.id === p2.id;
-    selectSummary.innerHTML = `P1: <b>${p1.name}</b> · P2: <b>${p2.name}</b>${mirror ? '<span class="mirror"> · ЗЕРКАЛО</span>' : ''}`;
+    const mirror = p1Char.id === p2Char.id;
+    selectSummary.innerHTML = t('select.sum2', {
+      p1: p1.name, p2: p2.name, mirror: mirror ? t('select.mirror') : ''
+    });
   } else if (selectMode === 'link') {
-    selectSummary.innerHTML = `ТВОЙ БОЁЦ: <b>${p1.name}</b> · <span class="mirror">РЯДОМ</span>`;
+    selectSummary.innerHTML = t('select.sumLink', { p1: p1.name });
   } else {
-    selectSummary.innerHTML = `ИГРОК: <b>${p1.name}</b> · ИИ: <b>${ai.name}</b>`;
+    selectSummary.innerHTML = t('select.sum1', { p1: p1.name, ai: ai.name });
   }
 }
 
@@ -280,7 +312,7 @@ function openSelect(mode) {
   selectPicks[0] = p1.id;
   selectPicks[1] = randomCharacterExcept(p1.id).id;
   aiPick = randomCharacterExcept(p1.id).id;
-  btnSelectFightLabel.textContent = mode === 'link' ? 'К СВЯЗИ' : 'В БОЙ';
+  btnSelectFightLabel.textContent = mode === 'link' ? t('select.toLink') : t('select.fight');
   updateSelectUI();
   audio.unlock();
   audio.ui();
@@ -366,11 +398,11 @@ btnHelpClose.addEventListener('click', () => {
 // ---------------------------------------------------------------- Bluetooth / link
 
 function updateLinkCharLine() {
-  const own = getCharacter(linkCharId);
-  const peer = link.peerChar ? getCharacter(link.peerChar) : null;
+  const own = charText(getCharacter(linkCharId).id);
+  const peer = link.peerChar ? charText(getCharacter(link.peerChar).id) : null;
   linkChar.textContent = peer
-    ? `ТЫ: ${own.name} · СОПЕРНИК: ${peer.name}`
-    : `ТВОЙ БОЁЦ: ${own.name}`;
+    ? t('link.charBoth', { own: own.name, peer: peer.name })
+    : t('link.charOwn', { name: own.name });
 }
 
 function resetLinkRoles() {
@@ -390,7 +422,7 @@ function renderLinkEndpoints(list) {
   for (const ep of list) {
     const b = document.createElement('button');
     b.className = 'link-endpoint';
-    b.textContent = ep.endpointName || 'ИГРОК РЯДОМ';
+    b.textContent = ep.endpointName || t('link.playerNearby');
     b.addEventListener('click', () => {
       audio.ui();
       linkEndpoints.classList.add('hidden');
@@ -432,7 +464,7 @@ function openLinkLobby(charId) {
   updateLinkCharLine();
   updateTransportUI();
   const isBle = link.transport === 'ble';
-  linkStatus.textContent = 'ПРОВЕРКА СВЯЗИ...';
+  linkStatus.textContent = t('link.checking');
   linkStatus.className = 'link-status';
   resetLinkRoles();
   linkNotice?.classList.add('hidden');
@@ -452,9 +484,7 @@ function openLinkLobby(charId) {
   mgr.prepare().then((ok) => {
     if (mgr !== link || linkEl.classList.contains('hidden')) return;
     if (!ok) {
-      linkStatus.textContent = isBle
-        ? 'ПРЯМОЕ BLE ДОСТУПНО ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ'
-        : 'ДОСТУПНО ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ';
+      linkStatus.textContent = isBle ? t('link.bleAndroidOnly') : t('link.androidOnly');
       linkStatus.className = 'link-status error';
       btnHost.disabled = true;
       btnJoin.disabled = true;
@@ -463,9 +493,7 @@ function openLinkLobby(charId) {
     btnHost.disabled = false;
     btnJoin.disabled = false;
     btnLinkStart.classList.add('hidden');
-    linkStatus.textContent = isBle
-      ? 'ПРЯМОЕ BLE · ВЫБЕРИ РОЛЬ: ХОСТ ИЛИ ГОСТЬ'
-      : 'NEARBY · ВЫБЕРИ РОЛЬ: ХОСТ ИЛИ ГОСТЬ';
+    linkStatus.textContent = isBle ? t('link.bleRolePrompt') : t('link.rolePrompt');
     linkStatus.className = 'link-status';
   });
 }
@@ -566,13 +594,13 @@ function handleLinkDisconnected(reason) {
     linkEl.classList.remove('hidden');
     updateLinkCharLine();
     resetLinkRoles();
-    linkStatus.textContent = reason || 'СВЯЗЬ ПОТЕРЯНА';
+    linkStatus.textContent = reason || t('link.connectionLost');
     linkStatus.className = 'link-status error';
     btnHost.disabled = !link.available;
     btnJoin.disabled = !link.available;
     audio.ui();
   } else {
-    linkStatus.textContent = reason || 'СВЯЗЬ ПОТЕРЯНА';
+    linkStatus.textContent = reason || t('link.connectionLost');
     linkStatus.className = 'link-status error';
     resetLinkRoles();
     btnHost.disabled = !link.available;
@@ -595,7 +623,7 @@ btnHost.addEventListener('click', async () => {
     resetLinkRoles();
     btnHost.disabled = !link.available;
     btnJoin.disabled = !link.available;
-    linkStatus.textContent = 'НЕ УДАЛОСЬ НАЧАТЬ: ' + (e?.message || 'ОШИБКА');
+    linkStatus.textContent = t('link.hostFailed', { msg: e?.message || t('status.failed') });
     linkStatus.className = 'link-status error';
   }
 });
@@ -616,7 +644,7 @@ btnJoin.addEventListener('click', async () => {
     resetLinkRoles();
     btnHost.disabled = !link.available;
     btnJoin.disabled = !link.available;
-    linkStatus.textContent = 'НЕ УДАЛОСЬ ИСКАТЬ: ' + (e?.message || 'ОШИБКА');
+    linkStatus.textContent = t('link.searchFailed', { msg: e?.message || t('status.failed') });
     linkStatus.className = 'link-status error';
   }
 });
@@ -693,7 +721,7 @@ btnResultMenu.addEventListener('click', quitToMenu);
 btnRematch.addEventListener('click', () => {
   if (game.netGuest) {
     link.requestRematch();
-    resultSub.textContent = 'ЗАПРОС ОТПРАВЛЕН · ЖДЁМ ХОСТА';
+    resultSub.textContent = t('result.requestSent');
     return;
   }
   if (game.netHost) {
@@ -743,18 +771,18 @@ function handleMatchEnd(winner) {
     const p1Won = winner === 0;
     const twoP = game.mode === '2p' || game.mode === 'link';
     const winnerF = game.fighters[winner];
-    resultKicker.textContent = 'БОЙ ОКОНЧЕН';
+    resultKicker.textContent = t('result.kicker');
     if (twoP) {
-      resultTitle.textContent = p1Won ? 'ПОБЕДА ИГРОКА 1' : 'ПОБЕДА ИГРОКА 2';
+      resultTitle.textContent = p1Won ? t('result.win1') : t('result.win2');
     } else {
-      resultTitle.textContent = p1Won ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ';
+      resultTitle.textContent = p1Won ? t('result.win') : t('result.lose');
     }
     resultTitle.classList.remove('win1', 'win2');
     if (winnerF) {
       resultTitle.style.color = winnerF.color;
       resultTitle.style.textShadow = `0 0 24px ${winnerF.color}`;
     }
-    resultSub.textContent = `${winnerF ? `${winnerF.name} · ` : ''}Счёт раундов ${game.wins[0]} : ${game.wins[1]} · до двух побед`;
+    resultSub.textContent = `${winnerF ? `${winnerF.name} · ` : ''}${t('result.score', { w0: game.wins[0], w1: game.wins[1] })}`;
     result.classList.remove('hidden');
     audio.ui();
   }, 900);

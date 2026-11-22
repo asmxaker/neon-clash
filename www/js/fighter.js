@@ -2,6 +2,7 @@
 
 import { audio } from './audio.js';
 import { getCharacter } from './characters.js';
+import { t } from './i18n.js';
 
 export const GROUND_Y = 604;
 export const ARENA = { left: 112, right: 1168 };
@@ -57,10 +58,10 @@ export const ATTACKS = {
 };
 
 const COMBOS = [
-  { seq: ['punch', 'punch', 'kick'], name: 'ШКВАЛ', damage: 1.55, kb: 1.45, hitstun: 1.2, startup: 0.88, recovery: 1.0 },
-  { seq: ['punch', 'kick'], name: 'КРЮК', damage: 1.3, kb: 1.15, startup: 0.95 },
-  { seq: ['kick', 'punch'], name: 'СМЕНА', damage: 1.35, startup: 0.9, recovery: 0.95 },
-  { seq: ['punch', 'punch'], name: 'ДВОЙКА', damage: 1.28, startup: 0.9, recovery: 0.92 }
+  { seq: ['punch', 'punch', 'kick'], name: 'flurry', damage: 1.55, kb: 1.45, hitstun: 1.2, startup: 0.88, recovery: 1.0 },
+  { seq: ['punch', 'kick'], name: 'hook', damage: 1.3, kb: 1.15, startup: 0.95 },
+  { seq: ['kick', 'punch'], name: 'switch', damage: 1.35, startup: 0.9, recovery: 0.95 },
+  { seq: ['punch', 'punch'], name: 'double', damage: 1.28, startup: 0.9, recovery: 0.92 }
 ];
 
 function findCombo(chain) {
@@ -89,7 +90,7 @@ export class Fighter {
     this.special = char.special;
     this.color = variant === 1 && char.altColor ? char.altColor : char.color;
     this.accent = variant === 1 && char.altAccent ? char.altAccent : char.accent;
-    this.name = char.name;
+    this.name = t(`char.${char.id}.name`);
     this.maxHealth = char.hp;
     this.walkSpeed = char.walkSpeed;
     this.airSpeed = char.airSpeed;
