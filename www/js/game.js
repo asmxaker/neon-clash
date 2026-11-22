@@ -30,6 +30,29 @@ function hexA(hex, a) {
 
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 
+// Гость рендерит не последний снапшот, а точку между двумя последними.
+// Это убирает рывки при неравномерной доставке пакетов (jitter buffer).
+function blendSnapshots(a, b, alpha) {
+  if (!a || !b || a === b) return b;
+  if (a.rd !== b.rd || a.ph !== b.ph) return b;
+  const out = { ...b };
+  if (Array.isArray(a.f) && Array.isArray(b.f)) {
+    out.f = b.f.map((d, i) => {
+      const p = a.f[i];
+      if (!p) return d;
+      return { ...d, x: p.x + (d.x - p.x) * alpha, y: p.y + (d.y - p.y) * alpha };
+    });
+  }
+  if (Array.isArray(a.p) && Array.isArray(b.p) && a.p.length === b.p.length) {
+    out.p = b.p.map((d, i) => {
+      const p = a.p[i];
+      if (!p || p.k !== d.k || p.o !== d.o) return d;
+      return { ...d, x: p.x + (d.x - p.x) * alpha, y: p.y + (d.y - p.y) * alpha };
+    });
+  }
+  return out;
+}
+
 function overlap(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
@@ -624,6 +647,9 @@ export class Game {
     this.netGuest = false;
     this.netHost = false;
     this._snap = null;
+    this._snapBuf = [];
+    this._snapGap = 0.033;
+    this.snapDelay = 0.12;
     this._netPrev = null;
     this.last = performance.now();
     this.dpr = 1;
@@ -675,6 +701,7 @@ export class Game {
     this.netGuest = false;
     this.netHost = false;
     this._snap = null;
+    this._snapBuf = [];
     this._netPrev = null;
     this.projectiles = [];
     this.fx.clear();
@@ -690,6 +717,7 @@ export class Game {
     this.netGuest = false;
     this.netHost = false;
     this._snap = null;
+    this._snapBuf = [];
     this._netPrev = null;
     this.p1CharId = p1CharId;
     this.p2CharId = p2CharId || otherCharacter(p1CharId).id;
@@ -736,6 +764,9 @@ export class Game {
     this.projectiles = [];
     this.fx.clear();
     this._snap = null;
+    this._snapBuf = [];
+    this._snapGap = 0.033;
+    this.snapDelay = 0.12;
     this._netPrev = null;
     this.p1CharId = hostChar;
     this.p2CharId = guestChar;
@@ -747,7 +778,19 @@ export class Game {
   }
 
   receiveSnapshot(snap) {
-    if (!this.netGuest) return;
+    if (!this.netGuest || !snap || !Array.isArray(snap.f)) return;
+    const now = performance.now();
+    const buf = this._snapBuf;
+    const last = buf[buf.length - 1];
+    if (last) {
+      const gap = clamp((now - last.t) / 1000, 0.008, 0.2);
+      this._snapGap += (gap - this._snapGap) * 0.15;
+      // Держим в буфере ~2.4 интервала доставки: этого хватает на дрожание сети,
+      // но задержка остаётся небольшой.
+      this.snapDelay = clamp(this._snapGap * 2.4, 0.09, 0.2);
+    }
+    buf.push({ s: snap, t: now });
+    if (buf.length > 40) buf.shift();
     this._snap = snap;
   }
 
@@ -921,11 +964,22 @@ export class Game {
       this.time += dt;
       this.fx.update(dt);
       for (const f of this.fighters) f.animT += dt;
-      if (this._snap) {
-        const snap = this._snap;
-        this._snap = null;
-        this.applyNetSnapshot(snap);
+      const buf = this._snapBuf;
+      const now = performance.now();
+      // Выбрасываем то, что уже никогда не понадобится для отрисовки.
+      while (buf.length > 2 && now - buf[1].t > 600) buf.shift();
+      if (!buf.length) return;
+      const renderT = now - this.snapDelay * 1000;
+      let i = buf.length - 1;
+      while (i > 0 && buf[i].t > renderT) i--;
+      const a = buf[i];
+      const b = buf[Math.min(i + 1, buf.length - 1)];
+      let snap = b.s;
+      if (a !== b && b.t > a.t) {
+        const alpha = clamp((renderT - a.t) / (b.t - a.t), 0, 1);
+        snap = blendSnapshots(a.s, b.s, alpha);
       }
+      this.applyNetSnapshot(snap);
       return;
     }
 

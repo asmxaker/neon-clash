@@ -37,8 +37,67 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function buildGameSnapshot(game) {
+  const g = game;
+  if (!g || g.screen !== 'match') return null;
+  return {
+    t: 'snap',
+    ph: g.phase,
+    pt: Number(g.phaseT.toFixed(2)),
+    tm: Number(g.timer.toFixed(2)),
+    rd: g.round,
+    w: [g.wins[0], g.wins[1]],
+    rw: g.roundWinner ?? -1,
+    rr: g.roundReason || '',
+    mw: g.matchWinner ?? -1,
+    f: g.fighters.map((f) => ({
+      x: Number(f.x.toFixed(1)),
+      y: Number(f.y.toFixed(1)),
+      vy: Number(f.vy.toFixed(0)),
+      fc: f.facing,
+      hp: Number(f.health.toFixed(1)),
+      mh: f.maxHealth,
+      dh: Number(f.displayHealth.toFixed(1)),
+      m: Number(f.meter.toFixed(1)),
+      st: f.state,
+      stt: Number(f.stateTime.toFixed(2)),
+      at: f.attack?.kind || null,
+      atT: Number(f.attackT.toFixed(2)),
+      as: f.attack ? Number(f.attack.startup.toFixed(3)) : 0,
+      aa: f.attack ? Number(f.attack.active.toFixed(3)) : 0,
+      ar: f.attack ? Number(f.attack.recovery.toFixed(3)) : 0,
+      hs: Number(f.hitstun.toFixed(2)),
+      bs: Number(f.blockstun.toFixed(2)),
+      c: f.combo,
+      ct: Number(f.comboTimer.toFixed(2)),
+      fl: Number(f.flash.toFixed(2)),
+      kt: Number(f.koTime.toFixed(2)),
+      wt: Number(f.winTime.toFixed(2))
+    })),
+    p: g.projectiles.map((p) => ({
+      k: p.kind,
+      x: Number(p.x.toFixed(1)),
+      y: Number(p.y.toFixed(1)),
+      vx: Number(p.vx.toFixed(0)),
+      vy: Number((p.vy || 0).toFixed(0)),
+      r: p.r,
+      hw: p.hitW || 0,
+      hh: p.hitH || 0,
+      o: p.owner,
+      life: Number((p.life || 0).toFixed(2)),
+      dl: Number((p.delay ?? 0).toFixed(2)),
+      sk: p.struck ? 1 : 0,
+      st: Number((p.strikeT || 0).toFixed(2)),
+      color: p.color || '',
+      hd: p.hitDir || 0,
+      ub: p.unblockable ? 1 : 0
+    }))
+  };
+}
+
 export class LinkManager {
   constructor() {
+    this.transport = 'nearby';
     this.plugin = null;
     this.available = false;
     this.prepared = false;
@@ -65,6 +124,15 @@ export class LinkManager {
     this.lastInput = null;
     this.callbacks = {};
     this.disconnecting = false;
+    this.matchActive = false;
+    this.autoReconnect = true;
+    this.reconnecting = false;
+    this.reconnectTimer = null;
+    this.reconnectUntil = 0;
+    this.reconnectAttempts = 0;
+    this.reconnectReason = '';
+    this.autoJoin = false;
+    this.guestController = null;
   }
 
   on(handlers) {
@@ -157,6 +225,12 @@ export class LinkManager {
       if (this.role !== 'guest') return;
       this.found.set(ep.endpointID, ep);
       this.endpoints();
+      if (this.autoJoin && this.reconnecting) {
+        this.autoJoin = false;
+        this.found.clear();
+        this.endpoints();
+        this.connect(ep);
+      }
     });
 
     add('onEndpointLost', (ep) => {
@@ -178,7 +252,7 @@ export class LinkManager {
       this.connected = true;
       this.found.clear();
       this.endpoints();
-      this.status('СОЕДИНЕНИЕ УСТАНОВЛЕНО');
+      this.status(this.reconnecting ? 'ПЕРЕПОДКЛЮЧЕНИЕ...' : 'СОЕДИНЕНИЕ УСТАНОВЛЕНО', this.reconnecting ? 'warn' : 'ok');
       await this.stopScanning();
       this.sendHello();
       this.callbacks.onConnected?.({ endpointID: this.endpointID });
@@ -212,8 +286,8 @@ export class LinkManager {
   }
 
   async startHost(charId) {
+    if (this.connected || this.endpointID || this.reconnecting) await this.disconnect(true);
     this.resetSession();
-    if (this.connected || this.endpointID) await this.disconnect(true);
     this.role = 'host';
     this.ownChar = charId;
     this.peerChar = null;
@@ -232,8 +306,8 @@ export class LinkManager {
   }
 
   async startJoin(charId) {
+    if (this.connected || this.endpointID || this.reconnecting) await this.disconnect(true);
     this.resetSession();
-    if (this.connected || this.endpointID) await this.disconnect(true);
     this.role = 'guest';
     this.ownChar = charId;
     this.peerChar = null;
@@ -244,6 +318,7 @@ export class LinkManager {
     await this.stopScanning();
     try {
       await this.plugin.startDiscovery({});
+      this.status('ИЩЕМ ИГРОКА РЯДОМ...');
     } catch (e) {
       this.status('ПОИСК НЕДОСТУПЕН: ' + (e?.message || 'ОШИБКА'), 'error');
       throw e;
@@ -271,8 +346,22 @@ export class LinkManager {
   sendStart(hostChar, guestChar) {
     this.ownChar = hostChar;
     this.peerChar = guestChar;
+    this.matchActive = true;
     this.sendControl({ t: 'start', hostChar, guestChar });
     this.stopScanning();
+    this.status('БОЙ');
+  }
+
+  sendResume() {
+    const g = this.hostGame;
+    const hostChar = g?.p1CharId || this.ownChar;
+    const guestChar = g?.p2CharId || this.peerChar;
+    this.sendControl({
+      t: 'resume',
+      hostChar,
+      guestChar,
+      snap: this.buildSnapshot()
+    });
     this.status('БОЙ');
   }
 
@@ -314,7 +403,7 @@ export class LinkManager {
     if (!msg) return;
     this.sending = true;
     try {
-      await this.plugin.sendPayload({ endpointID: this.endpointID, payload: JSON.stringify(msg) });
+      await this.sendRaw(JSON.stringify(msg));
     } catch (e) {
       this.status('ОШИБКА ОТПРАВКИ', 'warn');
     } finally {
@@ -323,62 +412,17 @@ export class LinkManager {
     }
   }
 
+  sendRaw(text) {
+    return this.plugin.sendPayload({ endpointID: this.endpointID, payload: text });
+  }
+
   buildSnapshot() {
-    const g = this.hostGame;
-    if (!g || g.screen !== 'match') return null;
-    return {
-      t: 'snap',
-      ph: g.phase,
-      pt: Number(g.phaseT.toFixed(2)),
-      tm: Number(g.timer.toFixed(2)),
-      rd: g.round,
-      w: [g.wins[0], g.wins[1]],
-      rw: g.roundWinner ?? -1,
-      rr: g.roundReason || '',
-      mw: g.matchWinner ?? -1,
-      f: g.fighters.map((f) => ({
-        x: Number(f.x.toFixed(1)),
-        y: Number(f.y.toFixed(1)),
-        vy: Number(f.vy.toFixed(0)),
-        fc: f.facing,
-        hp: Number(f.health.toFixed(1)),
-        mh: f.maxHealth,
-        dh: Number(f.displayHealth.toFixed(1)),
-        m: Number(f.meter.toFixed(1)),
-        st: f.state,
-        stt: Number(f.stateTime.toFixed(2)),
-        at: f.attack?.kind || null,
-        atT: Number(f.attackT.toFixed(2)),
-        as: f.attack ? Number(f.attack.startup.toFixed(3)) : 0,
-        aa: f.attack ? Number(f.attack.active.toFixed(3)) : 0,
-        ar: f.attack ? Number(f.attack.recovery.toFixed(3)) : 0,
-        hs: Number(f.hitstun.toFixed(2)),
-        bs: Number(f.blockstun.toFixed(2)),
-        c: f.combo,
-        ct: Number(f.comboTimer.toFixed(2)),
-        fl: Number(f.flash.toFixed(2)),
-        kt: Number(f.koTime.toFixed(2)),
-        wt: Number(f.winTime.toFixed(2))
-      })),
-      p: g.projectiles.map((p) => ({
-        k: p.kind,
-        x: Number(p.x.toFixed(1)),
-        y: Number(p.y.toFixed(1)),
-        vx: Number(p.vx.toFixed(0)),
-        vy: Number((p.vy || 0).toFixed(0)),
-        r: p.r,
-        hw: p.hitW || 0,
-        hh: p.hitH || 0,
-        o: p.owner,
-        life: Number((p.life || 0).toFixed(2)),
-        dl: Number((p.delay ?? 0).toFixed(2)),
-        sk: p.struck ? 1 : 0,
-        st: Number((p.strikeT || 0).toFixed(2)),
-        color: p.color || '',
-        hd: p.hitDir || 0,
-        ub: p.unblockable ? 1 : 0
-      }))
-    };
+    return buildGameSnapshot(this.hostGame);
+  }
+
+  handleSnapshot(msg) {
+    if (this.guestGame?.receiveSnapshot) this.guestGame.receiveSnapshot(msg);
+    else this.lastSnap = msg;
   }
 
   bindHostGame(game) {
@@ -399,6 +443,7 @@ export class LinkManager {
   }
 
   startGuestInput(controller) {
+    this.guestController = controller;
     if (this.inputTimer) clearInterval(this.inputTimer);
     let lastSent = 0;
     let lastJson = '';
@@ -444,8 +489,21 @@ export class LinkManager {
     if (msg.t === 'hello') {
       this.peerChar = msg.char || 'volt';
       this.peerName = msg.name || 'ИГРОК';
+      if (this.reconnecting && this.role === 'host') {
+        this.finishReconnect();
+        return;
+      }
       this.status(this.role === 'host' ? 'ИГРОК ПОДКЛЮЧЁН · МОЖНО НАЧИНАТЬ' : 'ПОДКЛЮЧЕНО · ЖДЁМ ХОСТА');
       this.callbacks.onPeer?.({ char: this.peerChar, name: this.peerName });
+      return;
+    }
+
+    if (msg.t === 'resume') {
+      if (this.role !== 'guest') return;
+      this.peerChar = msg.hostChar;
+      this.ownChar = msg.guestChar;
+      this.finishReconnect();
+      this.callbacks.onStart?.(msg);
       return;
     }
 
@@ -467,8 +525,7 @@ export class LinkManager {
 
     if (msg.t === 'snap') {
       if (this.role !== 'guest') return;
-      if (this.guestGame?.receiveSnapshot) this.guestGame.receiveSnapshot(msg);
-      else this.lastSnap = msg;
+      this.handleSnapshot(msg);
       return;
     }
 
@@ -478,13 +535,17 @@ export class LinkManager {
     }
 
     if (msg.t === 'bye') {
-      this.handleDisconnected('СОПЕРНИК ВЫШЕЛ');
+      this.handleDisconnected('СОПЕРНИК ВЫШЕЛ', false);
     }
   }
 
   async disconnect(silent = false) {
     if (this.disconnecting) return;
     this.disconnecting = true;
+    this.reconnecting = false;
+    this.autoJoin = false;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
     try {
       if (this.connected) this.sendBye();
       await delay(30);
@@ -498,6 +559,8 @@ export class LinkManager {
       this.endpointID = null;
       this.hostGame = null;
       this.guestGame = null;
+      this.guestController = null;
+      this.matchActive = false;
       this.remote.reset();
       this.outbox = [];
       this.pendingInput = null;
@@ -511,19 +574,97 @@ export class LinkManager {
     }
   }
 
-  handleDisconnected(reason) {
-    if (this.disconnecting) return;
-    if (!this.role) return;
-    if (!this.connected && !this.endpointID) return;
+  handleDisconnected(reason, allowReconnect = true) {
+    if (this.disconnecting || !this.role) return;
+    const wasActive = this.connected || !!this.endpointID || this.reconnecting;
+    if (!wasActive) return;
     this.connected = false;
     this.endpointID = null;
+    this.remote.reset();
     this.stopTimers();
     this.stopScanning();
-    this.remote.reset();
-    this.guestGame = null;
+    if (allowReconnect && this.matchActive && this.autoReconnect) {
+      this.beginReconnect(reason);
+      return;
+    }
     this.hostGame = null;
+    this.guestGame = null;
+    this.guestController = null;
+    this.matchActive = false;
     this.status(reason, 'warn');
     this.callbacks.onDisconnected?.(reason);
+  }
+
+  beginReconnect(reason) {
+    if (this.reconnecting) return;
+    this.reconnecting = true;
+    this.reconnectAttempts = 0;
+    this.reconnectReason = reason || 'СВЯЗЬ ПОТЕРЯНА';
+    this.reconnectUntil = Date.now() + 15000;
+    this.autoJoin = this.role === 'guest';
+    this.status('ПЕРЕПОДКЛЮЧЕНИЕ...', 'warn');
+    this.callbacks.onReconnecting?.(this.reconnectReason);
+    this.scheduleReconnect(350);
+  }
+
+  scheduleReconnect(ms) {
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = setTimeout(() => this.reconnectTick(), ms);
+  }
+
+  async reconnectTick() {
+    if (!this.reconnecting) return;
+    if (Date.now() > this.reconnectUntil) {
+      this.reconnectFailed();
+      return;
+    }
+    this.reconnectAttempts++;
+    this.status(`ПЕРЕПОДКЛЮЧЕНИЕ... ${this.reconnectAttempts}`, 'warn');
+    try {
+      await this.restartTransport();
+    } catch (e) { /* следующая попытка */ }
+    if (this.reconnecting) this.scheduleReconnect(1500);
+  }
+
+  async restartTransport() {
+    if (!this.plugin || !this.role) return;
+    try { await this.plugin.stopAdvertising?.(); } catch (e) { /* ignore */ }
+    try { await this.plugin.stopDiscovery?.(); } catch (e) { /* ignore */ }
+    if (this.role === 'host') {
+      await this.plugin.startAdvertising({ endpointName: ENDPOINT_NAME, connectionType: 'balanced' });
+    } else {
+      await this.plugin.startDiscovery({});
+    }
+  }
+
+  finishReconnect() {
+    if (!this.reconnecting) return;
+    this.reconnecting = false;
+    this.autoJoin = false;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    this.status('СВЯЗЬ ВОССТАНОВЛЕНА', 'ok');
+    if (this.role === 'host' && this.hostGame) {
+      this.bindHostGame(this.hostGame);
+      this.callbacks.onReconnected?.({ role: 'host' });
+      this.sendResume();
+    } else {
+      this.callbacks.onReconnected?.({ role: 'guest' });
+    }
+  }
+
+  reconnectFailed() {
+    this.reconnecting = false;
+    this.autoJoin = false;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    this.hostGame = null;
+    this.guestGame = null;
+    this.guestController = null;
+    this.matchActive = false;
+    this.stopTimers();
+    this.status('НЕ УДАЛОСЬ ПЕРЕПОДКЛЮЧИТЬСЯ', 'error');
+    this.callbacks.onReconnectFailed?.();
   }
 
   resetSession() {
@@ -532,6 +673,12 @@ export class LinkManager {
     this.endpointID = null;
     this.hostGame = null;
     this.guestGame = null;
+    this.guestController = null;
+    this.matchActive = false;
+    this.reconnecting = false;
+    this.autoJoin = false;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
     this.remote.reset();
     this.outbox = [];
     this.pendingInput = null;

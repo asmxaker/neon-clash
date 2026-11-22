@@ -6,6 +6,7 @@ import { CHARACTERS, getCharacter, randomCharacterExcept } from './characters.js
 import { makePlayerControllers } from './input.js';
 import { AIController } from './ai.js';
 import { LinkManager } from './link.js';
+import { BleLinkManager } from './ble-link.js';
 import { audio } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -56,10 +57,18 @@ const btnHost = $('btnHost');
 const btnJoin = $('btnJoin');
 const btnLinkStart = $('btnLinkStart');
 const btnLinkBack = $('btnLinkBack');
+const linkNotice = $('linkNotice');
+const linkNoticeText = $('linkNoticeText');
+const transportBtns = [...document.querySelectorAll('.link-transport-btn')];
 
 const controllers = makePlayerControllers();
 const ai = new AIController();
-const link = new LinkManager();
+let linkTransport = 'nearby';
+try {
+  const savedTransport = localStorage.getItem('nc_transport');
+  if (savedTransport === 'ble') linkTransport = savedTransport;
+} catch (e) { /* ignore */ }
+let link = linkTransport === 'ble' ? new BleLinkManager() : new LinkManager();
 
 const game = new Game($('game'), {
   p1: controllers.p1,
@@ -116,28 +125,51 @@ renderPortraits();
 
 // ---------------------------------------------------------------- link events
 
-link.on({
-  onStatus: (text, kind) => {
-    linkStatus.textContent = text;
-    linkStatus.className = 'link-status' + (kind ? ' ' + kind : '');
-  },
-  onEndpoints: (list) => renderLinkEndpoints(list),
-  onPeer: ({ char }) => {
-    updateLinkCharLine();
-    if (link.role === 'host') {
-      btnLinkStart.classList.remove('hidden');
-      linkStatus.textContent = 'ИГРОК ПОДКЛЮЧЁН · МОЖНО НАЧИНАТЬ';
-      linkStatus.className = 'link-status ok';
-    } else {
-      linkStatus.textContent = 'ПОДКЛЮЧЕНО · ЖДЁМ ХОСТА';
-      linkStatus.className = 'link-status ok';
+function bindLinkEvents(mgr) {
+  mgr.on({
+    onStatus: (text, kind) => {
+      linkStatus.textContent = text;
+      linkStatus.className = 'link-status' + (kind ? ' ' + kind : '');
+    },
+    onEndpoints: (list) => renderLinkEndpoints(list),
+    onPeer: ({ char }) => {
+      updateLinkCharLine();
+      if (mgr.role === 'host') {
+        btnLinkStart.classList.remove('hidden');
+        linkStatus.textContent = 'ИГРОК ПОДКЛЮЧЁН · МОЖНО НАЧИНАТЬ';
+        linkStatus.className = 'link-status ok';
+      } else {
+        linkStatus.textContent = 'ПОДКЛЮЧЕНО · ЖДЁМ ХОСТА';
+        linkStatus.className = 'link-status ok';
+      }
+      if (char) audio.ui();
+    },
+    onStart: (msg) => startLinkGuest(msg),
+    onRematchRequest: () => restartLinkMatch(),
+    onDisconnected: (reason) => handleLinkDisconnected(reason),
+    onReconnecting: (reason) => {
+      if (linkNotice) {
+        linkNoticeText.textContent = 'ПЕРЕПОДКЛЮЧЕНИЕ...';
+        linkNotice.classList.remove('hidden');
+      }
+      if (linkStatus) {
+        linkStatus.textContent = reason || 'ПЕРЕПОДКЛЮЧЕНИЕ...';
+        linkStatus.className = 'link-status warn';
+      }
+      if (game.netHost) game.setPaused(true);
+    },
+    onReconnected: ({ role } = {}) => {
+      linkNotice?.classList.add('hidden');
+      if (role === 'host' || game.netHost) game.setPaused(false);
+    },
+    onReconnectFailed: () => {
+      linkNotice?.classList.add('hidden');
+      handleLinkDisconnected('НЕ УДАЛОСЬ ПЕРЕПОДКЛЮЧИТЬСЯ');
     }
-    if (char) audio.ui();
-  },
-  onStart: (msg) => startLinkGuest(msg),
-  onRematchRequest: () => restartLinkMatch(),
-  onDisconnected: (reason) => handleLinkDisconnected(reason)
-});
+  });
+  window.__link = mgr;
+}
+bindLinkEvents(link);
 
 // ---------------------------------------------------------------- звук
 
@@ -368,12 +400,42 @@ function renderLinkEndpoints(list) {
   }
 }
 
+function updateTransportUI() {
+  for (const b of transportBtns) {
+    b.classList.toggle('active', b.dataset.transport === linkTransport);
+  }
+}
+updateTransportUI();
+
+function selectTransport(kind) {
+  if (kind === linkTransport || link.connected || link.reconnecting || game.inMatch) return;
+  const old = link;
+  old.callbacks = {};
+  old.dispose().catch(() => {});
+  link = kind === 'ble' ? new BleLinkManager() : new LinkManager();
+  linkTransport = kind;
+  bindLinkEvents(link);
+  updateTransportUI();
+  try { localStorage.setItem('nc_transport', kind); } catch (e) { /* ignore */ }
+  if (!linkEl.classList.contains('hidden')) openLinkLobby(linkCharId);
+}
+
+for (const b of transportBtns) {
+  b.addEventListener('click', () => {
+    audio.ui();
+    selectTransport(b.dataset.transport);
+  });
+}
+
 function openLinkLobby(charId) {
   linkCharId = charId;
   updateLinkCharLine();
+  updateTransportUI();
+  const isBle = link.transport === 'ble';
   linkStatus.textContent = 'ПРОВЕРКА СВЯЗИ...';
   linkStatus.className = 'link-status';
   resetLinkRoles();
+  linkNotice?.classList.add('hidden');
   btnHost.disabled = true;
   btnJoin.disabled = true;
   hideAllOverlays();
@@ -386,10 +448,13 @@ function openLinkLobby(charId) {
   audio.unlock();
   audio.ui();
 
-  link.prepare().then((ok) => {
-    if (linkEl.classList.contains('hidden')) return;
+  const mgr = link;
+  mgr.prepare().then((ok) => {
+    if (mgr !== link || linkEl.classList.contains('hidden')) return;
     if (!ok) {
-      linkStatus.textContent = 'ДОСТУПНО ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ';
+      linkStatus.textContent = isBle
+        ? 'ПРЯМОЕ BLE ДОСТУПНО ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ'
+        : 'ДОСТУПНО ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ';
       linkStatus.className = 'link-status error';
       btnHost.disabled = true;
       btnJoin.disabled = true;
@@ -398,7 +463,9 @@ function openLinkLobby(charId) {
     btnHost.disabled = false;
     btnJoin.disabled = false;
     btnLinkStart.classList.add('hidden');
-    linkStatus.textContent = 'ВЫБЕРИ РОЛЬ: ХОСТ ИЛИ ГОСТЬ';
+    linkStatus.textContent = isBle
+      ? 'ПРЯМОЕ BLE · ВЫБЕРИ РОЛЬ: ХОСТ ИЛИ ГОСТЬ'
+      : 'NEARBY · ВЫБЕРИ РОЛЬ: ХОСТ ИЛИ ГОСТЬ';
     linkStatus.className = 'link-status';
   });
 }
@@ -430,7 +497,9 @@ function startLinkHost(hostChar, guestChar) {
   game.netHost = true;
   game.netGuest = false;
   game.fighters[1].controller = link.remote;
+  link.matchActive = true;
   link.bindHostGame(game);
+  linkNotice?.classList.add('hidden');
   requestWakeLock();
   tryImmersive();
 }
@@ -449,8 +518,11 @@ function startLinkGuest(msg) {
   game.mode = 'link';
   game.netHost = false;
   game.netGuest = true;
+  link.matchActive = true;
   link.bindGuestGame(game);
+  if (msg.snap) game.receiveSnapshot(msg.snap);
   link.startGuestInput(controllers.p1);
+  linkNotice?.classList.add('hidden');
   requestWakeLock();
   tryImmersive();
 }
@@ -467,8 +539,10 @@ function restartLinkMatch() {
   game.netGuest = false;
   game.fighters[1].controller = link.remote;
   link.remote.reset();
+  link.matchActive = true;
   link.sendStart(hostChar, guestChar);
   link.bindHostGame(game);
+  linkNotice?.classList.add('hidden');
   stage.classList.add('in-match');
   stage.classList.remove('two-p');
   sysBtns.classList.remove('hidden');
@@ -480,6 +554,7 @@ function handleLinkDisconnected(reason) {
   const inMatch = game.netHost || game.netGuest || stage.classList.contains('in-match');
   game.netHost = false;
   game.netGuest = false;
+  linkNotice?.classList.add('hidden');
   link.resetSession();
   if (inMatch) {
     game.toMenu();

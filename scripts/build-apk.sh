@@ -18,6 +18,7 @@ fi
 echo "JAVA_HOME=${JAVA_HOME:-<system>}"
 echo "ANDROID_HOME=${ANDROID_HOME:-<local.properties>}"
 
+node scripts/fix-ble-gradle.mjs
 npx cap sync android
 (cd android && ./gradlew assembleDebug)
 

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "python3 -m http.server 5180 --bind 127.0.0.1 -d www",
     "serve": "python3 -m http.server 5180 --bind 0.0.0.0 -d www",
+    "postinstall": "node scripts/fix-ble-gradle.mjs",
     "icons": "node scripts/make-icons.mjs",
     "notify": "node scripts/notify.mjs",
     "cap:sync": "cap sync android",
@@ -17,7 +18,8 @@
   "dependencies": {
     "@capacitor-trancee/nearby-connections": "^0.2.6",
     "@capacitor/android": "^8.6.2",
-    "@capacitor/core": "^8.6.2"
+    "@capacitor/core": "^8.6.2",
+    "@capgo/capacitor-bluetooth-low-energy": "^8.2.9"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.6.2"

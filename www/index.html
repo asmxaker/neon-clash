@@ -189,6 +189,16 @@
           <div class="link-kicker" id="linkKicker">ИГРА РЯДОМ · BLUETOOTH / WI-FI</div>
           <h2>ПО BLUETOOTH</h2>
           <div class="link-char" id="linkChar">ТВОЙ БОЁЦ: ВОЛЬТ</div>
+
+          <div class="link-transport" id="linkTransport" role="group" aria-label="Способ связи">
+            <button class="link-transport-btn active" data-transport="nearby">
+              <b>NEARBY</b><span>Bluetooth + Wi-Fi</span>
+            </button>
+            <button class="link-transport-btn" data-transport="ble">
+              <b>ПРЯМОЕ BLE</b><span>без Wi-Fi</span>
+            </button>
+          </div>
+
           <div class="link-status" id="linkStatus">ПРОВЕРКА СВЯЗИ...</div>
 
           <div class="link-roles" id="linkRoles">
@@ -209,7 +219,16 @@
             <button class="menu-btn primary hidden" id="btnLinkStart"><span class="mb-main">НАЧАТЬ БОЙ</span></button>
           </div>
 
-          <p class="link-note" id="linkNote">Нужны два Android-телефона с включённым Bluetooth. Nearby Connections использует Bluetooth и Wi-Fi.</p>
+          <p class="link-note" id="linkNote">Нужны два Android-телефона с включённым Bluetooth. NEARBY использует Bluetooth + Wi-Fi; ПРЯМОЕ BLE работает по Bluetooth без Wi-Fi. При обрыве связь восстанавливается автоматически.</p>
+        </div>
+      </div>
+
+      <!-- Переподключение -->
+      <div id="linkNotice" class="hidden">
+        <div class="link-notice-card">
+          <div class="link-spinner"></div>
+          <div id="linkNoticeText">ПЕРЕПОДКЛЮЧЕНИЕ...</div>
+          <small>не выключай Bluetooth · бой продолжится сам</small>
         </div>
       </div>
 

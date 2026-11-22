@@ -4,3 +4,6 @@ project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/
 
 include ':capacitor-trancee-nearby-connections'
 project(':capacitor-trancee-nearby-connections').projectDir = new File('../node_modules/@capacitor-trancee/nearby-connections/android')
+
+include ':capgo-capacitor-bluetooth-low-energy'
+project(':capgo-capacitor-bluetooth-low-energy').projectDir = new File('../node_modules/@capgo/capacitor-bluetooth-low-energy/android')
