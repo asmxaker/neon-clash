@@ -25,6 +25,7 @@ const en = {
     link: 'VIA BLUETOOTH', linksub: 'play nearby',
     help: 'HOW TO PLAY',
     footer: 'Turn your phone horizontal · headphones on',
+    story: 'STORY', storySub: 'fight all challengers',
     language: 'LANGUAGE'
   },
   help: {
@@ -56,6 +57,10 @@ const en = {
     tLink: 'CHOOSE YOUR FIGHTER',
     you: 'YOU', ai: 'AI', both: 'P1·P2',
     speed: 'SPD', power: 'PWR', range: 'RNG',
+    kStory: 'STORY · CHOOSE YOUR FIGHTER',
+    tStory: 'CHOOSE YOUR FIGHTER',
+    sumStory: 'STORY: {n} FIGHTS · FINAL BOSS',
+    storyFight: 'START STORY',
     back: 'BACK', fight: 'FIGHT', toLink: 'TO LINK',
     special: '<b>SPECIAL</b> {name} — {desc}',
     sum2: 'P1: <b>{p1}</b> · P2: <b>{p2}</b>{mirror}',
@@ -133,6 +138,12 @@ const en = {
     bleGuestConnected: 'GUEST CONNECTED VIA BLE',
     bleEnded: 'BLE CONNECTION CLOSED'
   },
+  story: {
+    chapter: 'STORY · CHAPTER {n} / {total}', finalBattle: 'FINAL BATTLE',
+    next: 'NEXT FIGHT', retry: 'RETRY', playAgain: 'PLAY AGAIN',
+    nextOpponent: 'NEXT: {name}', complete: 'STORY COMPLETE',
+    completeSub: 'You defeated the boss and finished the story.', defeatSub: 'The story ends here. Try this fight again.'
+  },
   pause: { title: 'PAUSE', resume: 'RESUME', restart: 'RESTART', quit: 'MENU' },
   result: {
     kicker: 'FIGHT OVER',
@@ -163,6 +174,7 @@ const en = {
     victory: 'VICTORY',
     series: 'STREAK',
     combo: 'COMBO “{name}”',
+    story: 'STORY {n}/{total}',
     hits: '{n} HITS'
   },
   combo: { double: 'Double', hook: 'Hook', switch: 'Switch', flurry: 'Flurry' },
@@ -171,7 +183,8 @@ const en = {
     blaze: { name: 'BLAZE', tagline: 'POWER · SHOCKWAVE', specialName: 'SHOCKWAVE', specialDesc: 'Travels along the ground. Jump over it!', badge: 'HEAVY', short: 'WAVE' },
     nyx: { name: 'NYX', tagline: 'SHADOW · DASH', specialName: 'SHADOW DASH', specialDesc: 'A quick dash through your opponent. Close combat.', badge: 'STEALTHY', short: 'DASH' },
     mira: { name: 'MIRA', tagline: 'ICE · SHARD FAN', specialName: 'ICE FAN', specialDesc: 'Three shards: up, forward and down.', badge: 'ICY', short: 'FAN' },
-    storm: { name: 'STORM', tagline: 'STORM · LIGHTNING', specialName: 'SKY STRIKE', specialDesc: 'Lightning strikes a spot — move away in time.', badge: 'STORMBORN', short: 'LIGHTNING' }
+    storm: { name: 'STORM', tagline: 'STORM · LIGHTNING', specialName: 'SKY STRIKE', specialDesc: 'Lightning strikes a spot — move away in time.', badge: 'STORMBORN', short: 'LIGHTNING' },
+    boss: { name: 'OVERLORD', tagline: 'VOID · BOSS', specialName: 'VOID STRIKE', specialDesc: 'The final boss. Hits harder than anyone.', badge: 'BOSS', short: 'VOID' }
   }
 };
 
@@ -188,6 +201,7 @@ const ru = {
     link: 'ПО BLUETOOTH', linksub: 'игра рядом',
     help: 'КАК ИГРАТЬ',
     footer: 'Поверни телефон горизонтально · надень наушники',
+    story: 'ИСТОРИЯ', storySub: 'пройти всех бойцов',
     language: 'ЯЗЫК'
   },
   help: {
@@ -219,6 +233,10 @@ const ru = {
     tLink: 'ВЫБЕРИ БОЙЦА',
     you: 'ТЫ', ai: 'ИИ', both: 'P1·P2',
     speed: 'СКОР', power: 'СИЛА', range: 'ДАЛЬН',
+    kStory: 'ИСТОРИЯ · ВЫБЕРИ БОЙЦА',
+    tStory: 'ВЫБЕРИ БОЙЦА',
+    sumStory: 'ИСТОРИЯ: {n} БОЁВ · ФИНАЛЬНЫЙ БОСС',
+    storyFight: 'НАЧАТЬ ИСТОРИЮ',
     back: 'НАЗАД', fight: 'В БОЙ', toLink: 'К СВЯЗИ',
     special: '<b>СПЕЦ</b> {name} — {desc}',
     sum2: 'P1: <b>{p1}</b> · P2: <b>{p2}</b>{mirror}',
@@ -296,6 +314,12 @@ const ru = {
     bleGuestConnected: 'ГОСТЬ ПОДКЛЮЧЁН ПО BLE',
     bleEnded: 'BLE-СВЯЗЬ ЗАВЕРШЕНА'
   },
+  story: {
+    chapter: 'ИСТОРИЯ · ГЛАВА {n} / {total}', finalBattle: 'ФИНАЛЬНЫЙ БОЙ',
+    next: 'СЛЕДУЮЩИЙ БОЙ', retry: 'ПОВТОРИТЬ', playAgain: 'ПРОЙТИ ЗАНОВО',
+    nextOpponent: 'ДАЛЬШЕ: {name}', complete: 'ИСТОРИЯ ПРОЙДЕНА',
+    completeSub: 'Ты победил босса и прошёл историю.', defeatSub: 'История здесь заканчивается. Попробуй этот бой снова.'
+  },
   pause: { title: 'ПАУЗА', resume: 'ПРОДОЛЖИТЬ', restart: 'ЗАНОВО', quit: 'В МЕНЮ' },
   result: {
     kicker: 'БОЙ ОКОНЧЕН',
@@ -326,6 +350,7 @@ const ru = {
     victory: 'ПОБЕДА',
     series: 'СЕРИЯ',
     combo: 'КОМБО «{name}»',
+    story: 'ИСТОРИЯ {n}/{total}',
     hits: '{n} ХИТОВ'
   },
   combo: { double: 'Двойка', hook: 'Крюк', switch: 'Смена', flurry: 'Шквал' },
@@ -334,7 +359,8 @@ const ru = {
     blaze: { name: 'БЛЕЙЗ', tagline: 'СИЛА · УДАРНАЯ ВОЛНА', specialName: 'УДАРНАЯ ВОЛНА', specialDesc: 'Идёт по земле. Перепрыгни!', badge: 'ТЯЖЁЛЫЙ', short: 'ВОЛНА' },
     nyx: { name: 'НИКС', tagline: 'ТЕНЬ · РЫВОК', specialName: 'ТЕНЕВОЙ РЫВОК', specialDesc: 'Быстрый рывок сквозь соперника. Ближний бой.', badge: 'СКРЫТНЫЙ', short: 'РЫВОК' },
     mira: { name: 'МИРА', tagline: 'ЛЁД · ВЕЕР ОСКОЛКОВ', specialName: 'ЛЕДЯНОЙ ВЕЕР', specialDesc: 'Три осколка: вверх, вперёд и вниз.', badge: 'ЛЕДЯНОЙ', short: 'ВЕЕР' },
-    storm: { name: 'СТОРМ', tagline: 'ГРОЗА · МОЛНИЯ', specialName: 'НЕБЕСНЫЙ РАЗРЯД', specialDesc: 'Молния бьёт в точку — успей уйти.', badge: 'ГРОЗОВОЙ', short: 'МОЛНИЯ' }
+    storm: { name: 'СТОРМ', tagline: 'ГРОЗА · МОЛНИЯ', specialName: 'НЕБЕСНЫЙ РАЗРЯД', specialDesc: 'Молния бьёт в точку — успей уйти.', badge: 'ГРОЗОВОЙ', short: 'МОЛНИЯ' },
+    boss: { name: 'ОВЕРЛОРД', tagline: 'ПУСТОТА · БОСС', specialName: 'УДАР ПУСТОТЫ', specialDesc: 'Финальный босс. Бьёт сильнее всех.', badge: 'БОСС', short: 'ПУСТОТА' }
   }
 };
 
@@ -351,6 +377,7 @@ const es = {
     link: 'POR BLUETOOTH', linksub: 'jugar cerca',
     help: 'CÓMO JUGAR',
     footer: 'Gira el teléfono en horizontal · ponte auriculares',
+    story: 'HISTORIA', storySub: 'vence a todos',
     language: 'IDIOMA'
   },
   help: {
@@ -382,6 +409,10 @@ const es = {
     tLink: 'ELIGE TU LUCHADOR',
     you: 'TÚ', ai: 'IA', both: 'P1·P2',
     speed: 'VEL', power: 'FUE', range: 'ALC',
+    kStory: 'HISTORIA · ELIGE TU LUCHADOR',
+    tStory: 'ELIGE TU LUCHADOR',
+    sumStory: 'HISTORIA: {n} COMBATES · JEFE FINAL',
+    storyFight: 'EMPEZAR HISTORIA',
     back: 'ATRÁS', fight: 'LUCHAR', toLink: 'A CONECTAR',
     special: '<b>ESPECIAL</b> {name} — {desc}',
     sum2: 'P1: <b>{p1}</b> · P2: <b>{p2}</b>{mirror}',
@@ -459,6 +490,12 @@ const es = {
     bleGuestConnected: 'INVITADO CONECTADO POR BLE',
     bleEnded: 'CONEXIÓN BLE CERRADA'
   },
+  story: {
+    chapter: 'HISTORIA · CAPÍTULO {n} / {total}', finalBattle: 'COMBATE FINAL',
+    next: 'SIGUIENTE COMBATE', retry: 'REINTENTAR', playAgain: 'JUGAR DE NUEVO',
+    nextOpponent: 'SIGUIENTE: {name}', complete: 'HISTORIA COMPLETADA',
+    completeSub: 'Has derrotado al jefe y terminado la historia.', defeatSub: 'La historia termina aquí. Inténtalo de nuevo.'
+  },
   pause: { title: 'PAUSA', resume: 'SEGUIR', restart: 'REINICIAR', quit: 'MENÚ' },
   result: {
     kicker: 'FIN DE LA LUCHA',
@@ -489,6 +526,7 @@ const es = {
     victory: 'VICTORIA',
     series: 'RACHA',
     combo: 'COMBO «{name}»',
+    story: 'HISTORIA {n}/{total}',
     hits: '{n} GOLPES'
   },
   combo: { double: 'Doble', hook: 'Gancho', switch: 'Cambio', flurry: 'Ráfaga' },
@@ -497,7 +535,8 @@ const es = {
     blaze: { name: 'BLAZE', tagline: 'FUERZA · ONDA', specialName: 'ONDA SÍSMICA', specialDesc: 'Viaja por el suelo. ¡Salta!', badge: 'PESADO', short: 'ONDA' },
     nyx: { name: 'NYX', tagline: 'SOMBRA · EMBESTIDA', specialName: 'EMBESTIDA SOMBRÍA', specialDesc: 'Embestida rápida a través del rival. Cuerpo a cuerpo.', badge: 'OCULTO', short: 'EMBESTIDA' },
     mira: { name: 'MIRA', tagline: 'HIELO · ABANICO', specialName: 'ABANICO DE HIELO', specialDesc: 'Tres fragmentos: arriba, adelante y abajo.', badge: 'GÉLIDO', short: 'ABANICO' },
-    storm: { name: 'STORM', tagline: 'TORMENTA · RAYO', specialName: 'RAYO CELESTE', specialDesc: 'El rayo cae en un punto: muévete a tiempo.', badge: 'TORMENTA', short: 'RAYO' }
+    storm: { name: 'STORM', tagline: 'TORMENTA · RAYO', specialName: 'RAYO CELESTE', specialDesc: 'El rayo cae en un punto: muévete a tiempo.', badge: 'TORMENTA', short: 'RAYO' },
+    boss: { name: 'OVERLORD', tagline: 'VACÍO · JEFE', specialName: 'GOLPE DEL VACÍO', specialDesc: 'El jefe final. Golpea más fuerte que nadie.', badge: 'JEFE', short: 'VACÍO' }
   }
 };
 
@@ -514,6 +553,7 @@ const pt = {
     link: 'POR BLUETOOTH', linksub: 'jogar perto',
     help: 'COMO JOGAR',
     footer: 'Vire o celular na horizontal · use fones',
+    story: 'HISTÓRIA', storySub: 'enfrente todos',
     language: 'IDIOMA'
   },
   help: {
@@ -545,6 +585,10 @@ const pt = {
     tLink: 'ESCOLHA SEU LUTADOR',
     you: 'VOCÊ', ai: 'IA', both: 'P1·P2',
     speed: 'VEL', power: 'FOR', range: 'ALC',
+    kStory: 'HISTÓRIA · ESCOLHA SEU LUTADOR',
+    tStory: 'ESCOLHA SEU LUTADOR',
+    sumStory: 'HISTÓRIA: {n} LUTAS · CHEFE FINAL',
+    storyFight: 'COMEÇAR HISTÓRIA',
     back: 'VOLTAR', fight: 'LUTAR', toLink: 'CONECTAR',
     special: '<b>ESPECIAL</b> {name} — {desc}',
     sum2: 'P1: <b>{p1}</b> · P2: <b>{p2}</b>{mirror}',
@@ -622,6 +666,12 @@ const pt = {
     bleGuestConnected: 'CONVIDADO CONECTADO POR BLE',
     bleEnded: 'CONEXÃO BLE ENCERRADA'
   },
+  story: {
+    chapter: 'HISTÓRIA · CAPÍTULO {n} / {total}', finalBattle: 'LUTA FINAL',
+    next: 'PRÓXIMA LUTA', retry: 'TENTAR DE NOVO', playAgain: 'JOGAR DE NOVO',
+    nextOpponent: 'PRÓXIMO: {name}', complete: 'HISTÓRIA CONCLUÍDA',
+    completeSub: 'Você derrotou o chefe e concluiu a história.', defeatSub: 'A história termina aqui. Tente esta luta novamente.'
+  },
   pause: { title: 'PAUSA', resume: 'CONTINUAR', restart: 'REINICIAR', quit: 'MENU' },
   result: {
     kicker: 'FIM DA LUTA',
@@ -652,6 +702,7 @@ const pt = {
     victory: 'VITÓRIA',
     series: 'SEQUÊNCIA',
     combo: 'COMBO «{name}»',
+    story: 'HISTÓRIA {n}/{total}',
     hits: '{n} GOLPES'
   },
   combo: { double: 'Dupla', hook: 'Gancho', switch: 'Troca', flurry: 'Rajada' },
@@ -660,7 +711,8 @@ const pt = {
     blaze: { name: 'BLAZE', tagline: 'FORÇA · ONDA', specialName: 'ONDA DE CHOQUE', specialDesc: 'Anda pelo chão. Pule!', badge: 'PESADO', short: 'ONDA' },
     nyx: { name: 'NYX', tagline: 'SOMBRA · AVANÇO', specialName: 'AVANÇO SOMBRIO', specialDesc: 'Avanço rápido pelo oponente. Corpo a corpo.', badge: 'OCULTO', short: 'AVANÇO' },
     mira: { name: 'MIRA', tagline: 'GELO · LEQUE', specialName: 'LEQUE DE GELO', specialDesc: 'Três fragmentos: cima, frente e baixo.', badge: 'GÉLIDO', short: 'LEQUE' },
-    storm: { name: 'STORM', tagline: 'TEMPESTADE · RAIO', specialName: 'RAIO CELESTE', specialDesc: 'O raio cai num ponto — saia a tempo.', badge: 'TEMPESTUOSO', short: 'RAIO' }
+    storm: { name: 'STORM', tagline: 'TEMPESTADE · RAIO', specialName: 'RAIO CELESTE', specialDesc: 'O raio cai num ponto — saia a tempo.', badge: 'TEMPESTUOSO', short: 'RAIO' },
+    boss: { name: 'OVERLORD', tagline: 'VAZIO · CHEFE', specialName: 'GOLPE DO VAZIO', specialDesc: 'O chefe final. Bate mais forte que todos.', badge: 'CHEFE', short: 'VAZIO' }
   }
 };
 
@@ -677,6 +729,7 @@ const fr = {
     link: 'PAR BLUETOOTH', linksub: 'jouer à proximité',
     help: 'COMMENT JOUER',
     footer: 'Mets le téléphone à l’horizontale · mets un casque',
+    story: 'HISTOIRE', storySub: 'bats tous les combattants',
     language: 'LANGUE'
   },
   help: {
@@ -708,6 +761,10 @@ const fr = {
     tLink: 'CHOISIS TON COMBATTANT',
     you: 'TOI', ai: 'IA', both: 'P1·P2',
     speed: 'VIT', power: 'FOR', range: 'POR',
+    kStory: 'HISTOIRE · CHOISIS TON COMBATTANT',
+    tStory: 'CHOISIS TON COMBATTANT',
+    sumStory: 'HISTOIRE : {n} COMBATS · BOSS FINAL',
+    storyFight: 'COMMENCER L’HISTOIRE',
     back: 'RETOUR', fight: 'COMBAT', toLink: 'CONNEXION',
     special: '<b>SPÉCIAL</b> {name} — {desc}',
     sum2: 'P1 : <b>{p1}</b> · P2 : <b>{p2}</b>{mirror}',
@@ -785,6 +842,12 @@ const fr = {
     bleGuestConnected: 'INVITÉ CONNECTÉ EN BLE',
     bleEnded: 'CONNEXION BLE FERMÉE'
   },
+  story: {
+    chapter: 'HISTOIRE · CHAPITRE {n} / {total}', finalBattle: 'COMBAT FINAL',
+    next: 'COMBAT SUIVANT', retry: 'RÉESSAYER', playAgain: 'REJOUER',
+    nextOpponent: 'SUIVANT : {name}', complete: 'HISTOIRE TERMINÉE',
+    completeSub: 'Tu as vaincu le boss et terminé l’histoire.', defeatSub: 'L’histoire s’arrête ici. Réessaie ce combat.'
+  },
   pause: { title: 'PAUSE', resume: 'REPRENDRE', restart: 'RECOMMENCER', quit: 'MENU' },
   result: {
     kicker: 'COMBAT TERMINÉ',
@@ -815,6 +878,7 @@ const fr = {
     victory: 'VICTOIRE',
     series: 'SÉRIE',
     combo: 'COMBO «{name}»',
+    story: 'HISTOIRE {n}/{total}',
     hits: '{n} COUPS'
   },
   combo: { double: 'Double', hook: 'Crochet', switch: 'Bascule', flurry: 'Déluge' },
@@ -823,7 +887,8 @@ const fr = {
     blaze: { name: 'BLAZE', tagline: 'FORCE · ONDE', specialName: 'ONDE DE CHOC', specialDesc: 'Rase le sol. Saute par-dessus !', badge: 'LOURD', short: 'ONDE' },
     nyx: { name: 'NYX', tagline: 'OMBRE · RUÉE', specialName: 'RUÉE OMBRÉE', specialDesc: 'Ruée rapide à travers l’adversaire. Corps à corps.', badge: 'FURTIF', short: 'RUÉE' },
     mira: { name: 'MIRA', tagline: 'GLACE · ÉVENTAIL', specialName: 'ÉVENTAIL DE GLACE', specialDesc: 'Trois éclats : haut, avant et bas.', badge: 'GLACIAL', short: 'ÉVENTAIL' },
-    storm: { name: 'STORM', tagline: 'ORAGE · FOUDRE', specialName: 'FOUDRE CÉLESTE', specialDesc: 'La foudre frappe un point — déplace-toi à temps.', badge: 'ORAGEUX', short: 'FOUDRE' }
+    storm: { name: 'STORM', tagline: 'ORAGE · FOUDRE', specialName: 'FOUDRE CÉLESTE', specialDesc: 'La foudre frappe un point — déplace-toi à temps.', badge: 'ORAGEUX', short: 'FOUDRE' },
+    boss: { name: 'OVERLORD', tagline: 'VIDE · BOSS', specialName: 'FRAPPE DU VIDE', specialDesc: 'Le boss final. Frappe plus fort que tous.', badge: 'BOSS', short: 'VIDE' }
   }
 };
 
@@ -840,6 +905,7 @@ const de = {
     link: 'ÜBER BLUETOOTH', linksub: 'in der Nähe spielen',
     help: 'SO WIRD GESPIELT',
     footer: 'Handy quer halten · Kopfhörer auf',
+    story: 'STORY', storySub: 'alle Kämpfer besiegen',
     language: 'SPRACHE'
   },
   help: {
@@ -871,6 +937,10 @@ const de = {
     tLink: 'WÄHLE DEINEN KÄMPFER',
     you: 'DU', ai: 'KI', both: 'P1·P2',
     speed: 'TEM', power: 'KRA', range: 'REI',
+    kStory: 'STORY · KÄMPFER WÄHLEN',
+    tStory: 'KÄMPFER WÄHLEN',
+    sumStory: 'STORY: {n} KÄMPFE · ENDBOSS',
+    storyFight: 'STORY STARTEN',
     back: 'ZURÜCK', fight: 'KAMPF', toLink: 'VERBINDEN',
     special: '<b>SPEZIAL</b> {name} — {desc}',
     sum2: 'P1: <b>{p1}</b> · P2: <b>{p2}</b>{mirror}',
@@ -948,6 +1018,12 @@ const de = {
     bleGuestConnected: 'GAST ÜBER BLE VERBUNDEN',
     bleEnded: 'BLE-VERBINDUNG BEENDET'
   },
+  story: {
+    chapter: 'STORY · KAPITEL {n} / {total}', finalBattle: 'ENDBOSS',
+    next: 'NÄCHSTER KAMPF', retry: 'NOCHMAL', playAgain: 'NEU STARTEN',
+    nextOpponent: 'NÄCHSTER: {name}', complete: 'STORY GESCHAFFT',
+    completeSub: 'Du hast den Boss besiegt und die Story beendet.', defeatSub: 'Hier endet die Story. Versuch diesen Kampf erneut.'
+  },
   pause: { title: 'PAUSE', resume: 'WEITER', restart: 'NEUSTART', quit: 'MENÜ' },
   result: {
     kicker: 'KAMPF VORBEI',
@@ -978,6 +1054,7 @@ const de = {
     victory: 'SIEG',
     series: 'SERIE',
     combo: 'COMBO „{name}“',
+    story: 'STORY {n}/{total}',
     hits: '{n} TREFFER'
   },
   combo: { double: 'Doppel', hook: 'Haken', switch: 'Wechsel', flurry: 'Salve' },
@@ -986,7 +1063,8 @@ const de = {
     blaze: { name: 'BLAZE', tagline: 'KRAFT · SCHOCKWELLE', specialName: 'SCHOCKWELLE', specialDesc: 'Läuft über den Boden. Spring drüber!', badge: 'SCHWER', short: 'WELLE' },
     nyx: { name: 'NYX', tagline: 'SCHATTEN · SPRINT', specialName: 'SCHATTENSPRINT', specialDesc: 'Schneller Sprint durch den Gegner. Nahkampf.', badge: 'VERBORGEN', short: 'SPRINT' },
     mira: { name: 'MIRA', tagline: 'EIS · FÄCHER', specialName: 'EISFÄCHER', specialDesc: 'Drei Splitter: hoch, vorwärts und runter.', badge: 'EISIG', short: 'FÄCHER' },
-    storm: { name: 'STORM', tagline: 'STURM · BLITZ', specialName: 'HIMMELBLITZ', specialDesc: 'Der Blitz schlägt punktgenau ein — beweg dich rechtzeitig.', badge: 'GEWITTER', short: 'BLITZ' }
+    storm: { name: 'STORM', tagline: 'STURM · BLITZ', specialName: 'HIMMELBLITZ', specialDesc: 'Der Blitz schlägt punktgenau ein — beweg dich rechtzeitig.', badge: 'GEWITTER', short: 'BLITZ' },
+    boss: { name: 'OVERLORD', tagline: 'LEERE · BOSS', specialName: 'LEERENSTOSS', specialDesc: 'Der Endboss. Trifft härter als alle anderen.', badge: 'BOSS', short: 'LEERE' }
   }
 };
 
@@ -1003,6 +1081,7 @@ const zh = {
     link: '蓝牙对战', linksub: '附近联机',
     help: '玩法说明',
     footer: '请横屏握持手机 · 建议戴耳机',
+    story: '剧情', storySub: '挑战所有角色',
     language: '语言'
   },
   help: {
@@ -1034,6 +1113,10 @@ const zh = {
     tLink: '选择角色',
     you: '你', ai: 'AI', both: 'P1·P2',
     speed: '速度', power: '力量', range: '距离',
+    kStory: '剧情 · 选择角色',
+    tStory: '选择角色',
+    sumStory: '剧情：{n} 场战斗 · 最终 BOSS',
+    storyFight: '开始剧情',
     back: '返回', fight: '开战', toLink: '去联机',
     special: '<b>必杀</b> {name} — {desc}',
     sum2: 'P1：<b>{p1}</b> · P2：<b>{p2}</b>{mirror}',
@@ -1111,6 +1194,12 @@ const zh = {
     bleGuestConnected: '客机已通过 BLE 连接',
     bleEnded: 'BLE 连接已关闭'
   },
+  story: {
+    chapter: '剧情 · 第 {n} / {total} 章', finalBattle: '最终决战',
+    next: '下一场', retry: '重试', playAgain: '重新开始',
+    nextOpponent: '下一个：{name}', complete: '剧情通关',
+    completeSub: '你击败了 BOSS，完成了剧情。', defeatSub: '剧情在此结束。再试一次这场战斗。'
+  },
   pause: { title: '暂停', resume: '继续', restart: '重新开始', quit: '菜单' },
   result: {
     kicker: '战斗结束',
@@ -1141,6 +1230,7 @@ const zh = {
     victory: '胜利',
     series: '连击',
     combo: '连招「{name}」',
+    story: '剧情 {n}/{total}',
     hits: '{n} 连击'
   },
   combo: { double: '双击', hook: '勾拳', switch: '换手', flurry: '连破' },
@@ -1149,7 +1239,8 @@ const zh = {
     blaze: { name: 'BLAZE', tagline: '力量 · 冲击波', specialName: '地面冲击波', specialDesc: '沿地面推进。跳过去！', badge: '重装', short: '冲击波' },
     nyx: { name: 'NYX', tagline: '暗影 · 突进', specialName: '暗影突进', specialDesc: '快速穿过对手。近身战。', badge: '隐秘', short: '突进' },
     mira: { name: 'MIRA', tagline: '冰霜 · 碎片扇', specialName: '冰霜扇', specialDesc: '三枚碎片：上、前、下。', badge: '冰霜', short: '碎片扇' },
-    storm: { name: 'STORM', tagline: '雷霆 · 闪电', specialName: '天雷', specialDesc: '闪电击中定点——及时闪开。', badge: '雷霆', short: '闪电' }
+    storm: { name: 'STORM', tagline: '雷霆 · 闪电', specialName: '天雷', specialDesc: '闪电击中定点——及时闪开。', badge: '雷霆', short: '闪电' },
+    boss: { name: '霸主', tagline: '虚空 · BOSS', specialName: '虚空打击', specialDesc: '最终 BOSS，攻击力最强。', badge: 'BOSS', short: '虚空' }
   }
 };
 
@@ -1166,6 +1257,7 @@ const ja = {
     link: 'Bluetooth対戦', linksub: '近くの友達と',
     help: '遊び方',
     footer: 'スマホを横向きに · ヘッドホン推奨',
+    story: 'ストーリー', storySub: '全キャラと勝負',
     language: '言語'
   },
   help: {
@@ -1197,6 +1289,10 @@ const ja = {
     tLink: 'キャラを選べ',
     you: 'あなた', ai: 'AI', both: 'P1·P2',
     speed: '速さ', power: '力', range: '距離',
+    kStory: 'ストーリー · キャラ選択',
+    tStory: 'キャラを選べ',
+    sumStory: 'ストーリー：全 {n} 戦 · ラスボス',
+    storyFight: 'ストーリー開始',
     back: '戻る', fight: '開始', toLink: '通信へ',
     special: '<b>必殺</b> {name} — {desc}',
     sum2: 'P1：<b>{p1}</b> · P2：<b>{p2}</b>{mirror}',
@@ -1274,6 +1370,12 @@ const ja = {
     bleGuestConnected: 'ゲストが BLE で接続しました',
     bleEnded: 'BLE 接続を終了しました'
   },
+  story: {
+    chapter: 'ストーリー · 第 {n} / {total} 章', finalBattle: '最終決戦',
+    next: '次の試合', retry: 'リトライ', playAgain: 'もう一度',
+    nextOpponent: '次：{name}', complete: 'ストーリークリア',
+    completeSub: 'ボスを倒してストーリーを完了した。', defeatSub: 'ストーリーはここで終了。もう一度この試合へ。'
+  },
   pause: { title: 'ポーズ', resume: '再開', restart: 'やり直す', quit: 'メニュー' },
   result: {
     kicker: '対戦終了',
@@ -1304,6 +1406,7 @@ const ja = {
     victory: '勝利',
     series: '連続ヒット',
     combo: 'コンボ「{name}」',
+    story: 'ストーリー {n}/{total}',
     hits: '{n} ヒット'
   },
   combo: { double: 'ダブル', hook: 'フック', switch: 'スイッチ', flurry: '連撃' },
@@ -1312,7 +1415,8 @@ const ja = {
     blaze: { name: 'BLAZE', tagline: 'パワー · 衝撃波', specialName: 'グラウンドウェーブ', specialDesc: '地面を進む。跳び越えろ！', badge: 'ヘビー', short: '波動' },
     nyx: { name: 'NYX', tagline: '影 · ダッシュ', specialName: 'シャドウダッシュ', specialDesc: '相手をすり抜ける快速ダッシュ。近接戦。', badge: 'ステルス', short: 'ダッシュ' },
     mira: { name: 'MIRA', tagline: '氷 · 扇', specialName: 'アイスファン', specialDesc: '3つの破片：上・前・下。', badge: 'アイス', short: '扇' },
-    storm: { name: 'STORM', tagline: '嵐 · 雷', specialName: 'スカイストライク', specialDesc: '雷が地点に落ちる。早く離れろ。', badge: 'ストーム', short: '雷' }
+    storm: { name: 'STORM', tagline: '嵐 · 雷', specialName: 'スカイストライク', specialDesc: '雷が地点に落ちる。早く離れろ。', badge: 'ストーム', short: '雷' },
+    boss: { name: 'オーバーロード', tagline: '虚空 · ボス', specialName: 'ヴォイドストライク', specialDesc: '最終ボス。誰よりも強烈な一撃。', badge: 'ボス', short: '虚空' }
   }
 };
 

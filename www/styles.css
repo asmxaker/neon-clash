@@ -844,6 +844,14 @@ body {
 
 /* ---------------- link / bluetooth ---------------- */
 
+.menu-btn.story {
+  border-color: rgba(255, 70, 110, 0.5);
+  background: linear-gradient(180deg, rgba(56, 12, 30, 0.94), rgba(20, 5, 14, 0.96));
+}
+.menu-btn.story .mb-main { color: #ffd7e2; text-shadow: 0 0 14px rgba(255, 47, 79, 0.65); }
+.menu-btn.story .mb-sub { color: rgba(255, 185, 205, 0.62); }
+.menu-btn.story:hover { border-color: rgba(255, 120, 145, 0.85); box-shadow: 0 0 26px rgba(255, 47, 79, 0.25); }
+
 .menu-btn.link {
   border-color: rgba(139, 123, 255, 0.48);
   background: linear-gradient(180deg, rgba(30, 18, 58, 0.92), rgba(10, 6, 24, 0.94));

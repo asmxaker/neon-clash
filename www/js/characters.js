@@ -128,10 +128,40 @@ export const CHARACTERS = {
   }
 };
 
+export const BOSS_CHARACTER = {
+  id: 'boss',
+  name: 'OVERLORD',
+  style: 'nyx',
+  boss: true,
+  scale: 1.09,
+  tagline: 'VOID · BOSS',
+  color: '#ff2f4f',
+  accent: '#ffd6d6',
+  deep: '#2b0508',
+  altColor: '#ff2f4f',
+  altAccent: '#ffd6d6',
+  hp: 150,
+  walkSpeed: 320,
+  airSpeed: 240,
+  jumpV: 1100,
+  damageMul: 1.4,
+  startupMul: 0.94,
+  recoveryMul: 0.96,
+  reachMul: 1.12,
+  special: 'lightning',
+  specialName: 'VOID STRIKE',
+  specialDesc: 'The final boss. Hits harder than anyone.',
+  badge: 'BOSS',
+  short: 'VOID',
+  stats: { speed: 4, power: 5, range: 5 }
+};
+
+export const ALL_CHARACTERS = { ...CHARACTERS, boss: BOSS_CHARACTER };
+
 export const CHARACTER_LIST = Object.values(CHARACTERS);
 
 export function getCharacter(id) {
-  return CHARACTERS[id] || CHARACTERS.volt;
+  return ALL_CHARACTERS[id] || CHARACTERS.volt;
 }
 
 export function otherCharacter(id) {

@@ -2,7 +2,7 @@
 
 import { Game } from './game.js';
 import { Fighter, drawFighter } from './fighter.js';
-import { CHARACTERS, getCharacter, randomCharacterExcept } from './characters.js';
+import { CHARACTERS, CHARACTER_LIST, getCharacter, randomCharacterExcept } from './characters.js';
 import { makePlayerControllers } from './input.js';
 import { AIController } from './ai.js';
 import { LinkManager } from './link.js';
@@ -22,6 +22,7 @@ const sysBtns = $('sysBtns');
 const pauseBtn = $('pauseBtn');
 const soundBtn = $('soundBtn');
 const btn1p = $('btn1p');
+const btnStory = $('btnStory');
 const btn2p = $('btn2p');
 const btnLink = $('btnLink');
 const btnHelp = $('btnHelp');
@@ -87,6 +88,8 @@ window.__link = link;
 
 let resultTimer = null;
 let wakeLock = null;
+let story = null;
+let lastStoryWin = false;
 let selectMode = '1p';
 let selectActive = 0;
 let aiPick = 'storm';
@@ -272,6 +275,9 @@ function updateSelectUI() {
   if (selectMode === 'link') {
     selectKicker.textContent = t('select.kLink');
     selectTitle.textContent = t('select.tLink');
+  } else if (selectMode === 'story') {
+    selectKicker.textContent = t('select.kStory');
+    selectTitle.textContent = t('select.tStory');
   } else if (selectMode === '2p') {
     selectKicker.textContent = t('select.k2');
     selectTitle.textContent = t('select.t2');
@@ -300,6 +306,8 @@ function updateSelectUI() {
     });
   } else if (selectMode === 'link') {
     selectSummary.innerHTML = t('select.sumLink', { p1: p1.name });
+  } else if (selectMode === 'story') {
+    selectSummary.innerHTML = t('select.sumStory', { n: CHARACTER_LIST.length + 1 });
   } else {
     selectSummary.innerHTML = t('select.sum1', { p1: p1.name, ai: ai.name });
   }
@@ -312,7 +320,7 @@ function openSelect(mode) {
   selectPicks[0] = p1.id;
   selectPicks[1] = randomCharacterExcept(p1.id).id;
   aiPick = randomCharacterExcept(p1.id).id;
-  btnSelectFightLabel.textContent = mode === 'link' ? t('select.toLink') : t('select.fight');
+  btnSelectFightLabel.textContent = mode === 'link' ? t('select.toLink') : mode === 'story' ? t('select.storyFight') : t('select.fight');
   updateSelectUI();
   audio.unlock();
   audio.ui();
@@ -352,8 +360,44 @@ function startSelectedMatch() {
     openLinkLobby(selectPicks[0]);
     return;
   }
+  if (selectMode === 'story') {
+    startStory(selectPicks[0]);
+    return;
+  }
+  story = null;
   const p2 = selectMode === '2p' ? selectPicks[1] : aiPick;
   startGame(selectMode, selectPicks[0], p2);
+}
+
+function startStory(charId) {
+  const others = CHARACTER_LIST.filter((c) => c.id !== charId).map((c) => c.id);
+  story = { charId, opponents: [...others, charId, 'boss'], index: 0 };
+  lastStoryWin = false;
+  startStoryFight();
+}
+
+function startStoryFight() {
+  if (!story) return;
+  const opponentId = story.opponents[story.index];
+  const p1 = getCharacter(story.charId);
+  const p2 = getCharacter(opponentId);
+  lastStoryWin = false;
+  try { localStorage.setItem('nc_char', p1.id); } catch (e) { /* ignore */ }
+  audio.unlock();
+  audio.ui();
+  tryImmersive();
+  clearTimeout(resultTimer);
+  hideAllOverlays();
+  stage.classList.add('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.remove('hidden');
+  pauseBtn.classList.remove('hidden');
+  controllers.touch1.reset();
+  controllers.touch2.reset();
+  game.startMatch('story', p1.id, p2.id);
+  game.storyChapter = story.index + 1;
+  game.storyTotal = story.opponents.length;
+  requestWakeLock();
 }
 
 for (const card of fighterCards) {
@@ -379,6 +423,7 @@ for (const tab of selectTabEls) {
 }
 
 btn1p.addEventListener('click', () => openSelect('1p'));
+btnStory.addEventListener('click', () => openSelect('story'));
 btn2p.addEventListener('click', () => openSelect('2p'));
 btnLink.addEventListener('click', () => openSelect('link'));
 btnSelectBack.addEventListener('click', closeSelect);
@@ -681,6 +726,10 @@ btnResume.addEventListener('click', closePause);
 btnRestart.addEventListener('click', () => {
   pause.classList.add('hidden');
   result.classList.add('hidden');
+  if (story) {
+    startStoryFight();
+    return;
+  }
   if (game.netHost) {
     restartLinkMatch();
     return;
@@ -697,6 +746,9 @@ btnRestart.addEventListener('click', () => {
 
 function quitToMenu() {
   clearTimeout(resultTimer);
+  story = null;
+  lastStoryWin = false;
+  btnRematch.textContent = t('result.rematch');
   if (game.netHost || game.netGuest || link.connected || link.role) {
     link.disconnect(true);
     link.resetSession();
@@ -719,6 +771,20 @@ btnQuit.addEventListener('click', quitToMenu);
 btnResultMenu.addEventListener('click', quitToMenu);
 
 btnRematch.addEventListener('click', () => {
+  if (story) {
+    result.classList.add('hidden');
+    if (lastStoryWin) {
+      if (story.index >= story.opponents.length - 1) startStory(story.charId);
+      else {
+        story.index++;
+        startStoryFight();
+      }
+    } else {
+      startStoryFight();
+    }
+    audio.ui();
+    return;
+  }
   if (game.netGuest) {
     link.requestRematch();
     resultSub.textContent = t('result.requestSent');
@@ -769,20 +835,42 @@ function handleMatchEnd(winner) {
   resultTimer = setTimeout(() => {
     if (!game.inMatch || game.phase !== 'matchEnd') return;
     const p1Won = winner === 0;
-    const twoP = game.mode === '2p' || game.mode === 'link';
     const winnerF = game.fighters[winner];
-    resultKicker.textContent = t('result.kicker');
-    if (twoP) {
-      resultTitle.textContent = p1Won ? t('result.win1') : t('result.win2');
-    } else {
-      resultTitle.textContent = p1Won ? t('result.win') : t('result.lose');
-    }
     resultTitle.classList.remove('win1', 'win2');
-    if (winnerF) {
-      resultTitle.style.color = winnerF.color;
-      resultTitle.style.textShadow = `0 0 24px ${winnerF.color}`;
+
+    if (story) {
+      lastStoryWin = p1Won;
+      const final = story.index >= story.opponents.length - 1;
+      const nextId = story.opponents[story.index + 1];
+      resultKicker.textContent = final
+        ? t('story.finalBattle')
+        : t('story.chapter', { n: story.index + 1, total: story.opponents.length });
+      if (p1Won && final) resultTitle.textContent = t('story.complete');
+      else resultTitle.textContent = p1Won ? t('result.win') : t('result.lose');
+      if (winnerF) {
+        resultTitle.style.color = winnerF.color;
+        resultTitle.style.textShadow = `0 0 24px ${winnerF.color}`;
+      }
+      if (p1Won && final) resultSub.textContent = t('story.completeSub');
+      else if (p1Won) resultSub.textContent = t('story.nextOpponent', { name: charText(nextId).name });
+      else resultSub.textContent = t('story.defeatSub');
+      btnRematch.textContent = p1Won ? (final ? t('story.playAgain') : t('story.next')) : t('story.retry');
+    } else {
+      const twoP = game.mode === '2p' || game.mode === 'link';
+      resultKicker.textContent = t('result.kicker');
+      if (twoP) {
+        resultTitle.textContent = p1Won ? t('result.win1') : t('result.win2');
+      } else {
+        resultTitle.textContent = p1Won ? t('result.win') : t('result.lose');
+      }
+      if (winnerF) {
+        resultTitle.style.color = winnerF.color;
+        resultTitle.style.textShadow = `0 0 24px ${winnerF.color}`;
+      }
+      resultSub.textContent = `${winnerF ? `${winnerF.name} · ` : ''}${t('result.score', { w0: game.wins[0], w1: game.wins[1] })}`;
+      btnRematch.textContent = t('result.rematch');
     }
-    resultSub.textContent = `${winnerF ? `${winnerF.name} · ` : ''}${t('result.score', { w0: game.wins[0], w1: game.wins[1] })}`;
+
     result.classList.remove('hidden');
     audio.ui();
   }, 900);

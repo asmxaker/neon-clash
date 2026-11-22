@@ -443,6 +443,12 @@ function drawHUD(ctx, game) {
   if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
   ctx.fillStyle = 'rgba(190,205,245,0.55)';
   ctx.fillText(tr('hud.round', { n: game.round }), cx, 101);
+  if (game.mode === 'story' && game.storyTotal) {
+    ctx.font = '700 9px system-ui, sans-serif';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '1px';
+    ctx.fillStyle = 'rgba(255,210,63,0.68)';
+    ctx.fillText(tr('hud.story', { n: game.storyChapter, total: game.storyTotal }), cx, 118);
+  }
   ctx.restore();
 
   // ---- серии ----
@@ -717,6 +723,8 @@ export class Game {
 
   startMatch(mode = '1p', p1CharId = 'volt', p2CharId = null) {
     this.mode = mode;
+    this.storyChapter = 0;
+    this.storyTotal = 0;
     this.netGuest = false;
     this.netHost = false;
     this._snap = null;
@@ -732,7 +740,7 @@ export class Game {
     this.projectiles = [];
     this.fx.clear();
     this.ai?.reset?.();
-    const ctrl2 = mode === '1p' ? this.ai : this.p2;
+    const ctrl2 = (mode === '1p' || mode === 'story') ? this.ai : this.p2;
     const mirror = this.p1CharId === this.p2CharId;
     this.fighters = [
       new Fighter({

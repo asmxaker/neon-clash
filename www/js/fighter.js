@@ -87,6 +87,8 @@ export class Fighter {
     this.charId = char.id;
     this.variant = variant;
     this.style = char.style;
+    this.isBoss = !!char.boss;
+    this.scale = char.scale || 1;
     this.special = char.special;
     this.color = variant === 1 && char.altColor ? char.altColor : char.color;
     this.accent = variant === 1 && char.altAccent ? char.altAccent : char.accent;
@@ -1139,6 +1141,36 @@ function drawHead(ctx, f, col, accent, p) {
     ctx.stroke();
   }
 
+  if (f.isBoss) {
+    // рогатая корона и злые глаза
+    ctx.lineCap = 'round';
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 13, hy - r + 3);
+      ctx.quadraticCurveTo(hx + s * 32, hy - r - 4, hx + s * 28, hy - r - 17);
+      ctx.strokeStyle = hexA(col, 0.95);
+      ctx.lineWidth = 3.6;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 8, hy - r + 1);
+      ctx.lineTo(hx + s * 20, hy - r - 9);
+      ctx.strokeStyle = hexA(accent, 0.65);
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 22, hy - r - 10);
+      ctx.lineTo(hx + s * 30, hy - r - 14);
+      ctx.strokeStyle = hexA(col, 0.8);
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(hx - 7, hy + 1, 2.2, 0, TAU);
+    ctx.arc(hx + 3, hy + 1, 2.2, 0, TAU);
+    ctx.fillStyle = hexA(accent, 0.95);
+    ctx.fill();
+  }
+
   ctx.beginPath();
   ctx.arc(hx, hy, r, 0, TAU);
   ctx.fillStyle = 'rgba(7,4,15,0.96)';
@@ -1220,6 +1252,19 @@ function drawHead(ctx, f, col, accent, p) {
     ctx.strokeStyle = hexA(col, 0.55);
     ctx.lineWidth = 1.4;
     ctx.stroke();
+  }
+
+  if (f.isBoss) {
+    // три горящих глаза поверх маски
+    for (const [ex, ey2, rr] of [[-7, 1, 2.4], [4, 1, 2.4], [-1, 8, 1.6]]) {
+      ctx.beginPath();
+      ctx.arc(hx + ex, hy + ey2, rr, 0, TAU);
+      ctx.fillStyle = '#fff4f4';
+      ctx.shadowColor = hexA(accent, 1);
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
   }
 
   // затылочный огонёк
@@ -1505,7 +1550,7 @@ export function drawFighter(ctx, f) {
   const nyx = style === 'nyx';
   const mira = style === 'mira';
   const storm = style === 'storm';
-  const shadowW = heavy ? 50 : nyx ? 42 : 46;
+  const shadowW = (heavy ? 50 : nyx ? 42 : 46) * (f.scale || 1);
   const shadowScale = 1 - Math.min(0.62, f.y / 360);
   ctx.save();
   ctx.globalAlpha = 0.5 * shadowScale;
@@ -1525,7 +1570,7 @@ export function drawFighter(ctx, f) {
     ctx.translate(-14 * e, -2 * e);
     ctx.rotate(-1.5 * e);
   }
-  ctx.scale(f.facing, 1);
+  ctx.scale(f.facing * (f.scale || 1), f.scale || 1);
 
   const p = buildPose(f);
 
@@ -1541,6 +1586,37 @@ export function drawFighter(ctx, f) {
     ctx.beginPath();
     ctx.ellipse(0, -100, heavy ? 74 : nyx ? 58 : 66, 106, 0, 0, TAU);
     ctx.fill();
+    ctx.restore();
+  }
+
+  if (f.isBoss) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const pulse = 0.55 + Math.sin(f.animT * 3.2) * 0.16;
+    const g = ctx.createRadialGradient(0, -110, 10, 0, -110, 130);
+    g.addColorStop(0, hexA(col, 0.20 * pulse));
+    g.addColorStop(0.55, hexA(col, 0.07 * pulse));
+    g.addColorStop(1, hexA(col, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(0, -108, 92, 142, 0, 0, TAU);
+    ctx.fill();
+    // тёмные шипы за спиной
+    ctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 5; i++) {
+      const y = -170 + i * 24;
+      const len = 34 + (i % 2) * 12;
+      ctx.beginPath();
+      ctx.moveTo(-10, y);
+      ctx.lineTo(-len, y - 12 - (i % 3) * 4);
+      ctx.lineTo(-16, y + 2);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(8,2,10,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = hexA(col, 0.4);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
