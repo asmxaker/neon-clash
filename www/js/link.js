@@ -72,7 +72,9 @@ export function buildGameSnapshot(game) {
       ct: Number(f.comboTimer.toFixed(2)),
       fl: Number(f.flash.toFixed(2)),
       kt: Number(f.koTime.toFixed(2)),
-      wt: Number(f.winTime.toFixed(2))
+      wt: Number(f.winTime.toFixed(2)),
+      cl: f.comboLabel || '',
+      clt: Number((f.comboLabelT || 0).toFixed(2))
     })),
     p: g.projectiles.map((p) => ({
       k: p.kind,

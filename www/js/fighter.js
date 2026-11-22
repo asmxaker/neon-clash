@@ -56,6 +56,18 @@ export const ATTACKS = {
   }
 };
 
+const COMBOS = [
+  { seq: ['punch', 'punch', 'kick'], name: 'ШКВАЛ', damage: 1.55, kb: 1.45, hitstun: 1.2, startup: 0.88, recovery: 1.0 },
+  { seq: ['punch', 'kick'], name: 'КРЮК', damage: 1.3, kb: 1.15, startup: 0.95 },
+  { seq: ['kick', 'punch'], name: 'СМЕНА', damage: 1.35, startup: 0.9, recovery: 0.95 },
+  { seq: ['punch', 'punch'], name: 'ДВОЙКА', damage: 1.28, startup: 0.9, recovery: 0.92 }
+];
+
+function findCombo(chain) {
+  const key = chain.join('>');
+  return COMBOS.find((c) => c.seq.join('>') === key) || null;
+}
+
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const smooth = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t);
 const easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
@@ -117,6 +129,12 @@ export class Fighter {
     this.winTime = 0;
     this.landed = false;
     this.jumpDustArmed = false;
+    this.chain = [];
+    this.chainT = 0;
+    this.comboReady = false;
+    this.attackBuffer = null;
+    this.comboLabel = '';
+    this.comboLabelT = 0;
   }
 
   resetForRound(x, facing) {
@@ -143,6 +161,12 @@ export class Fighter {
     this.winTime = 0;
     this.landed = false;
     this.locked = true;
+    this.chain = [];
+    this.chainT = 0;
+    this.comboReady = false;
+    this.attackBuffer = null;
+    this.comboLabel = '';
+    this.comboLabelT = 0;
   }
 
   resetMeter() {
@@ -200,10 +224,24 @@ export class Fighter {
   startAttack(kind) {
     const base = kind === 'special' ? this.getSpecialDef() : ATTACKS[kind];
     if (!base) return false;
+    this.attackBuffer = null;
     if (base.projectile) {
       if (this.meter < base.cost) return false;
       this.meter -= base.cost;
     }
+
+    let combo = null;
+    if (kind === 'punch' || kind === 'kick') {
+      if (this.comboReady && this.chainT > 0) combo = findCombo([...this.chain, kind]);
+      this.chain = (combo ? [...this.chain, kind] : [kind]).slice(-3);
+      this.chainT = 0.8;
+      this.comboReady = false;
+    } else {
+      this.chain = [];
+      this.chainT = 0;
+      this.comboReady = false;
+    }
+
     const a = {
       ...base,
       startup: base.startup * this.startupMul,
@@ -211,14 +249,27 @@ export class Fighter {
       damage: base.damage * this.damageMul,
       reach: (base.reach || 0) * this.reachMul
     };
+    if (combo) {
+      a.damage *= combo.damage;
+      a.kb *= combo.kb || 1;
+      a.hitstun *= combo.hitstun || 1;
+      a.startup *= combo.startup || 1;
+      a.recovery *= combo.recovery || 1;
+      a.reach *= 1.12;
+      a.comboName = combo.name;
+    }
     this.attack = a;
     this.attackT = 0;
     this.attackHit = false;
     this.fired = false;
+    this.comboLabel = '';
+    this.comboLabelT = 0;
     this.setState('attack');
     if (a.air) this.airAttackUsed = true;
     this.kb *= 0.35;
-    if (kind === 'special') {
+    if (combo) {
+      audio.combo(combo.seq.length);
+    } else if (kind === 'special') {
       if (this.special === 'dash') audio.dash();
       else audio.specialCharge();
     } else {
@@ -227,11 +278,44 @@ export class Fighter {
     return true;
   }
 
+  pollAttackBuffer() {
+    const c = this.controller;
+    if (!c || this.locked) return;
+    if (c.consume('punch')) this.attackBuffer = { kind: 'punch', t: performance.now() };
+    else if (c.consume('kick')) this.attackBuffer = { kind: 'kick', t: performance.now() };
+  }
+
+  freshAttackBuffer() {
+    if (!this.attackBuffer) return null;
+    if (performance.now() - this.attackBuffer.t > 320) {
+      this.attackBuffer = null;
+      return null;
+    }
+    return this.attackBuffer.kind;
+  }
+
+  tryComboCancel(a, dt) {
+    if (!this.comboReady || this.attackT < a.startup + Math.max(0, a.active - 0.02)) return false;
+    const next = this.freshAttackBuffer();
+    if (!next) return false;
+    this.attackBuffer = null;
+    this.startAttack(next);
+    this.applyPhysics(dt);
+    return true;
+  }
+
   update(dt, foe, game) {
     this.animT += dt;
     this.stateTime += dt;
     this.comboTimer = Math.max(0, this.comboTimer - dt);
     if (this.comboTimer <= 0) this.combo = 0;
+    this.chainT = Math.max(0, this.chainT - dt);
+    if (this.chainT <= 0) {
+      this.chain = [];
+      this.comboReady = false;
+    }
+    this.comboLabelT = Math.max(0, this.comboLabelT - dt);
+    if (this.attackBuffer && performance.now() - this.attackBuffer.t > 320) this.attackBuffer = null;
     this.flash = Math.max(0, this.flash - dt * 5);
     this.displayHealth += (this.health - this.displayHealth) * Math.min(1, dt * 7);
     if (Math.abs(this.displayHealth - this.health) < 0.03) this.displayHealth = this.health;
@@ -267,6 +351,7 @@ export class Fighter {
 
     if (this.attack) {
       const a = this.attack;
+      this.pollAttackBuffer();
       const prev = this.attackT;
       this.attackT += dt;
       if (a.projectile && !this.fired && prev < a.startup && this.attackT >= a.startup) {
@@ -279,11 +364,17 @@ export class Fighter {
           game.fx.trail(this.x - this.facing * (12 + Math.random() * 24), GROUND_Y - this.y - 40 - Math.random() * 90, this.color);
         }
       }
+      if (this.tryComboCancel(a, dt)) return;
       const total = a.startup + a.active + a.recovery;
       this.applyPhysics(dt);
       if (this.attackT >= total) {
         this.attack = null;
         this.setState(this.y > 0 ? 'jump' : 'idle');
+        const next = this.freshAttackBuffer();
+        if (this.comboReady && next && this.y <= 0) {
+          this.attackBuffer = null;
+          this.startAttack(next);
+        }
       }
       return;
     }

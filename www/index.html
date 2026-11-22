@@ -22,9 +22,12 @@
       <!-- Сенсорное управление -->
       <div id="touch">
         <div class="pad" id="pad1">
-          <div class="stick" id="stick1" aria-label="Джойстик игрока 1">
-            <div class="stick-ring"></div>
-            <div class="knob"></div>
+          <div class="dpad" id="dpad1" role="group" aria-label="Крестовина игрока 1">
+            <button class="dpad-btn dpad-up" data-dir="up" aria-label="Прыжок">▲</button>
+            <button class="dpad-btn dpad-left" data-dir="left" aria-label="Влево">◀</button>
+            <span class="dpad-center" aria-hidden="true"></span>
+            <button class="dpad-btn dpad-right" data-dir="right" aria-label="Вправо">▶</button>
+            <button class="dpad-btn dpad-down" data-dir="down" aria-label="Присед">▼</button>
           </div>
           <div class="btns">
             <button class="tbtn tblock" data-action="block"><span>БЛОК</span></button>
@@ -35,9 +38,12 @@
         </div>
 
         <div class="pad" id="pad2">
-          <div class="stick" id="stick2" aria-label="Джойстик игрока 2">
-            <div class="stick-ring"></div>
-            <div class="knob"></div>
+          <div class="dpad" id="dpad2" role="group" aria-label="Крестовина игрока 2">
+            <button class="dpad-btn dpad-up" data-dir="up" aria-label="Прыжок">▲</button>
+            <button class="dpad-btn dpad-left" data-dir="left" aria-label="Влево">◀</button>
+            <span class="dpad-center" aria-hidden="true"></span>
+            <button class="dpad-btn dpad-right" data-dir="right" aria-label="Вправо">▶</button>
+            <button class="dpad-btn dpad-down" data-dir="down" aria-label="Присед">▼</button>
           </div>
           <div class="btns">
             <button class="tbtn tblock" data-action="block"><span>БЛОК</span></button>
@@ -91,17 +97,18 @@
           <div class="help-cols">
             <div class="help-col">
               <h3>1 ИГРОК</h3>
-              <p><b>Джойстик</b> — движение. Вверх — прыжок, вниз — присед.</p>
+              <p><b>Крестовина</b> — движение. Вверх — прыжок, вниз — присед.</p>
               <p><b>РУКА</b> — быстрый удар. Не попадает по присевшему сопернику.</p>
               <p><b>НОГА</b> — сильный удар. Пробивает присед.</p>
               <p><b>БЛОК</b> — держи, чтобы защищаться. В воздухе не работает.</p>
               <p><b>СПЕЦ</b> — особая атака. Нужно 50 энергии.</p>
+              <p><b>КОМБО</b> — РУКА→РУКА «Двойка», РУКА→РУКА→НОГА «Шквал», НОГА→РУКА «Смена». Главное — попасть первым ударом.</p>
               <p><b>ВОЛЬТ</b> — плазма. <b>БЛЕЙЗ</b> — ударная волна.</p>
               <p><b>НИКС</b> — рывок. <b>МИРА</b> — веер осколков. <b>СТОРМ</b> — молния.</p>
             </div>
             <div class="help-col">
               <h3>2 ИГРОКА</h3>
-              <p>Экран делится пополам: у каждого свой джойстик и кнопки.</p>
+              <p>Экран делится пополам: у каждого своя крестовина и кнопки.</p>
               <p>Игрок 1 — слева, игрок 2 — справа. Цвета зависят от выбранного бойца.</p>
               <p>Каждый выбирает бойца на вкладке P1 или P2. Можно выбрать одного и того же — будет зеркальный бой.</p>
               <h3>КЛАВИАТУРА</h3>

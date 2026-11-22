@@ -84,38 +84,20 @@ export class TouchController extends Controller {
     this.pad = padEl;
     this.stick = padEl.querySelector('.stick');
     this.knob = padEl.querySelector('.knob');
+    this.dpad = padEl.querySelector('.dpad');
+    this.dirButtons = this.dpad ? [...this.dpad.querySelectorAll('[data-dir]')] : [];
     this.buttons = [...padEl.querySelectorAll('[data-action]')];
     this.stickPointer = null;
+    this.dpadPointer = null;
+    this.dpadDir = null;
     this.buttonPointers = new Map();
     this.upLatched = false;
     this.bind();
   }
 
   bind() {
-    const stick = this.stick;
-    stick.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      if (this.stickPointer !== null) return;
-      this.stickPointer = e.pointerId;
-      stick.setPointerCapture(e.pointerId);
-      stick.classList.add('active');
-      this.updateStick(e);
-    });
-    stick.addEventListener('pointermove', (e) => {
-      if (e.pointerId !== this.stickPointer) return;
-      e.preventDefault();
-      this.updateStick(e);
-    });
-    const endStick = (e) => {
-      if (e.pointerId !== this.stickPointer) return;
-      this.stickPointer = null;
-      stick.classList.remove('active');
-      this.state.left = this.state.right = this.state.up = this.state.down = false;
-      this.upLatched = false;
-      this.knob.style.transform = 'translate(0px, 0px)';
-    };
-    stick.addEventListener('pointerup', endStick);
-    stick.addEventListener('pointercancel', endStick);
+    this.bindDpad();
+    this.bindStick();
 
     for (const btn of this.buttons) {
       const action = btn.dataset.action;
@@ -140,7 +122,97 @@ export class TouchController extends Controller {
       btn.addEventListener('lostpointercapture', release);
       btn.addEventListener('contextmenu', (e) => e.preventDefault());
     }
+  }
 
+  bindDpad() {
+    const dpad = this.dpad;
+    if (!dpad) return;
+
+    const start = (e) => {
+      e.preventDefault();
+      if (this.dpadPointer !== null) return;
+      this.dpadPointer = e.pointerId;
+      try { dpad.setPointerCapture(e.pointerId); } catch (err) { /* синтетические события */ }
+      dpad.classList.add('active');
+      this.updateDpad(e);
+    };
+    const move = (e) => {
+      if (e.pointerId !== this.dpadPointer) return;
+      e.preventDefault();
+      this.updateDpad(e);
+    };
+    const end = (e) => {
+      if (e.pointerId !== this.dpadPointer) return;
+      this.dpadPointer = null;
+      dpad.classList.remove('active');
+      this.setDpadDirs([]);
+    };
+
+    dpad.addEventListener('pointerdown', start);
+    dpad.addEventListener('pointermove', move);
+    dpad.addEventListener('pointerup', end);
+    dpad.addEventListener('pointercancel', end);
+    dpad.addEventListener('lostpointercapture', end);
+    dpad.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  updateDpad(e) {
+    const r = this.dpad.getBoundingClientRect();
+    const dx = e.clientX - (r.left + r.width / 2);
+    const dy = e.clientY - (r.top + r.height / 2);
+    if (Math.hypot(dx, dy) < r.width * 0.1) {
+      this.setDpadDirs([]);
+      return;
+    }
+    // Углы крестовины дают диагональ: можно прыгать вперёд или назад.
+    const dirs = [];
+    if (dx < -r.width * 0.13) dirs.push('left');
+    else if (dx > r.width * 0.13) dirs.push('right');
+    if (dy < -r.height * 0.13) dirs.push('up');
+    else if (dy > r.height * 0.13) dirs.push('down');
+    this.setDpadDirs(dirs);
+  }
+
+  setDpadDirs(dirs) {
+    const wasUp = this.state.up;
+    this.dpadDir = dirs[0] || null;
+    this.state.left = dirs.includes('left');
+    this.state.right = dirs.includes('right');
+    this.state.up = dirs.includes('up');
+    this.state.down = dirs.includes('down');
+    for (const b of this.dirButtons) {
+      b.classList.toggle('pressed', dirs.includes(b.dataset.dir));
+    }
+    if (this.state.up && !wasUp) this.press('up');
+  }
+
+  bindStick() {
+    const stick = this.stick;
+    if (!stick) return;
+
+    stick.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (this.stickPointer !== null) return;
+      this.stickPointer = e.pointerId;
+      stick.setPointerCapture(e.pointerId);
+      stick.classList.add('active');
+      this.updateStick(e);
+    });
+    stick.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== this.stickPointer) return;
+      e.preventDefault();
+      this.updateStick(e);
+    });
+    const endStick = (e) => {
+      if (e.pointerId !== this.stickPointer) return;
+      this.stickPointer = null;
+      stick.classList.remove('active');
+      this.state.left = this.state.right = this.state.up = this.state.down = false;
+      this.upLatched = false;
+      if (this.knob) this.knob.style.transform = 'translate(0px, 0px)';
+    };
+    stick.addEventListener('pointerup', endStick);
+    stick.addEventListener('pointercancel', endStick);
     stick.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
@@ -156,7 +228,7 @@ export class TouchController extends Controller {
       dx = dx / len * max;
       dy = dy / len * max;
     }
-    this.knob.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+    if (this.knob) this.knob.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
 
     const nx = dx / max;
     const ny = dy / max;
@@ -177,11 +249,15 @@ export class TouchController extends Controller {
   reset() {
     super.reset();
     this.stickPointer = null;
+    this.dpadPointer = null;
+    this.dpadDir = null;
     this.upLatched = false;
     this.buttonPointers.clear();
     if (this.knob) this.knob.style.transform = 'translate(0px, 0px)';
     if (this.stick) this.stick.classList.remove('active');
+    if (this.dpad) this.dpad.classList.remove('active');
     for (const b of this.buttons) b.classList.remove('pressed');
+    for (const b of this.dirButtons) b.classList.remove('pressed');
   }
 }
 

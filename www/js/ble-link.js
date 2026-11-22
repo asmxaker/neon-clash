@@ -13,6 +13,7 @@ const PHASES = ['idle', 'intro', 'fight', 'roundEnd', 'matchEnd'];
 const STATES = ['idle', 'walk', 'jump', 'crouch', 'block', 'hit', 'attack', 'ko', 'win'];
 const ATTACK_CODES = [null, 'punch', 'kick', 'airkick', 'special', 'shockwave', 'dash', 'fan', 'lightning'];
 const PROJ_CODES = [null, 'plasma', 'wave', 'shard', 'lightning'];
+const COMBO_CODES = [null, 'ДВОЙКА', 'КРЮК', 'СМЕНА', 'ШКВАЛ'];
 
 const TX_PROPS = {
   broadcast: false, read: false, writeWithoutResponse: false, write: false,
@@ -47,7 +48,9 @@ function buildBleSnapshot(game) {
         a ? Math.round(a.recovery * 1000) : 0,
         Math.round(f.hitstun * 100), Math.round(f.blockstun * 100), f.combo,
         Math.round(f.comboTimer * 100), Math.round(f.flash * 100),
-        Math.round(f.koTime * 100), Math.round(f.winTime * 100)
+        Math.round(f.koTime * 100), Math.round(f.winTime * 100),
+        Math.max(0, COMBO_CODES.indexOf(f.comboLabel || null)),
+        Math.round((f.comboLabelT || 0) * 100)
       ];
     }),
     p: game.projectiles.map((p) => [
@@ -81,7 +84,8 @@ function expandBleSnapshot(s) {
       as: (a[12] || 0) / 1000, aa: (a[13] || 0) / 1000, ar: (a[14] || 0) / 1000,
       hs: (a[15] || 0) / 100, bs: (a[16] || 0) / 100,
       c: a[17] || 0, ct: (a[18] || 0) / 100, fl: (a[19] || 0) / 100,
-      kt: (a[20] || 0) / 100, wt: (a[21] || 0) / 100
+      kt: (a[20] || 0) / 100, wt: (a[21] || 0) / 100,
+      cl: COMBO_CODES[a[22]] || '', clt: (a[23] || 0) / 100
     })),
     p: (s.p || []).map((a) => ({
       k: PROJ_CODES[a[0]] || 'plasma',

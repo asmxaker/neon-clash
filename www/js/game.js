@@ -612,6 +612,13 @@ function drawCombo(ctx, f, x, y, align) {
   ctx.font = '700 12px system-ui, sans-serif';
   ctx.fillStyle = 'rgba(220,230,255,0.6)';
   ctx.fillText('СЕРИЯ', 0, 24);
+  if (f.comboLabel && f.comboLabelT > 0) {
+    ctx.font = '900 13px "Arial Black", system-ui, sans-serif';
+    ctx.fillStyle = f.accent;
+    ctx.shadowColor = f.color;
+    ctx.shadowBlur = 10;
+    ctx.fillText(`КОМБО «${f.comboLabel}»`, 0, 43);
+  }
   ctx.restore();
 }
 
@@ -831,6 +838,8 @@ export class Game {
       f.flash = d.fl || 0;
       f.koTime = d.kt || 0;
       f.winTime = d.wt || 0;
+      f.comboLabel = d.cl || '';
+      f.comboLabelT = d.clt || 0;
       f.wins = this.wins[i] || 0;
       f.locked = s.ph !== 'fight';
     }
@@ -1326,6 +1335,9 @@ export class Game {
       def.setState('block');
       def.addMeter(4);
       atk.addMeter(3);
+      atk.comboReady = false;
+      atk.chain = [];
+      atk.chainT = 0;
       this.fx.blockSpark(cx, cy, def.color);
       this.fx.shakeIt(3.5);
       this.fx.hitstop = 0.028;
@@ -1345,9 +1357,23 @@ export class Game {
     def.blockstun = 0;
     def.hitstun = a.hitstun;
     def.setState('hit');
-    def.kb = dir * a.kb;
+    // Джаб почти не отталкивает — так проще попасть вторым ударом комбо.
+    def.kb = dir * a.kb * (a.kind === 'punch' ? 0.78 : 1);
     def.addMeter(6);
     atk.addMeter(a.meterGain ?? 8);
+    def.comboReady = false;
+    def.chain = [];
+    def.chainT = 0;
+    def.attackBuffer = null;
+
+    if (!projectile && (a.kind === 'punch' || a.kind === 'kick')) {
+      atk.comboReady = true;
+      atk.chainT = Math.max(atk.chainT, 0.7);
+    }
+    if (a.comboName) {
+      atk.comboLabel = a.comboName;
+      atk.comboLabelT = 1.5;
+    }
 
     this.fx.hitSpark(cx, cy, atk.accent, dir, Math.min(1.7, 0.7 + dmg / 12));
     this.fx.popup(def.x, GROUND_Y - def.y - def.getHurtHeight() - 14, `−${dmg}`, atk.accent, 26 + Math.min(12, dmg));

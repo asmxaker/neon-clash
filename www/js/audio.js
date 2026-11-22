@@ -132,6 +132,12 @@ class AudioEngine {
     this.noise({ dur: 0.07, vol: 0.12, type: 'bandpass', freq: 3200, q: 2.2 });
   }
 
+  combo(step = 2) {
+    const base = 620 + Math.min(3, step) * 95;
+    this.tone({ freq: base, freqEnd: base * 1.2, dur: 0.06, type: 'triangle', vol: 0.06 });
+    this.tone({ freq: base * 1.5, dur: 0.08, type: 'square', vol: 0.035, delay: 0.045 });
+  }
+
   jump() {
     this.tone({ freq: 300, freqEnd: 560, dur: 0.09, type: 'sine', vol: 0.06 });
   }
