@@ -91,12 +91,15 @@
               <p><b>РУКА</b> — быстрый удар. Не попадает по присевшему сопернику.</p>
               <p><b>НОГА</b> — сильный удар. Пробивает присед.</p>
               <p><b>БЛОК</b> — держи, чтобы защищаться. В воздухе не работает.</p>
-              <p><b>СПЕЦ</b> — энергетический заряд. Нужно 50 энергии.</p>
+              <p><b>СПЕЦ</b> — особая атака. Нужно 50 энергии.</p>
+              <p><b>ВОЛЬТ</b> — быстрый, спец: плазменный заряд.</p>
+              <p><b>БЛЕЙЗ</b> — тяжёлый, спец: ударная волна. Её можно перепрыгнуть.</p>
             </div>
             <div class="help-col">
               <h3>2 ИГРОКА</h3>
               <p>Экран делится пополам: у каждого свой джойстик и кнопки.</p>
-              <p>Игрок 1 — слева (бирюзовый), игрок 2 — справа (розовый).</p>
+              <p>Игрок 1 — слева, игрок 2 — справа. Цвета зависят от выбранного бойца.</p>
+              <p>Второй игрок получает другого бойца — выбери, за кого играешь ты.</p>
               <h3>КЛАВИАТУРА</h3>
               <p>P1: <b>A D W S</b> + <b>F</b> рука, <b>G</b> нога, <b>H</b> блок, <b>T</b> спец.</p>
               <p>P2: <b>← → ↑ ↓</b> + <b>1</b> рука, <b>2</b> нога, <b>3</b> блок, <b>4</b> спец.</p>
@@ -104,6 +107,55 @@
             </div>
           </div>
           <button class="menu-btn primary wide" id="btnHelpClose">ПОНЯТНО</button>
+        </div>
+      </div>
+
+      <!-- Выбор бойца -->
+      <div id="select" class="overlay hidden">
+        <div class="panel select-panel">
+          <div class="select-kicker" id="selectKicker">1 ИГРОК · ПРОТИВ ИИ</div>
+          <h2>ВЫБЕРИ БОЙЦА</h2>
+
+          <div class="fighter-grid">
+            <button class="fighter-card" data-char="volt" aria-pressed="true">
+              <span class="fc-top">
+                <span class="fc-badge">БЫСТРЫЙ</span>
+                <span class="fc-role"></span>
+              </span>
+              <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
+              <span class="fc-name">ВОЛЬТ</span>
+              <span class="fc-tag">СКОРОСТЬ · ПЛАЗМА</span>
+              <span class="fc-special"><b>СПЕЦ</b> ПЛАЗМЕННЫЙ ЗАРЯД</span>
+              <span class="fc-stats">
+                <span class="fc-stat"><i>СКОР</i><b><u style="width:100%"></u></b></span>
+                <span class="fc-stat"><i>СИЛА</i><b><u style="width:58%"></u></b></span>
+                <span class="fc-stat"><i>ДАЛЬН</i><b><u style="width:80%"></u></b></span>
+              </span>
+            </button>
+
+            <button class="fighter-card" data-char="blaze" aria-pressed="false">
+              <span class="fc-top">
+                <span class="fc-badge">ТЯЖЁЛЫЙ</span>
+                <span class="fc-role"></span>
+              </span>
+              <span class="fc-art"><canvas class="portrait" width="440" height="320"></canvas></span>
+              <span class="fc-name">БЛЕЙЗ</span>
+              <span class="fc-tag">СИЛА · УДАРНАЯ ВОЛНА</span>
+              <span class="fc-special"><b>СПЕЦ</b> УДАРНАЯ ВОЛНА</span>
+              <span class="fc-stats">
+                <span class="fc-stat"><i>СКОР</i><b><u style="width:60%"></u></b></span>
+                <span class="fc-stat"><i>СИЛА</i><b><u style="width:100%"></u></b></span>
+                <span class="fc-stat"><i>ДАЛЬН</i><b><u style="width:58%"></u></b></span>
+              </span>
+            </button>
+          </div>
+
+          <div class="select-summary" id="selectSummary"></div>
+
+          <div class="select-actions">
+            <button class="menu-btn ghost" id="btnSelectBack"><span class="mb-main">НАЗАД</span></button>
+            <button class="menu-btn primary" id="btnSelectFight"><span class="mb-main">В БОЙ</span></button>
+          </div>
         </div>
       </div>
 

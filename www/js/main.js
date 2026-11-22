@@ -1,6 +1,8 @@
 // Точка входа: меню, переключение режимов, пауза, звук и мелкие интеграции.
 
 import { Game } from './game.js';
+import { Fighter, drawFighter } from './fighter.js';
+import { CHARACTERS, getCharacter, otherCharacter } from './characters.js';
 import { makePlayerControllers } from './input.js';
 import { AIController } from './ai.js';
 import { audio } from './audio.js';
@@ -10,6 +12,7 @@ const $ = (id) => document.getElementById(id);
 const stage = $('stage');
 const menu = $('menu');
 const help = $('help');
+const select = $('select');
 const pause = $('pause');
 const result = $('result');
 const sysBtns = $('sysBtns');
@@ -27,6 +30,11 @@ const btnResultMenu = $('btnResultMenu');
 const resultKicker = $('resultKicker');
 const resultTitle = $('resultTitle');
 const resultSub = $('resultSub');
+const selectKicker = $('selectKicker');
+const selectSummary = $('selectSummary');
+const btnSelectBack = $('btnSelectBack');
+const btnSelectFight = $('btnSelectFight');
+const fighterCards = [...document.querySelectorAll('.fighter-card')];
 
 const controllers = makePlayerControllers();
 const ai = new AIController();
@@ -43,6 +51,40 @@ window.__audio = audio;
 
 let resultTimer = null;
 let wakeLock = null;
+let selectMode = '1p';
+let selectedCharId = 'volt';
+try {
+  const saved = localStorage.getItem('nc_char');
+  if (saved && CHARACTERS[saved]) selectedCharId = saved;
+} catch (e) { /* ignore */ }
+
+// ---------------------------------------------------------------- портреты
+
+function renderPortraits() {
+  for (const card of fighterCards) {
+    const canvas = card.querySelector('.portrait');
+    if (!canvas) continue;
+    const W = 220;
+    const H = 160;
+    const dpr = 2;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const f = new Fighter({ charId: card.dataset.char, x: 0, facing: 1, index: 0 });
+    f.locked = true;
+    f.state = 'idle';
+    f.animT = card.dataset.char === 'blaze' ? 2.1 : 1.4;
+    f.meter = 0;
+    const s = 0.64;
+    ctx.save();
+    ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * (W / 2), dpr * (H - 8 - 604 * s));
+    drawFighter(ctx, f);
+    ctx.restore();
+  }
+}
+renderPortraits();
 
 // ---------------------------------------------------------------- звук
 
@@ -66,10 +108,53 @@ document.addEventListener('keydown', () => audio.unlock(), { once: true, capture
 // ---------------------------------------------------------------- меню
 
 function hideAllOverlays() {
-  for (const el of [menu, help, pause, result]) el.classList.add('hidden');
+  for (const el of [menu, help, select, pause, result]) el.classList.add('hidden');
 }
 
-function startGame(mode) {
+function updateSelectUI() {
+  const p1 = getCharacter(selectedCharId);
+  const p2 = otherCharacter(p1.id);
+  for (const card of fighterCards) {
+    const active = card.dataset.char === p1.id;
+    card.classList.toggle('selected', active);
+    card.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const role = card.querySelector('.fc-role');
+    if (role) {
+      role.textContent = selectMode === '2p'
+        ? (active ? 'P1' : 'P2')
+        : (active ? 'ТЫ' : 'ИИ');
+    }
+  }
+  selectKicker.textContent = selectMode === '2p'
+    ? '2 ИГРОКА · ВЫБЕРИ СТОРОНУ'
+    : '1 ИГРОК · ПРОТИВ ИИ';
+  selectSummary.innerHTML = selectMode === '2p'
+    ? `P1: <b>${p1.name}</b> · P2: <b>${p2.name}</b>`
+    : `ИГРОК: <b>${p1.name}</b> · ИИ: <b>${p2.name}</b>`;
+}
+
+function openSelect(mode) {
+  selectMode = mode;
+  updateSelectUI();
+  audio.unlock();
+  audio.ui();
+  hideAllOverlays();
+  select.classList.remove('hidden');
+  stage.classList.remove('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.add('hidden');
+}
+
+function closeSelect() {
+  select.classList.add('hidden');
+  menu.classList.remove('hidden');
+  audio.ui();
+}
+
+function startGame(mode, charId) {
+  const p1 = getCharacter(charId);
+  const p2 = otherCharacter(p1.id);
+  try { localStorage.setItem('nc_char', p1.id); } catch (e) { /* ignore */ }
   audio.unlock();
   audio.ui();
   tryImmersive();
@@ -80,12 +165,22 @@ function startGame(mode) {
   sysBtns.classList.remove('hidden');
   controllers.touch1.reset();
   controllers.touch2.reset();
-  game.startMatch(mode);
+  game.startMatch(mode, p1.id, p2.id);
   requestWakeLock();
 }
 
-btn1p.addEventListener('click', () => startGame('1p'));
-btn2p.addEventListener('click', () => startGame('2p'));
+for (const card of fighterCards) {
+  card.addEventListener('click', () => {
+    selectedCharId = card.dataset.char;
+    updateSelectUI();
+    audio.ui();
+  });
+}
+
+btn1p.addEventListener('click', () => openSelect('1p'));
+btn2p.addEventListener('click', () => openSelect('2p'));
+btnSelectBack.addEventListener('click', closeSelect);
+btnSelectFight.addEventListener('click', () => startGame(selectMode, selectedCharId));
 
 btnHelp.addEventListener('click', () => {
   audio.unlock();
@@ -127,6 +222,7 @@ btnRestart.addEventListener('click', () => {
 function quitToMenu() {
   clearTimeout(resultTimer);
   hideAllOverlays();
+  menu.classList.remove('hidden');
   stage.classList.remove('in-match');
   stage.classList.remove('two-p');
   sysBtns.classList.add('hidden');
@@ -147,6 +243,10 @@ btnRematch.addEventListener('click', () => {
 
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' || e.code === 'KeyP') {
+    if (!select.classList.contains('hidden')) {
+      closeSelect();
+      return;
+    }
     if (!help.classList.contains('hidden')) {
       help.classList.add('hidden');
       return;
@@ -154,9 +254,14 @@ document.addEventListener('keydown', (e) => {
     if (!result.classList.contains('hidden')) return;
     if (!pause.classList.contains('hidden')) closePause();
     else if (game.inMatch) openPause();
-  } else if (e.code === 'Enter' && game.screen === 'menu') {
-    if (!help.classList.contains('hidden')) return;
-    startGame('1p');
+  } else if (e.code === 'Enter') {
+    if (!select.classList.contains('hidden')) {
+      startGame(selectMode, selectedCharId);
+      return;
+    }
+    if (game.screen === 'menu' && help.classList.contains('hidden')) {
+      openSelect('1p');
+    }
   }
 });
 
@@ -168,6 +273,7 @@ function handleMatchEnd(winner) {
     if (!game.inMatch || game.phase !== 'matchEnd') return;
     const p1Won = winner === 0;
     const twoP = game.mode === '2p';
+    const winnerF = game.fighters[winner];
     resultKicker.textContent = 'БОЙ ОКОНЧЕН';
     if (twoP) {
       resultTitle.textContent = p1Won ? 'ПОБЕДА ИГРОКА 1' : 'ПОБЕДА ИГРОКА 2';
@@ -175,8 +281,11 @@ function handleMatchEnd(winner) {
       resultTitle.textContent = p1Won ? 'ПОБЕДА' : 'ПОРАЖЕНИЕ';
     }
     resultTitle.classList.remove('win1', 'win2');
-    resultTitle.classList.add(p1Won ? 'win1' : 'win2');
-    resultSub.textContent = `Счёт раундов ${game.wins[0]} : ${game.wins[1]} · до двух побед`;
+    if (winnerF) {
+      resultTitle.style.color = winnerF.color;
+      resultTitle.style.textShadow = `0 0 24px ${winnerF.color}`;
+    }
+    resultSub.textContent = `${winnerF ? `${winnerF.name} · ` : ''}Счёт раундов ${game.wins[0]} : ${game.wins[1]} · до двух побед`;
     result.classList.remove('hidden');
     audio.ui();
   }, 900);

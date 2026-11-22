@@ -1,4 +1,4 @@
-const CACHE = 'neon-clash-v2';
+const CACHE = 'neon-clash-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './js/main.js',
   './js/game.js',
   './js/fighter.js',
+  './js/characters.js',
   './js/input.js',
   './js/ai.js',
   './js/fx.js',

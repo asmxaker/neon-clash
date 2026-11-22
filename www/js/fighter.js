@@ -1,14 +1,12 @@
 // Боец: физика, состояния, удары и процедурная неоновая отрисовка.
 
 import { audio } from './audio.js';
+import { getCharacter } from './characters.js';
 
 export const GROUND_Y = 604;
 export const ARENA = { left: 112, right: 1168 };
 
 const GRAVITY = 3150;
-const WALK_SPEED = 330;
-const AIR_SPEED = 245;
-const JUMP_V = 1140;
 const BODY_HALF = 32;
 const STAND_H = 196;
 const CROUCH_H = 120;
@@ -34,6 +32,11 @@ export const ATTACKS = {
     kind: 'special', startup: 0.23, active: 0.06, recovery: 0.36,
     projectile: true, cost: 50, damage: 15, y0: 96, y1: 160, kb: 460,
     hitstun: 0.38, blockstun: 0.26, meterGain: 0
+  },
+  shockwave: {
+    kind: 'shockwave', startup: 0.29, active: 0.06, recovery: 0.46,
+    projectile: true, cost: 50, damage: 16, y0: 0, y1: 100, kb: 520,
+    hitstun: 0.42, blockstun: 0.28, meterGain: 0
   }
 };
 
@@ -48,11 +51,24 @@ function hexA(hex, a) {
 }
 
 export class Fighter {
-  constructor({ x = 380, facing = 1, color = '#35f0ff', accent = '#bffaff', name = 'БОЕЦ', controller = null, index = 0 } = {}) {
+  constructor({ x = 380, facing = 1, charId = 'volt', controller = null, index = 0 } = {}) {
+    const char = getCharacter(charId);
     this.index = index;
-    this.color = color;
-    this.accent = accent;
-    this.name = name;
+    this.char = char;
+    this.charId = char.id;
+    this.style = char.style;
+    this.special = char.special;
+    this.color = char.color;
+    this.accent = char.accent;
+    this.name = char.name;
+    this.maxHealth = char.hp;
+    this.walkSpeed = char.walkSpeed;
+    this.airSpeed = char.airSpeed;
+    this.jumpV = char.jumpV;
+    this.damageMul = char.damageMul;
+    this.startupMul = char.startupMul;
+    this.recoveryMul = char.recoveryMul;
+    this.reachMul = char.reachMul;
     this.controller = controller;
     this.phase = Math.random() * TAU;
     this.animT = Math.random() * 10;
@@ -61,8 +77,8 @@ export class Fighter {
     this.x = x;
     this.facing = facing;
     this.locked = true;
-    this.health = 100;
-    this.displayHealth = 100;
+    this.health = this.maxHealth;
+    this.displayHealth = this.maxHealth;
     this.state = 'idle';
     this.stateTime = 0;
     this.attack = null;
@@ -89,8 +105,8 @@ export class Fighter {
   resetForRound(x, facing) {
     this.x = x;
     this.facing = facing;
-    this.health = 100;
-    this.displayHealth = 100;
+    this.health = this.maxHealth;
+    this.displayHealth = this.maxHealth;
     this.y = 0;
     this.vy = 0;
     this.kb = 0;
@@ -155,12 +171,21 @@ export class Fighter {
   }
 
   startAttack(kind) {
-    const a = ATTACKS[kind];
-    if (!a) return false;
-    if (a.projectile) {
-      if (this.meter < a.cost) return false;
-      this.meter -= a.cost;
+    const base = kind === 'special'
+      ? (this.special === 'wave' ? ATTACKS.shockwave : ATTACKS.special)
+      : ATTACKS[kind];
+    if (!base) return false;
+    if (base.projectile) {
+      if (this.meter < base.cost) return false;
+      this.meter -= base.cost;
     }
+    const a = {
+      ...base,
+      startup: base.startup * this.startupMul,
+      recovery: base.recovery * this.recoveryMul,
+      damage: base.damage * this.damageMul,
+      reach: (base.reach || 0) * this.reachMul
+    };
     this.attack = a;
     this.attackT = 0;
     this.attackHit = false;
@@ -249,14 +274,14 @@ export class Fighter {
       } else if (dir) {
         this.walkDir = dir;
         this.walkPhase += dt * 10.5;
-        this.x += dir * WALK_SPEED * dt;
+        this.x += dir * this.walkSpeed * dt;
         this.setState('walk');
       } else {
         this.setState('idle');
       }
 
       if (c.consume('up')) {
-        this.vy = JUMP_V;
+        this.vy = this.jumpV;
         this.y = 0.01;
         this.airAttackUsed = false;
         this.jumpDustArmed = true;
@@ -265,7 +290,7 @@ export class Fighter {
       }
     } else {
       const dir = (c.isDown('right') ? 1 : 0) - (c.isDown('left') ? 1 : 0);
-      if (dir) this.x += dir * AIR_SPEED * dt;
+      if (dir) this.x += dir * this.airSpeed * dt;
       if (this.state !== 'jump') this.setState('jump');
     }
 
@@ -274,8 +299,9 @@ export class Fighter {
     const punch = c.consume('punch');
     const kick = c.consume('kick');
     const special = c.consume('special');
+    const specialCost = (this.special === 'wave' ? ATTACKS.shockwave : ATTACKS.special).cost;
 
-    if (special && this.y <= 0 && this.meter >= ATTACKS.special.cost) {
+    if (special && this.y <= 0 && this.meter >= specialCost) {
       this.startAttack('special');
     } else if (this.y > 0) {
       if ((punch || kick) && !this.airAttackUsed) this.startAttack('airkick');
@@ -525,7 +551,47 @@ function buildPose(f) {
       p.ftB = [-30, -2];
       p.knF = [24, -50];
       p.knB = [-24, -50];
+    } else if (a.kind === 'shockwave') {
+      const st = a.startup;
+      if (f.attackT < st) {
+        const charge = clamp(f.attackT / st, 0, 1);
+        upper(-4 * charge, -2 * charge);
+        p.elF = lerp2([32, -128], [38, -160], charge);
+        p.haF = lerp2([30, -156], [46, -198], charge);
+        p.elB = lerp2([-32, -128], [-10, -158], charge);
+        p.haB = lerp2([-16, -150], [20, -194], charge);
+        p.knF = [30, -48];
+        p.knB = [-30, -48];
+        p.ftF = [34, -2];
+        p.ftB = [-38, -2];
+      } else {
+        const slam = smooth(clamp((f.attackT - st) / 0.1, 0, 1));
+        upper(12 * slam, 4 * slam);
+        p.hip[1] += 6 * slam;
+        p.chest[1] += 6 * slam;
+        p.elF = lerp2([38, -160], [50, -112], slam);
+        p.haF = lerp2([46, -198], [66, -62], slam);
+        p.elB = lerp2([-10, -158], [28, -116], slam);
+        p.haB = lerp2([20, -194], [44, -66], slam);
+        p.knF = [30, -44];
+        p.knB = [-30, -44];
+        p.ftF = [38, -2];
+        p.ftB = [-42, -2];
+      }
     }
+  }
+
+  if (f.style === 'heavy') {
+    if (f.state !== 'attack') {
+      p.ftF[0] += 4;
+      p.ftB[0] -= 4;
+      p.knF[0] += 2;
+      p.knB[0] -= 2;
+    }
+    p.shF[0] += 3;
+    p.shB[0] -= 3;
+    p.chest[1] += 1;
+    p.hip[1] += 1;
   }
 
   return p;
@@ -534,23 +600,23 @@ function buildPose(f) {
 function drawScarf(ctx, f, color) {
   const t = f.animT;
   const speed = Math.min(1, Math.abs(f.kb) / 500 + (f.y > 0 ? 0.5 : 0));
-  const n = 6;
+  const n = f.style === 'heavy' ? 4 : 6;
   let prev = [-2, -156];
   for (let i = 1; i <= n; i++) {
-    const x = -2 - i * (11 + speed * 5);
+    const x = -2 - i * ((f.style === 'heavy' ? 8 : 11) + speed * 5);
     const y = -156 + Math.sin(t * 5.5 + i * 0.9) * (4 + i * 0.9) + i * 1.4;
-    const width = 8.2 - i * 1.2;
+    const width = (f.style === 'heavy' ? 10 : 8.2) - i * (f.style === 'heavy' ? 2 : 1.2);
     ctx.beginPath();
     ctx.moveTo(prev[0], prev[1]);
     ctx.lineTo(x, y);
     ctx.lineCap = 'round';
-    ctx.strokeStyle = hexA(color, 0.13 * (1 - i / (n + 2)));
+    ctx.strokeStyle = hexA(color, 0.15 * (1 - i / (n + 2)));
     ctx.lineWidth = width * 3.4;
     ctx.stroke();
-    ctx.strokeStyle = hexA(color, 0.62 * (1 - i / (n + 1)));
+    ctx.strokeStyle = hexA(color, 0.7 * (1 - i / (n + 1)));
     ctx.lineWidth = width;
     ctx.stroke();
-    ctx.strokeStyle = `rgba(255,255,255,${0.35 * (1 - i / (n + 1))})`;
+    ctx.strokeStyle = `rgba(255,255,255,${0.4 * (1 - i / (n + 1))})`;
     ctx.lineWidth = Math.max(0.8, width * 0.3);
     ctx.stroke();
     prev = [x, y];
@@ -559,26 +625,30 @@ function drawScarf(ctx, f, color) {
 
 function drawTorso(ctx, f, col, p) {
   const a = 0.95;
+  const heavy = f.style === 'heavy';
+  const chestW = heavy ? 22 : 19;
+  const hipW = heavy ? 15 : 13;
+  const shOut = heavy ? 7 : 5;
   ctx.beginPath();
-  ctx.moveTo(p.shB[0] - 5, p.shB[1] + 5);
-  ctx.lineTo(p.shF[0] + 5, p.shF[1] + 5);
-  ctx.lineTo(p.chest[0] + 19, p.chest[1] + 19);
-  ctx.lineTo(p.hip[0] + 13, p.hip[1] + 4);
-  ctx.lineTo(p.hip[0] - 13, p.hip[1] + 4);
-  ctx.lineTo(p.chest[0] - 19, p.chest[1] + 19);
+  ctx.moveTo(p.shB[0] - shOut, p.shB[1] + 5);
+  ctx.lineTo(p.shF[0] + shOut, p.shF[1] + 5);
+  ctx.lineTo(p.chest[0] + chestW, p.chest[1] + 19);
+  ctx.lineTo(p.hip[0] + hipW, p.hip[1] + 4);
+  ctx.lineTo(p.hip[0] - hipW, p.hip[1] + 4);
+  ctx.lineTo(p.chest[0] - chestW, p.chest[1] + 19);
   ctx.closePath();
   ctx.fillStyle = 'rgba(8,5,18,0.92)';
   ctx.fill();
   ctx.strokeStyle = hexA(col, 0.12 * a);
-  ctx.lineWidth = 7;
+  ctx.lineWidth = heavy ? 9 : 7;
   ctx.stroke();
   ctx.strokeStyle = hexA(col, 0.9 * a);
-  ctx.lineWidth = 2.6;
+  ctx.lineWidth = heavy ? 3.2 : 2.6;
   ctx.stroke();
 
   // наплечники
-  limb(ctx, [p.shB, [p.shB[0] - 9, p.shB[1] - 5]], col, 5.5, 0.75);
-  limb(ctx, [p.shF, [p.shF[0] + 9, p.shF[1] - 5]], col, 5.5, 0.9);
+  limb(ctx, [p.shB, [p.shB[0] - (heavy ? 13 : 9), p.shB[1] - (heavy ? 8 : 5)]], col, heavy ? 8 : 5.5, 0.75);
+  limb(ctx, [p.shF, [p.shF[0] + (heavy ? 13 : 9), p.shF[1] - (heavy ? 8 : 5)]], col, heavy ? 8 : 5.5, 0.9);
 
   // энергетическая линия по центру
   ctx.beginPath();
@@ -586,101 +656,135 @@ function drawTorso(ctx, f, col, p) {
   ctx.lineTo(p.chest[0] + 3, p.chest[1] + 22);
   ctx.lineTo(p.hip[0], p.hip[1] - 2);
   ctx.strokeStyle = hexA(col, 0.55);
-  ctx.lineWidth = 1.8;
+  ctx.lineWidth = heavy ? 2.4 : 1.8;
   ctx.stroke();
 
   // рёбра / броня
   ctx.beginPath();
   ctx.moveTo(p.shF[0] + 3, p.shF[1] + 7);
-  ctx.lineTo(p.chest[0] + 12, p.chest[1] + 21);
+  ctx.lineTo(p.chest[0] + (heavy ? 15 : 12), p.chest[1] + 21);
   ctx.strokeStyle = hexA(col, 0.38);
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = heavy ? 2 : 1.4;
   ctx.stroke();
 
   // ядро на груди
   const ex = p.chest[0];
   const ey = p.chest[1] + 22;
+  const er = heavy ? 8 : 6;
   ctx.beginPath();
-  ctx.moveTo(ex, ey - 6);
-  ctx.lineTo(ex + 5, ey);
-  ctx.lineTo(ex, ey + 6);
-  ctx.lineTo(ex - 5, ey);
+  ctx.moveTo(ex, ey - er);
+  ctx.lineTo(ex + er * 0.8, ey);
+  ctx.lineTo(ex, ey + er);
+  ctx.lineTo(ex - er * 0.8, ey);
   ctx.closePath();
-  ctx.fillStyle = hexA(col, 0.18);
+  ctx.fillStyle = hexA(col, heavy ? 0.28 : 0.18);
   ctx.fill();
   ctx.strokeStyle = hexA(col, 0.85);
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = heavy ? 2 : 1.4;
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(ex, ey, 1.8, 0, TAU);
+  ctx.arc(ex, ey, heavy ? 2.5 : 1.8, 0, TAU);
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.fill();
 }
 
 function drawHead(ctx, f, col, accent, p) {
   const [hx, hy] = p.head;
-  const r = 18;
+  const heavy = f.style === 'heavy';
+  const r = heavy ? 19 : 18;
 
-  // короткий гребень-плавник
-  ctx.beginPath();
-  ctx.moveTo(hx - 6, hy - r + 4);
-  ctx.lineTo(hx - 16, hy - r - 2);
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = hexA(col, 0.7);
-  ctx.lineWidth = 2.4;
-  ctx.stroke();
+  if (heavy) {
+    // рога
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(hx - 9, hy - r + 3);
+    ctx.lineTo(hx - 17, hy - r - 10);
+    ctx.strokeStyle = hexA(col, 0.85);
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(hx + 8, hy - r + 3);
+    ctx.lineTo(hx + 15, hy - r - 8);
+    ctx.strokeStyle = hexA(col, 0.85);
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  } else {
+    // короткий гребень-плавник
+    ctx.beginPath();
+    ctx.moveTo(hx - 6, hy - r + 4);
+    ctx.lineTo(hx - 16, hy - r - 2);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = hexA(col, 0.7);
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+  }
 
   ctx.beginPath();
   ctx.arc(hx, hy, r, 0, TAU);
   ctx.fillStyle = 'rgba(7,4,15,0.96)';
   ctx.fill();
   ctx.strokeStyle = hexA(col, 0.12);
-  ctx.lineWidth = 8;
+  ctx.lineWidth = heavy ? 10 : 8;
   ctx.stroke();
   ctx.strokeStyle = hexA(col, 0.95);
-  ctx.lineWidth = 2.6;
+  ctx.lineWidth = heavy ? 3.2 : 2.6;
   ctx.stroke();
 
   // визор
   const vy = hy + 1;
   ctx.beginPath();
-  ctx.moveTo(hx - 5, vy);
-  ctx.lineTo(hx + 9, vy - 1);
+  ctx.moveTo(hx - (heavy ? 7 : 5), vy);
+  ctx.lineTo(hx + (heavy ? 11 : 9), vy - 1);
   ctx.lineCap = 'round';
   ctx.strokeStyle = hexA(accent, 0.25);
-  ctx.lineWidth = 9;
+  ctx.lineWidth = heavy ? 12 : 9;
   ctx.stroke();
   ctx.strokeStyle = hexA(accent, 0.95);
-  ctx.lineWidth = 4;
+  ctx.lineWidth = heavy ? 5 : 4;
   ctx.stroke();
   ctx.strokeStyle = 'rgba(255,255,255,0.95)';
   ctx.lineWidth = 1.4;
   ctx.stroke();
 
-  // бровь / маска
-  ctx.beginPath();
-  ctx.moveTo(hx - 7, hy - 7);
-  ctx.lineTo(hx + 8, hy - 8);
-  ctx.strokeStyle = hexA(col, 0.55);
-  ctx.lineWidth = 1.4;
-  ctx.stroke();
+  if (heavy) {
+    // маска-респиратор
+    ctx.beginPath();
+    ctx.moveTo(hx - 8, hy + 9);
+    ctx.lineTo(hx + 6, hy + 10);
+    ctx.strokeStyle = hexA(col, 0.6);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(hx - 1, hy + 13, 2, 0, TAU);
+    ctx.fillStyle = hexA(accent, 0.9);
+    ctx.fill();
+  } else {
+    // бровь / маска
+    ctx.beginPath();
+    ctx.moveTo(hx - 7, hy - 7);
+    ctx.lineTo(hx + 8, hy - 8);
+    ctx.strokeStyle = hexA(col, 0.55);
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+  }
 
   // затылочный огонёк
   ctx.beginPath();
-  ctx.arc(hx - 12, hy + 3, 2, 0, TAU);
+  ctx.arc(hx - (heavy ? 13 : 12), hy + 3, heavy ? 2.6 : 2, 0, TAU);
   ctx.fillStyle = hexA(accent, 0.8);
   ctx.fill();
 }
 
 function drawExtremities(ctx, f, col, accent, p) {
+  const heavy = f.style === 'heavy';
   // кулаки
   const hands = [
-    { pt: p.haB, r: 4.4, a: 0.62 },
-    { pt: p.haF, r: 5.2, a: 1 }
+    { pt: p.haB, r: heavy ? 6 : 4.4, a: 0.62 },
+    { pt: p.haF, r: heavy ? 7 : 5.2, a: 1 }
   ];
   for (const h of hands) {
     ctx.beginPath();
-    ctx.arc(h.pt[0], h.pt[1], h.r + 3.5, 0, TAU);
+    ctx.arc(h.pt[0], h.pt[1], h.r + (heavy ? 5 : 3.5), 0, TAU);
     ctx.fillStyle = hexA(col, 0.13 * h.a);
     ctx.fill();
     ctx.beginPath();
@@ -700,14 +804,14 @@ function drawExtremities(ctx, f, col, accent, p) {
   ];
   for (const ft of feet) {
     ctx.beginPath();
-    ctx.moveTo(ft.pt[0] - 8, ft.pt[1] - 2);
-    ctx.lineTo(ft.pt[0] + 11, ft.pt[1] - 2);
+    ctx.moveTo(ft.pt[0] - (heavy ? 10 : 8), ft.pt[1] - 2);
+    ctx.lineTo(ft.pt[0] + (heavy ? 13 : 11), ft.pt[1] - 2);
     ctx.strokeStyle = hexA(col, 0.12 * ft.a);
-    ctx.lineWidth = 12;
+    ctx.lineWidth = heavy ? 15 : 12;
     ctx.lineCap = 'round';
     ctx.stroke();
     ctx.strokeStyle = hexA(col, 0.95 * ft.a);
-    ctx.lineWidth = 6;
+    ctx.lineWidth = heavy ? 8 : 6;
     ctx.stroke();
     ctx.strokeStyle = `rgba(255,255,255,${0.55 * ft.a})`;
     ctx.lineWidth = 1.8;
@@ -717,20 +821,22 @@ function drawExtremities(ctx, f, col, accent, p) {
 
 function drawShield(ctx, f, col) {
   const pulse = 0.72 + Math.sin(f.animT * 10) * 0.08 + (f.blockstun > 0 ? 0.25 : 0);
+  const heavy = f.style === 'heavy';
+  const base = heavy ? 58 : 52;
   ctx.save();
   ctx.translate(28, -128);
   ctx.scale(1, 1.02);
   for (let i = 0; i < 3; i++) {
     ctx.beginPath();
-    ctx.arc(0, 0, 52 + i * 7, -1.05, 1.05);
+    ctx.arc(0, 0, base + i * 7, -1.05, 1.05);
     ctx.strokeStyle = hexA(i === 0 ? '#ffffff' : col, (0.55 - i * 0.14) * pulse);
-    ctx.lineWidth = 3.5 - i * 0.7;
+    ctx.lineWidth = (heavy ? 4.2 : 3.5) - i * 0.7;
     ctx.stroke();
   }
   ctx.beginPath();
-  ctx.arc(0, 0, 60, -0.85, 0.85);
+  ctx.arc(0, 0, base + 8, -0.85, 0.85);
   ctx.strokeStyle = hexA(col, 0.18 * pulse);
-  ctx.lineWidth = 16;
+  ctx.lineWidth = heavy ? 20 : 16;
   ctx.stroke();
   ctx.restore();
 }
@@ -799,12 +905,13 @@ function drawAttackTrail(ctx, f, col) {
 }
 
 export function drawFighter(ctx, f) {
+  const heavy = f.style === 'heavy';
   const shadowScale = 1 - Math.min(0.62, f.y / 360);
   ctx.save();
   ctx.globalAlpha = 0.5 * shadowScale;
   ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.ellipse(f.x, GROUND_Y + 5, 44 * shadowScale + 10, 10 * shadowScale + 2, 0, 0, TAU);
+  ctx.ellipse(f.x, GROUND_Y + 5, (heavy ? 50 : 44) * shadowScale + 10, (heavy ? 12 : 10) * shadowScale + 2, 0, 0, TAU);
   ctx.fill();
   ctx.restore();
 
@@ -828,11 +935,11 @@ export function drawFighter(ctx, f) {
     ctx.globalCompositeOperation = 'lighter';
     const pulse = 0.5 + Math.sin(f.animT * 4) * 0.2;
     const g = ctx.createRadialGradient(0, -100, 8, 0, -100, 92);
-    g.addColorStop(0, hexA(col, 0.10 * pulse));
+    g.addColorStop(0, hexA(col, (heavy ? 0.13 : 0.10) * pulse));
     g.addColorStop(1, hexA(col, 0));
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.ellipse(0, -100, 66, 106, 0, 0, TAU);
+    ctx.ellipse(0, -100, heavy ? 74 : 66, 106, 0, 0, TAU);
     ctx.fill();
     ctx.restore();
   }
@@ -840,17 +947,17 @@ export function drawFighter(ctx, f) {
   drawScarf(ctx, f, col);
 
   // задняя нога
-  limb(ctx, [p.hipB, p.knB, p.ftB], col, 10.5, 0.62);
+  limb(ctx, [p.hipB, p.knB, p.ftB], col, heavy ? 13 : 10.5, 0.62);
   // задняя рука
-  limb(ctx, [p.shB, p.elB, p.haB], col, 9, 0.62);
+  limb(ctx, [p.shB, p.elB, p.haB], col, heavy ? 11.5 : 9, 0.62);
   // передняя нога
-  limb(ctx, [p.hipF, p.knF, p.ftF], col, 12, 0.95);
+  limb(ctx, [p.hipF, p.knF, p.ftF], col, heavy ? 14.5 : 12, 0.95);
   // торс
   drawTorso(ctx, f, col, p);
   // голова
   drawHead(ctx, f, col, accent, p);
   // передняя рука
-  limb(ctx, [p.shF, p.elF, p.haF], col, 10.5, 1);
+  limb(ctx, [p.shF, p.elF, p.haF], col, heavy ? 13 : 10.5, 1);
   // кулаки и ботинки
   drawExtremities(ctx, f, col, accent, p);
 

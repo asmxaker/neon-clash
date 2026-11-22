@@ -1,6 +1,7 @@
 // Игровой цикл, раунды, HUD и вся сцена (неоновый город на крыше).
 
 import { Fighter, drawFighter, GROUND_Y, ARENA, ATTACKS } from './fighter.js';
+import { otherCharacter } from './characters.js';
 import { FX } from './fx.js';
 import { audio } from './audio.js';
 
@@ -350,12 +351,12 @@ function drawHUD(ctx, game) {
   const left = 96;
   const right = W - 96;
 
-  drawHealth(ctx, p1, left, y, barW, barH, false, CYAN, CYAN_A);
-  drawHealth(ctx, p2, right - barW, y, barW, barH, true, PINK, PINK_A);
+  drawHealth(ctx, p1, left, y, barW, barH, false, p1.color, p1.accent);
+  drawHealth(ctx, p2, right - barW, y, barW, barH, true, p2.color, p2.accent);
 
   // ---- энергия ----
-  drawMeter(ctx, p1, left, y + barH + 6, barW, CYAN);
-  drawMeter(ctx, p2, right - barW, y + barH + 6, barW, PINK);
+  drawMeter(ctx, p1, left, y + barH + 6, barW, p1.color);
+  drawMeter(ctx, p2, right - barW, y + barH + 6, barW, p2.color);
 
   // ---- имена ----
   ctx.save();
@@ -443,8 +444,8 @@ function drawHealth(ctx, f, x, y, w, h, flip, color, accent) {
   ctx.save();
   ctx.clip(path);
 
-  const frac = clamp(f.health / 100, 0, 1);
-  const ghost = clamp(f.displayHealth / 100, 0, 1);
+  const frac = clamp(f.health / f.maxHealth, 0, 1);
+  const ghost = clamp(f.displayHealth / f.maxHealth, 0, 1);
 
   // «призрак» урона
   ctx.fillStyle = 'rgba(255,255,255,0.22)';
@@ -665,14 +666,16 @@ export class Game {
     this.projectiles = [];
     this.fx.clear();
     this.fighters = [
-      new Fighter({ x: 388, facing: 1, color: CYAN, accent: CYAN_A, name: 'ИГРОК 1', index: 0 }),
-      new Fighter({ x: 892, facing: -1, color: PINK, accent: PINK_A, name: 'ИГРОК 2', index: 1 })
+      new Fighter({ x: 388, facing: 1, charId: 'volt', index: 0 }),
+      new Fighter({ x: 892, facing: -1, charId: 'blaze', index: 1 })
     ];
     this.fighters.forEach(f => { f.locked = true; f.animT = Math.random() * 8; });
   }
 
-  startMatch(mode = '1p') {
+  startMatch(mode = '1p', p1CharId = 'volt', p2CharId = null) {
     this.mode = mode;
+    this.p1CharId = p1CharId;
+    this.p2CharId = p2CharId || otherCharacter(p1CharId).id;
     this.screen = 'match';
     this.paused = false;
     this.matchEnded = false;
@@ -684,13 +687,11 @@ export class Game {
     const ctrl2 = mode === '1p' ? this.ai : this.p2;
     this.fighters = [
       new Fighter({
-        x: 408, facing: 1, color: CYAN, accent: CYAN_A,
-        name: mode === '1p' ? 'ИГРОК' : 'ИГРОК 1',
+        x: 408, facing: 1, charId: this.p1CharId,
         controller: this.p1, index: 0
       }),
       new Fighter({
-        x: 872, facing: -1, color: PINK, accent: PINK_A,
-        name: mode === '1p' ? 'ИИ' : 'ИГРОК 2',
+        x: 872, facing: -1, charId: this.p2CharId,
         controller: ctrl2, index: 1
       })
     ];
@@ -722,7 +723,7 @@ export class Game {
   }
 
   rematch() {
-    this.startMatch(this.mode);
+    this.startMatch(this.mode, this.p1CharId, this.p2CharId);
   }
 
   toMenu() {
@@ -884,20 +885,49 @@ export class Game {
 
   spawnProjectile(f) {
     const dir = f.facing;
-    const x = f.x + dir * 64;
-    const y = GROUND_Y - f.y - 128;
-    this.projectiles.push({
-      x, y,
-      vx: dir * 780,
-      r: 21,
-      owner: f.index,
-      life: 2.4,
-      trailT: 0,
-      born: this.time
-    });
-    audio.fire();
-    this.fx.ring(x, y, f.color, 8, 54, 0.25, 3);
-    this.fx.shakeIt(4);
+    const attack = f.attack || ATTACKS.special;
+    if (f.special === 'wave') {
+      const x = f.x + dir * 74;
+      const y = GROUND_Y - 52;
+      this.projectiles.push({
+        kind: 'wave',
+        x, y,
+        vx: dir * 640,
+        r: 30,
+        hitW: 80,
+        hitH: 46,
+        owner: f.index,
+        life: 2.2,
+        trailT: 0,
+        born: this.time,
+        color: f.color,
+        attack
+      });
+      audio.shockwave();
+      this.fx.ring(x, GROUND_Y - 10, f.color, 8, 100, 0.32, 5);
+      this.fx.dust(x - dir * 20, GROUND_Y, 14, f.color);
+      this.fx.shakeIt(8);
+    } else {
+      const x = f.x + dir * 64;
+      const y = GROUND_Y - f.y - 128;
+      this.projectiles.push({
+        kind: 'plasma',
+        x, y,
+        vx: dir * 780,
+        r: 21,
+        hitW: 16,
+        hitH: 22,
+        owner: f.index,
+        life: 2.4,
+        trailT: 0,
+        born: this.time,
+        color: f.color,
+        attack
+      });
+      audio.fire();
+      this.fx.ring(x, y, f.color, 8, 54, 0.25, 3);
+      this.fx.shakeIt(4);
+    }
   }
 
   updateProjectiles(dt) {
@@ -906,9 +936,16 @@ export class Game {
       p.x += p.vx * dt;
       p.life -= dt;
       p.trailT += dt;
-      if (p.trailT > 0.016) {
+
+      if (p.kind === 'wave') {
+        if (p.trailT > 0.03) {
+          p.trailT = 0;
+          this.fx.trail(p.x - Math.sign(p.vx) * (20 + Math.random() * 20), GROUND_Y - 10 - Math.random() * 34, p.color);
+        }
+        this.fx.dust(p.x - Math.sign(p.vx) * 24, GROUND_Y, 1, p.color);
+      } else if (p.trailT > 0.016) {
         p.trailT = 0;
-        this.fx.trail(p.x - Math.sign(p.vx) * 12, p.y + (Math.random() * 2 - 1) * 8, i === 0 ? this.fighters[0].color : this.fighters[1].color);
+        this.fx.trail(p.x - Math.sign(p.vx) * 12, p.y + (Math.random() * 2 - 1) * 8, p.color);
       }
 
       const owner = this.fighters[p.owner];
@@ -917,11 +954,13 @@ export class Game {
 
       if (def && def.health > 0 && def.state !== 'ko') {
         const hb = this.hurtbox(def);
-        const cy = GROUND_Y - def.y - def.getHurtHeight() * 0.55;
-        if (p.x > hb.x - p.r * 0.6 && p.x < hb.x + hb.w + p.r * 0.6 &&
-            cy > hb.y - p.r && cy < hb.y + hb.h + p.r) {
-          this.fx.ring(p.x, p.y, owner ? owner.color : PINK, 10, 76, 0.3, 4);
-          this.resolveHit(owner, def, ATTACKS.special, p);
+        const hw = p.hitW ?? p.r * 0.8;
+        const hh = p.hitH ?? p.r;
+        if (p.x + hw > hb.x && p.x - hw < hb.x + hb.w &&
+            p.y + hh > hb.y && p.y - hh < hb.y + hb.h) {
+          this.fx.ring(p.x, p.y, p.color || (owner ? owner.color : PINK), 10, p.kind === 'wave' ? 110 : 76, 0.3, 4);
+          if (p.kind === 'wave') this.fx.dust(p.x, GROUND_Y, 12, p.color);
+          this.resolveHit(owner, def, p.attack || ATTACKS.special, p);
           remove = true;
           if (this.phase !== 'fight') {
             this.projectiles.length = 0;
@@ -1090,7 +1129,71 @@ export class Game {
 
   drawProjectile(ctx, p) {
     const owner = this.fighters[p.owner];
-    const col = owner ? owner.color : PINK;
+    const col = p.color || (owner ? owner.color : PINK);
+    if (p.kind === 'wave') {
+      const dir = Math.sign(p.vx) || 1;
+      const t = this.time;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.scale(dir, 1);
+      ctx.globalCompositeOperation = 'lighter';
+
+      const g = ctx.createRadialGradient(0, 20, 2, 0, 20, 100);
+      g.addColorStop(0, hexA(col, 0.45));
+      g.addColorStop(0.5, hexA(col, 0.14));
+      g.addColorStop(1, hexA(col, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(0, 26, 95, 52, 0, 0, TAU);
+      ctx.fill();
+
+      // гребень волны
+      const crest = (offset, scale, alpha) => {
+        ctx.beginPath();
+        ctx.moveTo(-58 * scale, 48);
+        ctx.quadraticCurveTo(-34 * scale, -8 * scale, -6 * scale, -50 * scale + offset);
+        ctx.quadraticCurveTo(18 * scale, -18 * scale, 34 * scale, 6 * scale);
+        ctx.quadraticCurveTo(48 * scale, 28 * scale, 58 * scale, 48);
+        ctx.strokeStyle = hexA(col, alpha * 0.22);
+        ctx.lineWidth = 18;
+        ctx.stroke();
+        ctx.strokeStyle = hexA(col, alpha);
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.7})`;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      };
+      crest(0, 1, 0.9);
+      crest(Math.sin(t * 18) * 6 - 8, 0.72, 0.45);
+
+      // яркий фронт
+      ctx.beginPath();
+      ctx.moveTo(28, -6);
+      ctx.quadraticCurveTo(48, 22, 58, 48);
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      // линия земли и камни
+      ctx.beginPath();
+      ctx.moveTo(-62, 48);
+      ctx.lineTo(62, 48);
+      ctx.strokeStyle = hexA(col, 0.5);
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      for (let i = 0; i < 5; i++) {
+        const rx = -45 + i * 22 + Math.sin(t * 14 + i) * 5;
+        const ry = 40 - Math.abs(Math.sin(t * 12 + i * 1.7)) * 22;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 1.6 + (i % 2), 0, TAU);
+        ctx.fillStyle = hexA(col, 0.5);
+        ctx.fill();
+      }
+      ctx.restore();
+      return;
+    }
+
     const pulse = 1 + Math.sin((this.time - p.born) * 24) * 0.12;
     const r = p.r * pulse;
     ctx.save();
@@ -1196,7 +1299,7 @@ function drawReflection(ctx, f) {
 
 function drawLowHealth(ctx, game) {
   if (game.screen !== 'match' || game.phase !== 'fight') return;
-  const low = game.fighters.some(f => f.health > 0 && f.health < 25);
+  const low = game.fighters.some(f => f.health > 0 && f.health < f.maxHealth * 0.25);
   if (!low) return;
   const pulse = 0.1 + (Math.sin(game.time * 7) * 0.5 + 0.5) * 0.14;
   const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.32, W / 2, H / 2, H * 0.82);

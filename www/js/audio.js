@@ -146,6 +146,12 @@ class AudioEngine {
     this.noise({ dur: 0.18, vol: 0.1, type: 'bandpass', freq: 2400, freqEnd: 600, q: 0.9 });
   }
 
+  shockwave() {
+    this.tone({ freq: 95, freqEnd: 36, dur: 0.5, type: 'sine', vol: 0.4 });
+    this.noise({ dur: 0.42, vol: 0.24, type: 'lowpass', freq: 620, freqEnd: 90, q: 0.6 });
+    this.tone({ freq: 240, freqEnd: 70, dur: 0.24, type: 'square', vol: 0.07 });
+  }
+
   ko() {
     this.tone({ freq: 170, freqEnd: 34, dur: 0.85, type: 'sine', vol: 0.5 });
     this.noise({ dur: 0.7, vol: 0.24, type: 'lowpass', freq: 900, freqEnd: 120, q: 0.6 });
