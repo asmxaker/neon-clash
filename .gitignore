@@ -1,0 +1,24 @@
+node_modules/
+.DS_Store
+dist/
+
+# Локальные секреты (токен Telegram-бота)
+.env
+
+# Android build outputs
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/capacitor-cordova-android-plugins/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.log
+
+# Локальные секреты
+.env

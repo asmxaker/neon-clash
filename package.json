@@ -1,0 +1,24 @@
+{
+  "name": "neon-clash",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Neon Clash — неоновый 2D-файтинг для Android и мобильного веба.",
+  "scripts": {
+    "dev": "python3 -m http.server 5180 --bind 127.0.0.1 -d www",
+    "serve": "python3 -m http.server 5180 --bind 0.0.0.0 -d www",
+    "icons": "node scripts/make-icons.mjs",
+    "notify": "node scripts/notify.mjs",
+    "cap:sync": "cap sync android",
+    "cap:add": "cap add android",
+    "android": "cap open android",
+    "apk": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.2"
+  }
+}

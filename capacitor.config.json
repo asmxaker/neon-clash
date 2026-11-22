@@ -1,0 +1,15 @@
+{
+  "appId": "com.neonclash.game",
+  "appName": "Neon Clash",
+  "webDir": "www",
+  "backgroundColor": "#05020c",
+  "android": {
+    "backgroundColor": "#05020c",
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
