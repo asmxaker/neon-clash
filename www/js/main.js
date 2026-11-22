@@ -5,6 +5,7 @@ import { Fighter, drawFighter } from './fighter.js';
 import { CHARACTERS, getCharacter, randomCharacterExcept } from './characters.js';
 import { makePlayerControllers } from './input.js';
 import { AIController } from './ai.js';
+import { LinkManager } from './link.js';
 import { audio } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -20,6 +21,7 @@ const pauseBtn = $('pauseBtn');
 const soundBtn = $('soundBtn');
 const btn1p = $('btn1p');
 const btn2p = $('btn2p');
+const btnLink = $('btnLink');
 const btnHelp = $('btnHelp');
 const btnHelpClose = $('btnHelpClose');
 const btnResume = $('btnResume');
@@ -42,10 +44,22 @@ const sdStats = [...document.querySelectorAll('.sd-stat u')];
 const selectSummary = $('selectSummary');
 const btnSelectBack = $('btnSelectBack');
 const btnSelectFight = $('btnSelectFight');
+const btnSelectFightLabel = btnSelectFight.querySelector('.mb-main');
 const fighterCards = [...document.querySelectorAll('.fighter-card')];
+
+const linkEl = $('link');
+const linkChar = $('linkChar');
+const linkStatus = $('linkStatus');
+const linkRoles = $('linkRoles');
+const linkEndpoints = $('linkEndpoints');
+const btnHost = $('btnHost');
+const btnJoin = $('btnJoin');
+const btnLinkStart = $('btnLinkStart');
+const btnLinkBack = $('btnLinkBack');
 
 const controllers = makePlayerControllers();
 const ai = new AIController();
+const link = new LinkManager();
 
 const game = new Game($('game'), {
   p1: controllers.p1,
@@ -56,12 +70,14 @@ const game = new Game($('game'), {
 
 window.__game = game;
 window.__audio = audio;
+window.__link = link;
 
 let resultTimer = null;
 let wakeLock = null;
 let selectMode = '1p';
 let selectActive = 0;
 let aiPick = 'storm';
+let linkCharId = 'volt';
 const selectPicks = ['volt', 'blaze'];
 try {
   const saved = localStorage.getItem('nc_char');
@@ -98,6 +114,31 @@ function renderPortraits() {
 }
 renderPortraits();
 
+// ---------------------------------------------------------------- link events
+
+link.on({
+  onStatus: (text, kind) => {
+    linkStatus.textContent = text;
+    linkStatus.className = 'link-status' + (kind ? ' ' + kind : '');
+  },
+  onEndpoints: (list) => renderLinkEndpoints(list),
+  onPeer: ({ char }) => {
+    updateLinkCharLine();
+    if (link.role === 'host') {
+      btnLinkStart.classList.remove('hidden');
+      linkStatus.textContent = 'ИГРОК ПОДКЛЮЧЁН · МОЖНО НАЧИНАТЬ';
+      linkStatus.className = 'link-status ok';
+    } else {
+      linkStatus.textContent = 'ПОДКЛЮЧЕНО · ЖДЁМ ХОСТА';
+      linkStatus.className = 'link-status ok';
+    }
+    if (char) audio.ui();
+  },
+  onStart: (msg) => startLinkGuest(msg),
+  onRematchRequest: () => restartLinkMatch(),
+  onDisconnected: (reason) => handleLinkDisconnected(reason)
+});
+
 // ---------------------------------------------------------------- звук
 
 function updateSoundIcon() {
@@ -120,7 +161,7 @@ document.addEventListener('keydown', () => audio.unlock(), { once: true, capture
 // ---------------------------------------------------------------- меню
 
 function hideAllOverlays() {
-  for (const el of [menu, help, select, pause, result]) el.classList.add('hidden');
+  for (const el of [menu, help, select, linkEl, pause, result]) el.classList.add('hidden');
 }
 
 function updateSelectUI() {
@@ -134,7 +175,7 @@ function updateSelectUI() {
     const id = card.dataset.char;
     const isP1 = p1.id === id;
     const isP2 = selectMode === '2p' && p2.id === id;
-    const isAI = selectMode !== '2p' && ai.id === id;
+    const isAI = selectMode === '1p' && ai.id === id;
     const isActive = activeChar.id === id;
     card.classList.toggle('selected', isActive);
     card.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -166,10 +207,16 @@ function updateSelectUI() {
     }
   }
 
-  selectKicker.textContent = selectMode === '2p'
-    ? '2 ИГРОКА · ВЫБЕРИТЕ БОЙЦОВ'
-    : '1 ИГРОК · ПРОТИВ ИИ';
-  selectTitle.textContent = selectMode === '2p' ? 'ВЫБЕРИТЕ БОЙЦОВ' : 'ВЫБЕРИ БОЙЦА';
+  if (selectMode === 'link') {
+    selectKicker.textContent = 'ИГРА РЯДОМ · BLUETOOTH / WI-FI';
+    selectTitle.textContent = 'ВЫБЕРИ БОЙЦА';
+  } else if (selectMode === '2p') {
+    selectKicker.textContent = '2 ИГРОКА · ВЫБЕРИТЕ БОЙЦОВ';
+    selectTitle.textContent = 'ВЫБЕРИТЕ БОЙЦОВ';
+  } else {
+    selectKicker.textContent = '1 ИГРОК · ПРОТИВ ИИ';
+    selectTitle.textContent = 'ВЫБЕРИ БОЙЦА';
+  }
   selectTabs.hidden = selectMode !== '2p';
   for (const tab of selectTabEls) {
     tab.classList.toggle('active', Number(tab.dataset.player) === selectActive);
@@ -187,6 +234,8 @@ function updateSelectUI() {
   if (selectMode === '2p') {
     const mirror = p1.id === p2.id;
     selectSummary.innerHTML = `P1: <b>${p1.name}</b> · P2: <b>${p2.name}</b>${mirror ? '<span class="mirror"> · ЗЕРКАЛО</span>' : ''}`;
+  } else if (selectMode === 'link') {
+    selectSummary.innerHTML = `ТВОЙ БОЁЦ: <b>${p1.name}</b> · <span class="mirror">РЯДОМ</span>`;
   } else {
     selectSummary.innerHTML = `ИГРОК: <b>${p1.name}</b> · ИИ: <b>${ai.name}</b>`;
   }
@@ -199,6 +248,7 @@ function openSelect(mode) {
   selectPicks[0] = p1.id;
   selectPicks[1] = randomCharacterExcept(p1.id).id;
   aiPick = randomCharacterExcept(p1.id).id;
+  btnSelectFightLabel.textContent = mode === 'link' ? 'К СВЯЗИ' : 'В БОЙ';
   updateSelectUI();
   audio.unlock();
   audio.ui();
@@ -234,6 +284,10 @@ function startGame(mode, p1CharId, p2CharId) {
 }
 
 function startSelectedMatch() {
+  if (selectMode === 'link') {
+    openLinkLobby(selectPicks[0]);
+    return;
+  }
   const p2 = selectMode === '2p' ? selectPicks[1] : aiPick;
   startGame(selectMode, selectPicks[0], p2);
 }
@@ -262,6 +316,7 @@ for (const tab of selectTabEls) {
 
 btn1p.addEventListener('click', () => openSelect('1p'));
 btn2p.addEventListener('click', () => openSelect('2p'));
+btnLink.addEventListener('click', () => openSelect('link'));
 btnSelectBack.addEventListener('click', closeSelect);
 btnSelectFight.addEventListener('click', startSelectedMatch);
 
@@ -276,19 +331,245 @@ btnHelpClose.addEventListener('click', () => {
   help.classList.add('hidden');
 });
 
+// ---------------------------------------------------------------- Bluetooth / link
+
+function updateLinkCharLine() {
+  const own = getCharacter(linkCharId);
+  const peer = link.peerChar ? getCharacter(link.peerChar) : null;
+  linkChar.textContent = peer
+    ? `ТЫ: ${own.name} · СОПЕРНИК: ${peer.name}`
+    : `ТВОЙ БОЁЦ: ${own.name}`;
+}
+
+function resetLinkRoles() {
+  linkRoles.classList.remove('hidden');
+  btnLinkStart.classList.add('hidden');
+  linkEndpoints.classList.add('hidden');
+  linkEndpoints.innerHTML = '';
+}
+
+function renderLinkEndpoints(list) {
+  linkEndpoints.innerHTML = '';
+  if (!list || !list.length) {
+    linkEndpoints.classList.add('hidden');
+    return;
+  }
+  linkEndpoints.classList.remove('hidden');
+  for (const ep of list) {
+    const b = document.createElement('button');
+    b.className = 'link-endpoint';
+    b.textContent = ep.endpointName || 'ИГРОК РЯДОМ';
+    b.addEventListener('click', () => {
+      audio.ui();
+      linkEndpoints.classList.add('hidden');
+      link.connect(ep);
+    });
+    linkEndpoints.appendChild(b);
+  }
+}
+
+function openLinkLobby(charId) {
+  linkCharId = charId;
+  updateLinkCharLine();
+  linkStatus.textContent = 'ПРОВЕРКА СВЯЗИ...';
+  linkStatus.className = 'link-status';
+  resetLinkRoles();
+  btnHost.disabled = true;
+  btnJoin.disabled = true;
+  hideAllOverlays();
+  linkEl.classList.remove('hidden');
+  stage.classList.remove('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.add('hidden');
+  pauseBtn.classList.remove('hidden');
+  game.toMenu();
+  audio.unlock();
+  audio.ui();
+
+  link.prepare().then((ok) => {
+    if (linkEl.classList.contains('hidden')) return;
+    if (!ok) {
+      linkStatus.textContent = 'ДОСТУПНО ТОЛЬКО В ANDROID-ПРИЛОЖЕНИИ';
+      linkStatus.className = 'link-status error';
+      btnHost.disabled = true;
+      btnJoin.disabled = true;
+      return;
+    }
+    btnHost.disabled = false;
+    btnJoin.disabled = false;
+    btnLinkStart.classList.add('hidden');
+    linkStatus.textContent = 'ВЫБЕРИ РОЛЬ: ХОСТ ИЛИ ГОСТЬ';
+    linkStatus.className = 'link-status';
+  });
+}
+
+function closeLinkLobby() {
+  link.disconnect(true);
+  link.resetSession();
+  hideAllOverlays();
+  menu.classList.remove('hidden');
+  stage.classList.remove('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.add('hidden');
+  pauseBtn.classList.remove('hidden');
+  game.toMenu();
+  audio.ui();
+}
+
+function startLinkHost(hostChar, guestChar) {
+  hideAllOverlays();
+  stage.classList.add('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.remove('hidden');
+  pauseBtn.classList.remove('hidden');
+  controllers.touch1.reset();
+  controllers.touch2.reset();
+  link.remote.reset();
+  game.startMatch('2p', hostChar, guestChar);
+  game.mode = 'link';
+  game.netHost = true;
+  game.netGuest = false;
+  game.fighters[1].controller = link.remote;
+  link.bindHostGame(game);
+  requestWakeLock();
+  tryImmersive();
+}
+
+function startLinkGuest(msg) {
+  if (!msg || !msg.hostChar || !msg.guestChar) return;
+  hideAllOverlays();
+  stage.classList.add('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.remove('hidden');
+  pauseBtn.classList.remove('hidden');
+  controllers.touch1.reset();
+  controllers.touch2.reset();
+  linkCharId = msg.guestChar;
+  game.startGuestMatch(msg.hostChar, msg.guestChar);
+  game.mode = 'link';
+  game.netHost = false;
+  game.netGuest = true;
+  link.bindGuestGame(game);
+  link.startGuestInput(controllers.p1);
+  requestWakeLock();
+  tryImmersive();
+}
+
+function restartLinkMatch() {
+  if (!game.netHost) return;
+  const hostChar = game.p1CharId;
+  const guestChar = game.p2CharId;
+  hideAllOverlays();
+  game.setPaused(false);
+  game.rematch();
+  game.mode = 'link';
+  game.netHost = true;
+  game.netGuest = false;
+  game.fighters[1].controller = link.remote;
+  link.remote.reset();
+  link.sendStart(hostChar, guestChar);
+  link.bindHostGame(game);
+  stage.classList.add('in-match');
+  stage.classList.remove('two-p');
+  sysBtns.classList.remove('hidden');
+  pauseBtn.classList.remove('hidden');
+  audio.ui();
+}
+
+function handleLinkDisconnected(reason) {
+  const inMatch = game.netHost || game.netGuest || stage.classList.contains('in-match');
+  game.netHost = false;
+  game.netGuest = false;
+  link.resetSession();
+  if (inMatch) {
+    game.toMenu();
+    stage.classList.remove('in-match');
+    stage.classList.remove('two-p');
+    sysBtns.classList.add('hidden');
+    pauseBtn.classList.remove('hidden');
+    hideAllOverlays();
+    linkEl.classList.remove('hidden');
+    updateLinkCharLine();
+    resetLinkRoles();
+    linkStatus.textContent = reason || 'СВЯЗЬ ПОТЕРЯНА';
+    linkStatus.className = 'link-status error';
+    btnHost.disabled = !link.available;
+    btnJoin.disabled = !link.available;
+    audio.ui();
+  } else {
+    linkStatus.textContent = reason || 'СВЯЗЬ ПОТЕРЯНА';
+    linkStatus.className = 'link-status error';
+    resetLinkRoles();
+    btnHost.disabled = !link.available;
+    btnJoin.disabled = !link.available;
+  }
+}
+
+btnHost.addEventListener('click', async () => {
+  if (btnHost.disabled) return;
+  audio.unlock();
+  audio.ui();
+  btnHost.disabled = true;
+  btnJoin.disabled = true;
+  linkRoles.classList.add('hidden');
+  btnLinkStart.classList.add('hidden');
+  linkEndpoints.classList.add('hidden');
+  try {
+    await link.startHost(linkCharId);
+  } catch (e) {
+    resetLinkRoles();
+    btnHost.disabled = !link.available;
+    btnJoin.disabled = !link.available;
+    linkStatus.textContent = 'НЕ УДАЛОСЬ НАЧАТЬ: ' + (e?.message || 'ОШИБКА');
+    linkStatus.className = 'link-status error';
+  }
+});
+
+btnJoin.addEventListener('click', async () => {
+  if (btnJoin.disabled) return;
+  audio.unlock();
+  audio.ui();
+  btnHost.disabled = true;
+  btnJoin.disabled = true;
+  linkRoles.classList.add('hidden');
+  btnLinkStart.classList.add('hidden');
+  linkEndpoints.innerHTML = '';
+  linkEndpoints.classList.remove('hidden');
+  try {
+    await link.startJoin(linkCharId);
+  } catch (e) {
+    resetLinkRoles();
+    btnHost.disabled = !link.available;
+    btnJoin.disabled = !link.available;
+    linkStatus.textContent = 'НЕ УДАЛОСЬ ИСКАТЬ: ' + (e?.message || 'ОШИБКА');
+    linkStatus.className = 'link-status error';
+  }
+});
+
+btnLinkStart.addEventListener('click', () => {
+  if (!link.connected || !link.peerChar) return;
+  audio.ui();
+  const hostChar = linkCharId;
+  const guestChar = link.peerChar;
+  link.sendStart(hostChar, guestChar);
+  startLinkHost(hostChar, guestChar);
+});
+
+btnLinkBack.addEventListener('click', closeLinkLobby);
+
 // ---------------------------------------------------------------- пауза
 
 function openPause() {
   if (!game.inMatch || game.paused) return;
   if (game.phase === 'matchEnd') return;
-  game.setPaused(true);
+  if (!game.netGuest) game.setPaused(true);
   pause.classList.remove('hidden');
   audio.ui();
 }
 
 function closePause() {
   pause.classList.add('hidden');
-  game.setPaused(false);
+  if (!game.netGuest) game.setPaused(false);
 }
 
 pauseBtn.addEventListener('click', openPause);
@@ -297,6 +578,15 @@ btnResume.addEventListener('click', closePause);
 btnRestart.addEventListener('click', () => {
   pause.classList.add('hidden');
   result.classList.add('hidden');
+  if (game.netHost) {
+    restartLinkMatch();
+    return;
+  }
+  if (game.netGuest) {
+    link.requestRematch();
+    audio.ui();
+    return;
+  }
   game.setPaused(false);
   game.rematch();
   audio.ui();
@@ -304,11 +594,18 @@ btnRestart.addEventListener('click', () => {
 
 function quitToMenu() {
   clearTimeout(resultTimer);
+  if (game.netHost || game.netGuest || link.connected || link.role) {
+    link.disconnect(true);
+    link.resetSession();
+  }
+  game.netHost = false;
+  game.netGuest = false;
   hideAllOverlays();
   menu.classList.remove('hidden');
   stage.classList.remove('in-match');
   stage.classList.remove('two-p');
   sysBtns.classList.add('hidden');
+  pauseBtn.classList.remove('hidden');
   game.setPaused(false);
   game.toMenu();
   releaseWakeLock();
@@ -319,6 +616,16 @@ btnQuit.addEventListener('click', quitToMenu);
 btnResultMenu.addEventListener('click', quitToMenu);
 
 btnRematch.addEventListener('click', () => {
+  if (game.netGuest) {
+    link.requestRematch();
+    resultSub.textContent = 'ЗАПРОС ОТПРАВЛЕН · ЖДЁМ ХОСТА';
+    return;
+  }
+  if (game.netHost) {
+    result.classList.add('hidden');
+    restartLinkMatch();
+    return;
+  }
   result.classList.add('hidden');
   game.rematch();
   audio.ui();
@@ -326,6 +633,10 @@ btnRematch.addEventListener('click', () => {
 
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' || e.code === 'KeyP') {
+    if (!linkEl.classList.contains('hidden')) {
+      closeLinkLobby();
+      return;
+    }
     if (!select.classList.contains('hidden')) {
       closeSelect();
       return;
@@ -355,7 +666,7 @@ function handleMatchEnd(winner) {
   resultTimer = setTimeout(() => {
     if (!game.inMatch || game.phase !== 'matchEnd') return;
     const p1Won = winner === 0;
-    const twoP = game.mode === '2p';
+    const twoP = game.mode === '2p' || game.mode === 'link';
     const winnerF = game.fighters[winner];
     resultKicker.textContent = 'БОЙ ОКОНЧЕН';
     if (twoP) {

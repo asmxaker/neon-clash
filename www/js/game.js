@@ -2,6 +2,11 @@
 
 import { Fighter, drawFighter, GROUND_Y, ARENA, ATTACKS } from './fighter.js';
 import { otherCharacter } from './characters.js';
+
+const ATTACK_BY_KIND = Object.values(ATTACKS).reduce((map, a) => {
+  map[a.kind] = a;
+  return map;
+}, {});
 import { FX } from './fx.js';
 import { audio } from './audio.js';
 
@@ -616,6 +621,10 @@ export class Game {
     this.matchEnded = false;
     this.roundSounded = false;
     this.fightSounded = false;
+    this.netGuest = false;
+    this.netHost = false;
+    this._snap = null;
+    this._netPrev = null;
     this.last = performance.now();
     this.dpr = 1;
 
@@ -663,6 +672,10 @@ export class Game {
     this.phase = 'idle';
     this.paused = false;
     this.slowmo = 0;
+    this.netGuest = false;
+    this.netHost = false;
+    this._snap = null;
+    this._netPrev = null;
     this.projectiles = [];
     this.fx.clear();
     this.fighters = [
@@ -674,6 +687,10 @@ export class Game {
 
   startMatch(mode = '1p', p1CharId = 'volt', p2CharId = null) {
     this.mode = mode;
+    this.netGuest = false;
+    this.netHost = false;
+    this._snap = null;
+    this._netPrev = null;
     this.p1CharId = p1CharId;
     this.p2CharId = p2CharId || otherCharacter(p1CharId).id;
     this.screen = 'match';
@@ -697,6 +714,144 @@ export class Game {
       })
     ];
     this.startRound(true);
+  }
+
+  startGuestMatch(hostChar, guestChar) {
+    const mirror = hostChar === guestChar;
+    this.mode = 'link';
+    this.netGuest = true;
+    this.netHost = false;
+    this.screen = 'match';
+    this.paused = false;
+    this.matchEnded = false;
+    this.round = 1;
+    this.wins = [0, 0];
+    this.timer = ROUND_TIME;
+    this.phase = 'intro';
+    this.phaseT = 0;
+    this.roundWinner = -1;
+    this.roundReason = '';
+    this.matchWinner = -1;
+    this.slowmo = 0;
+    this.projectiles = [];
+    this.fx.clear();
+    this._snap = null;
+    this._netPrev = null;
+    this.p1CharId = hostChar;
+    this.p2CharId = guestChar;
+    this.fighters = [
+      new Fighter({ x: 408, facing: 1, charId: hostChar, index: 0 }),
+      new Fighter({ x: 872, facing: -1, charId: guestChar, variant: mirror ? 1 : 0, index: 1 })
+    ];
+    this.fighters.forEach(f => { f.locked = true; f.controller = null; });
+  }
+
+  receiveSnapshot(snap) {
+    if (!this.netGuest) return;
+    this._snap = snap;
+  }
+
+  applyNetSnapshot(s) {
+    if (!s || !Array.isArray(s.f) || s.f.length < 2) return;
+    const prev = this._netPrev;
+    for (let i = 0; i < 2; i++) {
+      const d = s.f[i];
+      const f = this.fighters[i];
+      if (!d || !f) continue;
+      f.x = d.x;
+      f.y = d.y;
+      f.vy = d.vy;
+      f.facing = d.fc;
+      f.health = d.hp;
+      f.maxHealth = d.mh;
+      f.displayHealth = d.dh;
+      f.meter = d.m;
+      f.state = d.st;
+      f.stateTime = d.stt;
+      if (d.at) {
+        const base = ATTACK_BY_KIND[d.at] || ATTACKS.punch;
+        f.attack = {
+          ...base,
+          kind: d.at,
+          startup: d.as || base.startup,
+          active: d.aa || base.active,
+          recovery: d.ar || base.recovery
+        };
+      } else {
+        f.attack = null;
+      }
+      f.attackT = d.atT || 0;
+      f.hitstun = d.hs || 0;
+      f.blockstun = d.bs || 0;
+      f.combo = d.c || 0;
+      f.comboTimer = d.ct || 0;
+      f.flash = d.fl || 0;
+      f.koTime = d.kt || 0;
+      f.winTime = d.wt || 0;
+      f.wins = this.wins[i] || 0;
+      f.locked = s.ph !== 'fight';
+    }
+    this.phase = s.ph;
+    this.phaseT = s.pt || 0;
+    this.timer = s.tm;
+    this.round = s.rd;
+    if (Array.isArray(s.w)) this.wins = s.w;
+    this.roundWinner = s.rw;
+    this.roundReason = s.rr;
+    this.matchWinner = s.mw;
+
+    this.projectiles = (s.p || []).map((p) => ({
+      kind: p.k,
+      x: p.x,
+      y: p.y,
+      vx: p.vx,
+      vy: p.vy,
+      r: p.r,
+      hitW: p.hw,
+      hitH: p.hh,
+      owner: p.o,
+      life: p.life,
+      delay: p.dl,
+      struck: !!p.sk,
+      strikeT: p.st,
+      color: p.color,
+      hitDir: p.hd,
+      unblockable: !!p.ub
+    }));
+
+    if (prev) {
+      for (let i = 0; i < 2; i++) {
+        const f = this.fighters[i];
+        const old = prev[i];
+        if (old == null) continue;
+        const drop = old - f.health;
+        if (drop > 0.05) {
+          const atk = this.fighters[1 - i];
+          const y = GROUND_Y - f.y - f.getHurtHeight() * 0.6;
+          if (f.state === 'block' || f.blockstun > 0) {
+            this.fx.blockSpark(f.x, y, f.color);
+            audio.block();
+          } else {
+            this.fx.hitSpark(f.x, y, atk.color, atk.facing, Math.min(1.6, 0.7 + drop / 12));
+            this.fx.popup(f.x, GROUND_Y - f.y - f.getHurtHeight() - 14, `−${Math.round(drop)}`, atk.accent, 24 + Math.min(10, drop));
+            this.fx.shakeIt(4 + drop * 0.5);
+            audio.hit(0.7 + drop / 22);
+          }
+          if (old > 0 && f.health <= 0) {
+            this.fx.screenFlash('#ff4de0', 0.4);
+            this.fx.shakeIt(18);
+            this.fx.dust(f.x, GROUND_Y, 16, f.color);
+            audio.ko();
+          }
+        }
+      }
+    }
+    this._netPrev = this.fighters.map((f) => f.health);
+
+    if (this.phase === 'matchEnd' && !this.matchEnded) {
+      this.matchEnded = true;
+      this.onMatchEnd(this.matchWinner, 'link');
+    }
   }
 
   startRound(resetMeter = false) {
@@ -761,6 +916,19 @@ export class Game {
       this.fx.update(dt * 0.1);
       return;
     }
+
+    if (this.netGuest) {
+      this.time += dt;
+      this.fx.update(dt);
+      for (const f of this.fighters) f.animT += dt;
+      if (this._snap) {
+        const snap = this._snap;
+        this._snap = null;
+        this.applyNetSnapshot(snap);
+      }
+      return;
+    }
+
     this.time += dt;
 
     if (this.screen === 'menu') {

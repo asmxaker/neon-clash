@@ -71,6 +71,10 @@
               <span class="mb-main">2 ИГРОКА</span>
               <span class="mb-sub">на одном экране</span>
             </button>
+            <button class="menu-btn link" id="btnLink">
+              <span class="mb-main">ПО BLUETOOTH</span>
+              <span class="mb-sub">игра рядом</span>
+            </button>
             <button class="menu-btn ghost" id="btnHelp">
               <span class="mb-main">КАК ИГРАТЬ</span>
             </button>
@@ -176,6 +180,36 @@
             <button class="menu-btn ghost" id="btnSelectBack"><span class="mb-main">НАЗАД</span></button>
             <button class="menu-btn primary" id="btnSelectFight"><span class="mb-main">В БОЙ</span></button>
           </div>
+        </div>
+      </div>
+
+      <!-- Bluetooth / рядом -->
+      <div id="link" class="overlay hidden">
+        <div class="panel link-panel">
+          <div class="link-kicker" id="linkKicker">ИГРА РЯДОМ · BLUETOOTH / WI-FI</div>
+          <h2>ПО BLUETOOTH</h2>
+          <div class="link-char" id="linkChar">ТВОЙ БОЁЦ: ВОЛЬТ</div>
+          <div class="link-status" id="linkStatus">ПРОВЕРКА СВЯЗИ...</div>
+
+          <div class="link-roles" id="linkRoles">
+            <button class="menu-btn primary" id="btnHost">
+              <span class="mb-main">СОЗДАТЬ ИГРУ</span>
+              <span class="mb-sub">стать хостом</span>
+            </button>
+            <button class="menu-btn" id="btnJoin">
+              <span class="mb-main">ПОДКЛЮЧИТЬСЯ</span>
+              <span class="mb-sub">найти рядом</span>
+            </button>
+          </div>
+
+          <div class="link-endpoints hidden" id="linkEndpoints"></div>
+
+          <div class="link-actions">
+            <button class="menu-btn ghost" id="btnLinkBack"><span class="mb-main">НАЗАД</span></button>
+            <button class="menu-btn primary hidden" id="btnLinkStart"><span class="mb-main">НАЧАТЬ БОЙ</span></button>
+          </div>
+
+          <p class="link-note" id="linkNote">Нужны два Android-телефона с включённым Bluetooth. Nearby Connections использует Bluetooth и Wi-Fi.</p>
         </div>
       </div>
 
