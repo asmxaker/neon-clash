@@ -117,9 +117,16 @@ www/audio/sfx/
 
 ## 3. Спрайты бойцов
 
-Сейчас бойцы рисуются процедурно и пикселизуются через offscreen Canvas. Внешние спрайты пока не подключены.
+Бойцы по умолчанию рисуются процедурно и пикселизуются через offscreen Canvas. Спрайтовый загрузчик уже подготовлен в `www/js/sprites.js`, но выключен, пока нет PNG.
 
-Если добавлять спрайты, предлагаемый формат:
+Первый подготовленный персонаж — KAI:
+
+- дизайн-бриф: [`CHARACTER_KAI.md`](CHARACTER_KAI.md);
+- manifest: [`www/sprites/kai/manifest.json`](../www/sprites/kai/manifest.json);
+- шаблон сетки: [`www/sprites/kai/_layout.svg`](../www/sprites/kai/_layout.svg);
+- инструкция: [`www/sprites/README.md`](../www/sprites/README.md).
+
+Формат:
 
 ```text
 www/sprites/
@@ -183,12 +190,15 @@ www/sprites/
 }
 ```
 
-После получения спрайтов нужно:
+Загрузчик уже умеет:
 
-1. Добавить загрузчик PNG.
-2. Выбирать анимацию по `f.state` и `f.attack.kind`.
-3. Рисовать кадр с anchor и flip по `f.facing`.
-4. Оставить процедурный fallback для отсутствующих анимаций.
+1. Читать `manifest.json`.
+2. Загружать PNG-полосы.
+3. Выбирать анимацию по `f.state` и `f.attack.kind`.
+4. Рисовать кадр с anchor и flip по `f.facing`.
+5. Оставлять процедурный fallback для отсутствующих кадров.
+
+Включение: `SPRITE_ENABLED.add('kai')` в `www/js/sprites.js` после добавления файлов.
 
 ## 4. Иконки и PWA
 

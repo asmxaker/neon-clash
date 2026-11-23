@@ -1,0 +1,19 @@
+{
+  "charId": "kai",
+  "frameW": 256,
+  "frameH": 256,
+  "anchorX": 128,
+  "anchorY": 242,
+  "scale": 0.92,
+  "animations": {
+    "idle":    { "file": "idle.png",    "frames": 6, "fps": 10, "loop": true },
+    "walk":    { "file": "walk.png",    "frames": 8, "fps": 12, "loop": true },
+    "jump":    { "file": "jump.png",    "frames": 4, "fps": 12, "loop": false },
+    "punch":   { "file": "punch.png",   "frames": 5, "fps": 18, "loop": false },
+    "kick":    { "file": "kick.png",    "frames": 5, "fps": 16, "loop": false },
+    "special": { "file": "special.png", "frames": 6, "fps": 14, "loop": false },
+    "block":   { "file": "block.png",   "frames": 2, "fps": 8,  "loop": true },
+    "hit":     { "file": "hit.png",     "frames": 3, "fps": 14, "loop": false },
+    "ko":      { "file": "ko.png",      "frames": 5, "fps": 10, "loop": false }
+  }
+}

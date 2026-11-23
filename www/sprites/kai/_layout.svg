@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2304" viewBox="0 0 2048 2304">
+<rect width="100%" height="100%" fill="none"/>
+<style>text{font-family:system-ui,sans-serif;font-size:13px;letter-spacing:2px;fill:#ff5ad8;opacity:.75}.grid{stroke:#35f0ff;stroke-opacity:.22;stroke-width:1}.anchor{stroke:#ffd23f;stroke-opacity:.5;stroke-width:1}</style>
+<text x="10" y="18">IDLE · 256×256</text>
+<rect class="grid" x="0" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 242H135M128 235V249"/>
+<rect class="grid" x="256" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 242H391M384 235V249"/>
+<rect class="grid" x="512" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 242H647M640 235V249"/>
+<rect class="grid" x="768" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 242H903M896 235V249"/>
+<rect class="grid" x="1024" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 242H1159M1152 235V249"/>
+<rect class="grid" x="1280" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 242H1415M1408 235V249"/>
+<rect class="grid" x="1536" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 242H1671M1664 235V249"/>
+<rect class="grid" x="1792" y="0" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 242H1927M1920 235V249"/>
+<text x="10" y="274">WALK · 256×256</text>
+<rect class="grid" x="0" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 498H135M128 491V505"/>
+<rect class="grid" x="256" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 498H391M384 491V505"/>
+<rect class="grid" x="512" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 498H647M640 491V505"/>
+<rect class="grid" x="768" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 498H903M896 491V505"/>
+<rect class="grid" x="1024" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 498H1159M1152 491V505"/>
+<rect class="grid" x="1280" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 498H1415M1408 491V505"/>
+<rect class="grid" x="1536" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 498H1671M1664 491V505"/>
+<rect class="grid" x="1792" y="256" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 498H1927M1920 491V505"/>
+<text x="10" y="530">JUMP · 256×256</text>
+<rect class="grid" x="0" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 754H135M128 747V761"/>
+<rect class="grid" x="256" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 754H391M384 747V761"/>
+<rect class="grid" x="512" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 754H647M640 747V761"/>
+<rect class="grid" x="768" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 754H903M896 747V761"/>
+<rect class="grid" x="1024" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 754H1159M1152 747V761"/>
+<rect class="grid" x="1280" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 754H1415M1408 747V761"/>
+<rect class="grid" x="1536" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 754H1671M1664 747V761"/>
+<rect class="grid" x="1792" y="512" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 754H1927M1920 747V761"/>
+<text x="10" y="786">PUNCH · 256×256</text>
+<rect class="grid" x="0" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 1010H135M128 1003V1017"/>
+<rect class="grid" x="256" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 1010H391M384 1003V1017"/>
+<rect class="grid" x="512" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 1010H647M640 1003V1017"/>
+<rect class="grid" x="768" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 1010H903M896 1003V1017"/>
+<rect class="grid" x="1024" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 1010H1159M1152 1003V1017"/>
+<rect class="grid" x="1280" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 1010H1415M1408 1003V1017"/>
+<rect class="grid" x="1536" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 1010H1671M1664 1003V1017"/>
+<rect class="grid" x="1792" y="768" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 1010H1927M1920 1003V1017"/>
+<text x="10" y="1042">KICK · 256×256</text>
+<rect class="grid" x="0" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 1266H135M128 1259V1273"/>
+<rect class="grid" x="256" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 1266H391M384 1259V1273"/>
+<rect class="grid" x="512" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 1266H647M640 1259V1273"/>
+<rect class="grid" x="768" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 1266H903M896 1259V1273"/>
+<rect class="grid" x="1024" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 1266H1159M1152 1259V1273"/>
+<rect class="grid" x="1280" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 1266H1415M1408 1259V1273"/>
+<rect class="grid" x="1536" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 1266H1671M1664 1259V1273"/>
+<rect class="grid" x="1792" y="1024" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 1266H1927M1920 1259V1273"/>
+<text x="10" y="1298">SPECIAL · 256×256</text>
+<rect class="grid" x="0" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 1522H135M128 1515V1529"/>
+<rect class="grid" x="256" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 1522H391M384 1515V1529"/>
+<rect class="grid" x="512" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 1522H647M640 1515V1529"/>
+<rect class="grid" x="768" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 1522H903M896 1515V1529"/>
+<rect class="grid" x="1024" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 1522H1159M1152 1515V1529"/>
+<rect class="grid" x="1280" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 1522H1415M1408 1515V1529"/>
+<rect class="grid" x="1536" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 1522H1671M1664 1515V1529"/>
+<rect class="grid" x="1792" y="1280" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 1522H1927M1920 1515V1529"/>
+<text x="10" y="1554">BLOCK · 256×256</text>
+<rect class="grid" x="0" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 1778H135M128 1771V1785"/>
+<rect class="grid" x="256" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 1778H391M384 1771V1785"/>
+<rect class="grid" x="512" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 1778H647M640 1771V1785"/>
+<rect class="grid" x="768" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 1778H903M896 1771V1785"/>
+<rect class="grid" x="1024" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 1778H1159M1152 1771V1785"/>
+<rect class="grid" x="1280" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 1778H1415M1408 1771V1785"/>
+<rect class="grid" x="1536" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 1778H1671M1664 1771V1785"/>
+<rect class="grid" x="1792" y="1536" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 1778H1927M1920 1771V1785"/>
+<text x="10" y="1810">HIT · 256×256</text>
+<rect class="grid" x="0" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 2034H135M128 2027V2041"/>
+<rect class="grid" x="256" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 2034H391M384 2027V2041"/>
+<rect class="grid" x="512" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 2034H647M640 2027V2041"/>
+<rect class="grid" x="768" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 2034H903M896 2027V2041"/>
+<rect class="grid" x="1024" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 2034H1159M1152 2027V2041"/>
+<rect class="grid" x="1280" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 2034H1415M1408 2027V2041"/>
+<rect class="grid" x="1536" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 2034H1671M1664 2027V2041"/>
+<rect class="grid" x="1792" y="1792" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 2034H1927M1920 2027V2041"/>
+<text x="10" y="2066">KO · 256×256</text>
+<rect class="grid" x="0" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M121 2290H135M128 2283V2297"/>
+<rect class="grid" x="256" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M377 2290H391M384 2283V2297"/>
+<rect class="grid" x="512" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M633 2290H647M640 2283V2297"/>
+<rect class="grid" x="768" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M889 2290H903M896 2283V2297"/>
+<rect class="grid" x="1024" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1145 2290H1159M1152 2283V2297"/>
+<rect class="grid" x="1280" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1401 2290H1415M1408 2283V2297"/>
+<rect class="grid" x="1536" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1657 2290H1671M1664 2283V2297"/>
+<rect class="grid" x="1792" y="2048" width="256" height="256" fill="none"/>
+<path class="anchor" d="M1913 2290H1927M1920 2283V2297"/>
+<text x="10" y="2298">KAI SPRITE LAYOUT · FRAME 256×256 · ANCHOR X=128 Y=242 · FACE RIGHT · TRANSPARENT PNG STRIPS</text>
+</svg>

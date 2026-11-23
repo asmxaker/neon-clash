@@ -145,7 +145,15 @@ dist/NeonClash-MVP.apk       собранный APK (dist/ в .gitignore)
 - Серии: `hitsText(n)`.
 - Проверь длинные строки на телефоне (немецкий/французский/португальский).
 
-### 6.5 Музыка/SFX
+### 6.5 Спрайты
+
+- Загрузчик: `www/js/sprites.js`.
+- Формат: `www/sprites/README.md`.
+- Первый персонаж: `www/sprites/kai/`, бриф `docs/CHARACTER_KAI.md`.
+- По умолчанию спрайты выключены (`SPRITE_ENABLED` пуст). Включать только после добавления PNG и manifest.
+- Если спрайт/анимация не загрузились, обязателен процедурный fallback.
+
+### 6.6 Музыка/SFX
 
 - Музыка: `www/audio/*.ogg`, карта `MUSIC_FILES` в `audio.js`.
 - Селект и меню используют `menu.ogg`; арены — `battle_*.ogg`; результат победы — `victory.ogg`.
@@ -153,7 +161,7 @@ dist/NeonClash-MVP.apk       собранный APK (dist/ в .gitignore)
 - Форматы и ограничения — `docs/ASSETS.md`.
 - Если меняешь список ассетов, подними `CACHE` в `www/sw.js`.
 
-### 6.6 Сеть
+### 6.7 Сеть
 
 - Общая логика: `LinkManager` в `link.js`.
 - BLE: `BleLinkManager` в `ble-link.js` наследует общий протокол.
@@ -164,7 +172,7 @@ dist/NeonClash-MVP.apk       собранный APK (dist/ в .gitignore)
 - Арена и label комбо синхронизируются в снапшоте.
 - Проверь авто-реконнект и паузу на обрыве.
 
-### 6.7 UI
+### 6.8 UI
 
 - Оверлеи: `index.html` + `styles.css`.
 - Логика видимости: `main.js` (`hideAllOverlays`, `startGame`, `openSelect`, `openLinkLobby`).

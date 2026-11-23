@@ -3,6 +3,7 @@
 import { audio } from './audio.js';
 import { getCharacter } from './characters.js';
 import { t } from './i18n.js';
+import { getSpriteFrame } from './sprites.js';
 
 export const GROUND_Y = 604;
 export const ARENA = { left: 112, right: 1168 };
@@ -2331,6 +2332,28 @@ function drawFighterBody(ctx, f, col, accent) {
 
 }
 
+function drawSpriteFrame(ctx, f, sprite) {
+  const scale = (sprite.scale || 1) * (f.scale || 1);
+  const squash = f.landSquash || 0;
+  ctx.save();
+  ctx.translate(f.x, GROUND_Y - f.y);
+  ctx.scale(f.facing, 1);
+  ctx.scale(1 + squash * 0.05, 1 - squash * 0.07);
+  if (f.flash > 0.42) {
+    try { ctx.filter = 'brightness(2.6)'; } catch (e) { /* filter не поддерживается */ }
+  }
+  const prevSmooth = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(
+    sprite.img,
+    sprite.sx, sprite.sy, sprite.sw, sprite.sh,
+    -sprite.anchorX * scale, -sprite.anchorY * scale,
+    sprite.sw * scale, sprite.sh * scale
+  );
+  ctx.imageSmoothingEnabled = prevSmooth;
+  ctx.restore();
+}
+
 export function drawFighter(ctx, f) {
   const style = f.style;
   const heavy = style === 'heavy';
@@ -2347,6 +2370,13 @@ export function drawFighter(ctx, f) {
 
   const col = f.flash > 0.42 ? '#ffffff' : f.color;
   const accent = f.flash > 0.42 ? '#ffffff' : f.accent;
+
+  const sprite = getSpriteFrame(f);
+  if (sprite) {
+    drawSpriteFrame(ctx, f, sprite);
+    return;
+  }
+
   const pc = getPixelCanvas();
 
   pc.clearRect(0, 0, pc.canvas.width, pc.canvas.height);
