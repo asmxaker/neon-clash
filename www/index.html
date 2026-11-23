@@ -250,9 +250,10 @@
 
       <!-- Пауза -->
       <div id="pause" class="overlay hidden">
-        <div class="panel narrow">
+        <div class="panel pause-panel" id="pausePanel">
           <h2 data-i18n="pause.title">PAUSE</h2>
-          <div class="menu-buttons">
+          <div class="pause-moves" id="pauseMoves"></div>
+          <div class="menu-buttons pause-buttons">
             <button class="menu-btn primary" id="btnResume" data-i18n="pause.resume">RESUME</button>
             <button class="menu-btn" id="btnRestart" data-i18n="pause.restart">RESTART</button>
             <button class="menu-btn ghost" id="btnQuit" data-i18n="pause.quit">MENU</button>

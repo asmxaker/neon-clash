@@ -17,6 +17,8 @@ const menu = $('menu');
 const help = $('help');
 const select = $('select');
 const pause = $('pause');
+const pausePanel = $('pausePanel');
+const pauseMoves = $('pauseMoves');
 const result = $('result');
 const sysBtns = $('sysBtns');
 const pauseBtn = $('pauseBtn');
@@ -198,6 +200,7 @@ onLangChange(() => {
   updateSelectUI();
   updateSoundIcon();
   updateLinkCharLine();
+  if (!pause.classList.contains('hidden')) renderPauseMoves();
 });
 
 // ---------------------------------------------------------------- звук
@@ -707,10 +710,60 @@ btnLinkBack.addEventListener('click', closeLinkLobby);
 
 // ---------------------------------------------------------------- пауза
 
+const PAUSE_COMBOS = [
+  ['double', '{P} → {P}'],
+  ['hook', '{P} → {K}'],
+  ['switch', '{K} → {P}'],
+  ['flurry', '{P} → {P} → {K}'],
+  ['triple', '{P} → {P} → {P}'],
+  ['doubleKick', '{K} → {K}'],
+  ['reversal', '{K} → {P} → {K}']
+];
+
+const PAUSE_COMMANDS = [
+  ['rush', '→ → + {P}'],
+  ['charge', '→ → + {K}'],
+  ['uppercut', '↓ → + {P}'],
+  ['sweep', '↓ ← + {K}'],
+  ['breakerPunch', '→ ↓ ← + {P}'],
+  ['breakerKick', '→ ↓ ← + {K}']
+];
+
+function renderPauseMoves() {
+  if (!pauseMoves || !game.fighters || !game.fighters.length) return;
+  const both = game.mode === '2p' || game.mode === 'link';
+  const list = both ? game.fighters : [game.fighters[0]];
+  const P = t('notation.punch');
+  const K = t('notation.kick');
+  const input = (tmpl) => tmpl.split('{P}').join(P).split('{K}').join(K);
+  const row = (label, name, extra = '') => `<div class="pf-row${extra}"><span class="pf-input">${label}</span><span class="pf-name">${name}</span></div>`;
+
+  pausePanel?.classList.toggle('solo', list.length === 1);
+  pauseMoves.innerHTML = list.map((f) => {
+    const c = charText(f.charId);
+    const combos = PAUSE_COMBOS.map(([key, tmpl]) => row(input(tmpl), t(`combo.${key}`))).join('');
+    const commands = PAUSE_COMMANDS.map(([key, tmpl]) => row(input(tmpl), t(`combo.${key}`))).join('');
+    const special = row(`${t('controls.special')} · 50`, c.specialName, ' pf-special');
+    return `<section class="pause-fighter" style="--pf:${f.color}">
+      <div class="pf-head"><b>P${f.index + 1}</b><span>${c.name}</span></div>
+      <div class="pf-body">
+        <div class="pf-col">
+          <div class="pf-group"><h4>${t('pause.combos')}</h4>${combos}</div>
+        </div>
+        <div class="pf-col">
+          <div class="pf-group"><h4>${t('pause.commands')}</h4>${commands}</div>
+          <div class="pf-group"><h4>${t('pause.special')}</h4>${special}</div>
+        </div>
+      </div>
+    </section>`;
+  }).join('') + `<div class="pause-note">${t('pause.inputNote')}</div>`;
+}
+
 function openPause() {
   if (!game.inMatch || game.paused) return;
   if (game.phase === 'matchEnd') return;
   if (!game.netGuest) game.setPaused(true);
+  renderPauseMoves();
   pause.classList.remove('hidden');
   audio.ui();
 }

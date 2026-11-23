@@ -145,7 +145,8 @@ const en = {
     nextOpponent: 'NEXT: {name}', complete: 'STORY COMPLETE',
     completeSub: 'You defeated the boss and finished the story.', defeatSub: 'The story ends here. Try this fight again.'
   },
-  pause: { title: 'PAUSE', resume: 'RESUME', restart: 'RESTART', quit: 'MENU' },
+  notation: { punch: 'P', kick: 'K' },
+  pause: { title: 'PAUSE', resume: 'RESUME', restart: 'RESTART', quit: 'MENU', combos: 'COMBOS', commands: 'COMMANDS', special: 'SPECIAL', inputNote: 'Directions are relative to the fighter’s facing.' },
   result: {
     kicker: 'FIGHT OVER',
     win1: 'PLAYER 1 WINS',
@@ -322,7 +323,8 @@ const ru = {
     nextOpponent: 'ДАЛЬШЕ: {name}', complete: 'ИСТОРИЯ ПРОЙДЕНА',
     completeSub: 'Ты победил босса и прошёл историю.', defeatSub: 'История здесь заканчивается. Попробуй этот бой снова.'
   },
-  pause: { title: 'ПАУЗА', resume: 'ПРОДОЛЖИТЬ', restart: 'ЗАНОВО', quit: 'В МЕНЮ' },
+  notation: { punch: 'Р', kick: 'Н' },
+  pause: { title: 'ПАУЗА', resume: 'ПРОДОЛЖИТЬ', restart: 'ЗАНОВО', quit: 'В МЕНЮ', combos: 'КОМБО', commands: 'ПРИЁМЫ', special: 'СПЕЦПРИЁМ', inputNote: 'Направления — относительно взгляда бойца.' },
   result: {
     kicker: 'БОЙ ОКОНЧЕН',
     win1: 'ПОБЕДА ИГРОКА 1',
@@ -499,7 +501,8 @@ const es = {
     nextOpponent: 'SIGUIENTE: {name}', complete: 'HISTORIA COMPLETADA',
     completeSub: 'Has derrotado al jefe y terminado la historia.', defeatSub: 'La historia termina aquí. Inténtalo de nuevo.'
   },
-  pause: { title: 'PAUSA', resume: 'SEGUIR', restart: 'REINICIAR', quit: 'MENÚ' },
+  notation: { punch: 'PU', kick: 'PA' },
+  pause: { title: 'PAUSA', resume: 'SEGUIR', restart: 'REINICIAR', quit: 'MENÚ', combos: 'COMBOS', commands: 'COMANDOS', special: 'ESPECIAL', inputNote: 'Las direcciones son relativas a la orientación del luchador.' },
   result: {
     kicker: 'FIN DE LA LUCHA',
     win1: 'GANA EL JUGADOR 1',
@@ -676,7 +679,8 @@ const pt = {
     nextOpponent: 'PRÓXIMO: {name}', complete: 'HISTÓRIA CONCLUÍDA',
     completeSub: 'Você derrotou o chefe e concluiu a história.', defeatSub: 'A história termina aqui. Tente esta luta novamente.'
   },
-  pause: { title: 'PAUSA', resume: 'CONTINUAR', restart: 'REINICIAR', quit: 'MENU' },
+  notation: { punch: 'SO', kick: 'CH' },
+  pause: { title: 'PAUSA', resume: 'CONTINUAR', restart: 'REINICIAR', quit: 'MENU', combos: 'COMBOS', commands: 'COMANDOS', special: 'ESPECIAL', inputNote: 'As direções são relativas para onde o lutador está virado.' },
   result: {
     kicker: 'FIM DA LUTA',
     win1: 'JOGADOR 1 VENCE',
@@ -853,7 +857,8 @@ const fr = {
     nextOpponent: 'SUIVANT : {name}', complete: 'HISTOIRE TERMINÉE',
     completeSub: 'Tu as vaincu le boss et terminé l’histoire.', defeatSub: 'L’histoire s’arrête ici. Réessaie ce combat.'
   },
-  pause: { title: 'PAUSE', resume: 'REPRENDRE', restart: 'RECOMMENCER', quit: 'MENU' },
+  notation: { punch: 'PO', kick: 'PI' },
+  pause: { title: 'PAUSE', resume: 'REPRENDRE', restart: 'RECOMMENCER', quit: 'MENU', combos: 'COMBOS', commands: 'COMMANDES', special: 'SPÉCIAL', inputNote: 'Les directions sont relatives à l’orientation du combattant.' },
   result: {
     kicker: 'COMBAT TERMINÉ',
     win1: 'JOUEUR 1 GAGNE',
@@ -1030,7 +1035,8 @@ const de = {
     nextOpponent: 'NÄCHSTER: {name}', complete: 'STORY GESCHAFFT',
     completeSub: 'Du hast den Boss besiegt und die Story beendet.', defeatSub: 'Hier endet die Story. Versuch diesen Kampf erneut.'
   },
-  pause: { title: 'PAUSE', resume: 'WEITER', restart: 'NEUSTART', quit: 'MENÜ' },
+  notation: { punch: 'FA', kick: 'TR' },
+  pause: { title: 'PAUSE', resume: 'WEITER', restart: 'NEUSTART', quit: 'MENÜ', combos: 'KOMBOS', commands: 'KOMMANDOS', special: 'SPEZIAL', inputNote: 'Die Richtungen gelten relativ zur Blickrichtung des Kämpfers.' },
   result: {
     kicker: 'KAMPF VORBEI',
     win1: 'SPIELER 1 GEWINNT',
@@ -1207,7 +1213,8 @@ const zh = {
     nextOpponent: '下一个：{name}', complete: '剧情通关',
     completeSub: '你击败了 BOSS，完成了剧情。', defeatSub: '剧情在此结束。再试一次这场战斗。'
   },
-  pause: { title: '暂停', resume: '继续', restart: '重新开始', quit: '菜单' },
+  notation: { punch: '拳', kick: '腿' },
+  pause: { title: '暂停', resume: '继续', restart: '重新开始', quit: '菜单', combos: '连招', commands: '指令技', special: '必杀', inputNote: '方向以角色面向为准。' },
   result: {
     kicker: '战斗结束',
     win1: '玩家 1 获胜',
@@ -1384,7 +1391,8 @@ const ja = {
     nextOpponent: '次：{name}', complete: 'ストーリークリア',
     completeSub: 'ボスを倒してストーリーを完了した。', defeatSub: 'ストーリーはここで終了。もう一度この試合へ。'
   },
-  pause: { title: 'ポーズ', resume: '再開', restart: 'やり直す', quit: 'メニュー' },
+  notation: { punch: 'パ', kick: 'キ' },
+  pause: { title: 'ポーズ', resume: '再開', restart: 'やり直す', quit: 'メニュー', combos: 'コンボ', commands: 'コマンド技', special: '必殺', inputNote: '方向はキャラクターの向きが基準。' },
   result: {
     kicker: '対戦終了',
     win1: 'プレイヤー1の勝ち',

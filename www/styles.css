@@ -501,6 +501,139 @@ body {
 
 .panel.narrow { width: min(420px, 92%); }
 
+.pause-panel {
+  width: min(980px, 97%);
+  max-height: 92%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.pause-panel.solo {
+  width: min(640px, 94%);
+}
+
+.pause-moves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(7px, 1.2vw, 12px);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 clamp(8px, 1.5vh, 14px);
+  text-align: left;
+}
+.pause-panel.solo .pause-moves { grid-template-columns: 1fr; }
+
+.pause-fighter {
+  min-width: 0;
+  padding: clamp(7px, 1.3vh, 12px) clamp(8px, 1.2vw, 13px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--pf, var(--cyan));
+  background: rgba(5, 3, 14, 0.62);
+}
+
+.pf-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.pf-head b {
+  font-size: clamp(10px, 1.9vh, 15px);
+  letter-spacing: .08em;
+  color: var(--pf, var(--cyan));
+}
+.pf-head span {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: clamp(7px, 1.25vh, 9px);
+  letter-spacing: .12em;
+  color: rgba(190, 200, 235, 0.55);
+}
+
+.pf-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px clamp(8px, 1vw, 12px);
+}
+.pf-col { min-width: 0; }
+.pf-group { margin-top: 4px; }
+.pf-group:first-child { margin-top: 0; }
+.pf-group h4 {
+  margin: 0 0 2px;
+  font-size: clamp(7px, 1.2vh, 9px);
+  letter-spacing: .16em;
+  color: rgba(255, 210, 63, 0.72);
+}
+.pf-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 0;
+  padding: 1px 0;
+  line-height: 1.3;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.055);
+  font-size: clamp(8px, 1.45vh, 11px);
+}
+.pf-row:last-child { border-bottom: 0; }
+.pf-input {
+  flex: 0 0 auto;
+  font-weight: 900;
+  letter-spacing: .03em;
+  color: rgba(190, 245, 255, 0.92);
+  white-space: nowrap;
+}
+.pf-name {
+  min-width: 0;
+  text-align: right;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: rgba(225, 230, 250, 0.82);
+}
+.pf-special .pf-input { color: rgba(255, 225, 140, 0.95); }
+.pf-special .pf-name { color: #ffecb5; font-weight: 700; }
+
+.pause-note {
+  grid-column: 1 / -1;
+  padding: 2px 2px 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: clamp(7px, 1.2vh, 9px);
+  color: rgba(180, 190, 225, 0.5);
+  text-align: center;
+}
+
+.pause-buttons {
+  flex-direction: row;
+  width: 100%;
+  gap: clamp(6px, 1vw, 10px);
+}
+.pause-buttons .menu-btn {
+  flex: 1;
+  min-height: clamp(34px, 6vh, 48px);
+  padding: 4px 8px;
+}
+
+@media (max-width: 720px) {
+  .pause-panel { width: min(600px, 96%); }
+  .pause-panel .pause-moves { grid-template-columns: 1fr; }
+  .pause-panel .pf-body { grid-template-columns: 1fr; }
+}
+
+@media (max-height: 470px) {
+  .pause-panel { width: min(920px, 97%); }
+  .pause-moves { gap: 6px; margin-bottom: 6px; }
+  .pause-fighter { padding: 5px 8px; }
+  .pf-head { margin-bottom: 3px; }
+  .pf-group { margin-top: 3px; }
+  .pf-row { font-size: 8px; }
+  .pause-buttons .menu-btn { min-height: 32px; }
+}
+
 .panel h2 {
   margin: 0 0 clamp(10px, 2vh, 18px);
   font-size: clamp(20px, 4.2vh, 38px);
