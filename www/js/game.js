@@ -1236,6 +1236,7 @@ function drawCombo(ctx, f, x, y, align) {
 export class Game {
   constructor(canvas, opts = {}) {
     this.canvas = canvas;
+    this.stageEl = canvas.closest('#stage') || document.getElementById('stage');
     this.ctx = canvas.getContext('2d');
     this.p1 = opts.p1;
     this.p2 = opts.p2;
@@ -2076,6 +2077,9 @@ export class Game {
     const ctx = this.ctx;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+
+    // Страховка: сенсорное управление видно во всех режимах боя.
+    if (this.stageEl) this.stageEl.classList.toggle('in-match', this.screen === 'match');
 
     const t = this.time;
 
