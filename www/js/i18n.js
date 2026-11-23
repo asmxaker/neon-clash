@@ -188,7 +188,12 @@ const en = {
     nyx: { name: 'NYX', tagline: 'SHADOW · DASH', specialName: 'SHADOW DASH', specialDesc: 'A quick dash through your opponent. Close combat.', badge: 'STEALTHY', short: 'DASH' },
     mira: { name: 'MIRA', tagline: 'ICE · SHARD FAN', specialName: 'ICE FAN', specialDesc: 'Three shards: up, forward and down.', badge: 'ICY', short: 'FAN' },
     storm: { name: 'STORM', tagline: 'STORM · LIGHTNING', specialName: 'SKY STRIKE', specialDesc: 'Lightning strikes a spot — move away in time.', badge: 'STORMBORN', short: 'LIGHTNING' },
-    boss: { name: 'OVERLORD', tagline: 'VOID · BOSS', specialName: 'VOID STRIKE', specialDesc: 'The final boss. Hits harder than anyone.', badge: 'BOSS', short: 'VOID' }
+    boss: { name: 'OVERLORD', tagline: 'VOID · BOSS', specialName: 'VOID STRIKE', specialDesc: 'The final boss. Hits harder than anyone.', badge: 'BOSS', short: 'VOID' },
+    kai: { name: 'KAI', tagline: 'ENERGY · RUSH', specialName: 'SPARK RUSH', specialDesc: 'A lightning-fast dash through the opponent.', badge: 'AGILE', short: 'RUSH' },
+    cyber: { name: 'CYBER-C', tagline: 'TECH · AEGIS', specialName: 'AEGIS WAVE', specialDesc: 'A heavy energy wave that hugs the ground.', badge: 'CYBER', short: 'AEGIS' },
+    neko: { name: 'NEKO', tagline: 'SPIRIT · FAN', specialName: 'SPIRIT FAN', specialDesc: 'Three spirit shards: high, forward and low.', badge: 'TRICKY', short: 'FAN' },
+    orc: { name: 'ORC-F', tagline: 'BRUTE · QUAKE', specialName: 'GROUND SLAM', specialDesc: 'A brutal ground slam. Jump over the shockwave.', badge: 'BRUTE', short: 'SLAM' },
+    rogue: { name: 'ROGUE-K', tagline: 'SHADOW · BLADES', specialName: 'SHADOW CUT', specialDesc: 'A quick blade dash through the enemy.', badge: 'ROGUE', short: 'CUT' }
   }
 };
 
@@ -368,7 +373,12 @@ const ru = {
     nyx: { name: 'НИКС', tagline: 'ТЕНЬ · РЫВОК', specialName: 'ТЕНЕВОЙ РЫВОК', specialDesc: 'Быстрый рывок сквозь соперника. Ближний бой.', badge: 'СКРЫТНЫЙ', short: 'РЫВОК' },
     mira: { name: 'МИРА', tagline: 'ЛЁД · ВЕЕР ОСКОЛКОВ', specialName: 'ЛЕДЯНОЙ ВЕЕР', specialDesc: 'Три осколка: вверх, вперёд и вниз.', badge: 'ЛЕДЯНОЙ', short: 'ВЕЕР' },
     storm: { name: 'СТОРМ', tagline: 'ГРОЗА · МОЛНИЯ', specialName: 'НЕБЕСНЫЙ РАЗРЯД', specialDesc: 'Молния бьёт в точку — успей уйти.', badge: 'ГРОЗОВОЙ', short: 'МОЛНИЯ' },
-    boss: { name: 'ОВЕРЛОРД', tagline: 'ПУСТОТА · БОСС', specialName: 'УДАР ПУСТОТЫ', specialDesc: 'Финальный босс. Бьёт сильнее всех.', badge: 'БОСС', short: 'ПУСТОТА' }
+    boss: { name: 'ОВЕРЛОРД', tagline: 'ПУСТОТА · БОСС', specialName: 'УДАР ПУСТОТЫ', specialDesc: 'Финальный босс. Бьёт сильнее всех.', badge: 'БОСС', short: 'ПУСТОТА' },
+    kai: { name: 'KAI', tagline: 'ЭНЕРГИЯ · РЫВОК', specialName: 'ИСКРОВОЙ РЫВОК', specialDesc: 'Молниеносный рывок сквозь соперника.', badge: 'ЛОВКИЙ', short: 'РЫВОК' },
+    cyber: { name: 'CYBER-C', tagline: 'ТЕХНО · ЭГИДА', specialName: 'ВОЛНА ЭГИДЫ', specialDesc: 'Тяжёлая энерговолна идёт по земле.', badge: 'КИБЕР', short: 'ЭГИДА' },
+    neko: { name: 'NEKO', tagline: 'ДУХ · ВЕЕР', specialName: 'ВЕЕР ДУХОВ', specialDesc: 'Три осколка духа: вверх, вперёд и вниз.', badge: 'ХИТРЫЙ', short: 'ВЕЕР' },
+    orc: { name: 'ORC-F', tagline: 'ЯРОСТЬ · ЗЕМЛЯ', specialName: 'ЗЕМЛЕТРЯСЕНИЕ', specialDesc: 'Мощный удар по земле. Перепрыгни волну.', badge: 'ГРУБЫЙ', short: 'УДАР' },
+    rogue: { name: 'ROGUE-K', tagline: 'ТЕНЬ · КЛИНКИ', specialName: 'ТЕНЕВОЙ РАЗРЕЗ', specialDesc: 'Быстрый рывок с клинками сквозь врага.', badge: 'РАЗБОЙНИК', short: 'РАЗРЕЗ' }
   }
 };
 
@@ -548,7 +558,12 @@ const es = {
     nyx: { name: 'NYX', tagline: 'SOMBRA · EMBESTIDA', specialName: 'EMBESTIDA SOMBRÍA', specialDesc: 'Embestida rápida a través del rival. Cuerpo a cuerpo.', badge: 'OCULTO', short: 'EMBESTIDA' },
     mira: { name: 'MIRA', tagline: 'HIELO · ABANICO', specialName: 'ABANICO DE HIELO', specialDesc: 'Tres fragmentos: arriba, adelante y abajo.', badge: 'GÉLIDO', short: 'ABANICO' },
     storm: { name: 'STORM', tagline: 'TORMENTA · RAYO', specialName: 'RAYO CELESTE', specialDesc: 'El rayo cae en un punto: muévete a tiempo.', badge: 'TORMENTA', short: 'RAYO' },
-    boss: { name: 'OVERLORD', tagline: 'VACÍO · JEFE', specialName: 'GOLPE DEL VACÍO', specialDesc: 'El jefe final. Golpea más fuerte que nadie.', badge: 'JEFE', short: 'VACÍO' }
+    boss: { name: 'OVERLORD', tagline: 'VACÍO · JEFE', specialName: 'GOLPE DEL VACÍO', specialDesc: 'El jefe final. Golpea más fuerte que nadie.', badge: 'JEFE', short: 'VACÍO' },
+    kai: { name: 'KAI', tagline: 'ENERGÍA · EMBESTIDA', specialName: 'EMBESTIDA CHISPA', specialDesc: 'Una embestida relámpago a través del rival.', badge: 'ÁGIL', short: 'EMBESTIDA' },
+    cyber: { name: 'CYBER-C', tagline: 'TECNOLOGÍA · ÉGIDA', specialName: 'ONDA ÉGIDA', specialDesc: 'Una onda de energía pesada que va por el suelo.', badge: 'CIBER', short: 'ÉGIDA' },
+    neko: { name: 'NEKO', tagline: 'ESPÍRITU · ABANICO', specialName: 'ABANICO ESPIRITUAL', specialDesc: 'Tres fragmentos: arriba, adelante y abajo.', badge: 'ASTUTO', short: 'ABANICO' },
+    orc: { name: 'ORC-F', tagline: 'BRUTO · SISMO', specialName: 'GOLPE SÍSMICO', specialDesc: 'Un golpe brutal al suelo. Salta la onda.', badge: 'BRUTO', short: 'GOLPE' },
+    rogue: { name: 'ROGUE-K', tagline: 'SOMBRA · FILOS', specialName: 'CORTE SOMBRÍO', specialDesc: 'Una embestida rápida con filos a través del rival.', badge: 'PÍCARO', short: 'CORTE' }
   }
 };
 
@@ -728,7 +743,12 @@ const pt = {
     nyx: { name: 'NYX', tagline: 'SOMBRA · AVANÇO', specialName: 'AVANÇO SOMBRIO', specialDesc: 'Avanço rápido pelo oponente. Corpo a corpo.', badge: 'OCULTO', short: 'AVANÇO' },
     mira: { name: 'MIRA', tagline: 'GELO · LEQUE', specialName: 'LEQUE DE GELO', specialDesc: 'Três fragmentos: cima, frente e baixo.', badge: 'GÉLIDO', short: 'LEQUE' },
     storm: { name: 'STORM', tagline: 'TEMPESTADE · RAIO', specialName: 'RAIO CELESTE', specialDesc: 'O raio cai num ponto — saia a tempo.', badge: 'TEMPESTUOSO', short: 'RAIO' },
-    boss: { name: 'OVERLORD', tagline: 'VAZIO · CHEFE', specialName: 'GOLPE DO VAZIO', specialDesc: 'O chefe final. Bate mais forte que todos.', badge: 'CHEFE', short: 'VAZIO' }
+    boss: { name: 'OVERLORD', tagline: 'VAZIO · CHEFE', specialName: 'GOLPE DO VAZIO', specialDesc: 'O chefe final. Bate mais forte que todos.', badge: 'CHEFE', short: 'VAZIO' },
+    kai: { name: 'KAI', tagline: 'ENERGIA · AVANÇO', specialName: 'AVANÇO FAISCANTE', specialDesc: 'Um avanço relâmpago pelo oponente.', badge: 'ÁGIL', short: 'AVANÇO' },
+    cyber: { name: 'CYBER-C', tagline: 'TECNOLOGIA · ÉGIDE', specialName: 'ONDA ÉGIDE', specialDesc: 'Uma onda de energia pesada que anda pelo chão.', badge: 'CIBER', short: 'ÉGIDE' },
+    neko: { name: 'NEKO', tagline: 'ESPÍRITO · LEQUE', specialName: 'LEQUE ESPIRITUAL', specialDesc: 'Três fragmentos: cima, frente e baixo.', badge: 'ASTUTO', short: 'LEQUE' },
+    orc: { name: 'ORC-F', tagline: 'BRUTO · SISMO', specialName: 'GOLPE SÍSMICO', specialDesc: 'Um golpe brutal no chão. Pule a onda.', badge: 'BRUTO', short: 'GOLPE' },
+    rogue: { name: 'ROGUE-K', tagline: 'SOMBRA · LÂMINAS', specialName: 'CORTE SOMBRIO', specialDesc: 'Avanço rápido com lâminas pelo inimigo.', badge: 'LADINO', short: 'CORTE' }
   }
 };
 
@@ -908,7 +928,12 @@ const fr = {
     nyx: { name: 'NYX', tagline: 'OMBRE · RUÉE', specialName: 'RUÉE OMBRÉE', specialDesc: 'Ruée rapide à travers l’adversaire. Corps à corps.', badge: 'FURTIF', short: 'RUÉE' },
     mira: { name: 'MIRA', tagline: 'GLACE · ÉVENTAIL', specialName: 'ÉVENTAIL DE GLACE', specialDesc: 'Trois éclats : haut, avant et bas.', badge: 'GLACIAL', short: 'ÉVENTAIL' },
     storm: { name: 'STORM', tagline: 'ORAGE · FOUDRE', specialName: 'FOUDRE CÉLESTE', specialDesc: 'La foudre frappe un point — déplace-toi à temps.', badge: 'ORAGEUX', short: 'FOUDRE' },
-    boss: { name: 'OVERLORD', tagline: 'VIDE · BOSS', specialName: 'FRAPPE DU VIDE', specialDesc: 'Le boss final. Frappe plus fort que tous.', badge: 'BOSS', short: 'VIDE' }
+    boss: { name: 'OVERLORD', tagline: 'VIDE · BOSS', specialName: 'FRAPPE DU VIDE', specialDesc: 'Le boss final. Frappe plus fort que tous.', badge: 'BOSS', short: 'VIDE' },
+    kai: { name: 'KAI', tagline: 'ÉNERGIE · RUÉE', specialName: 'RUÉE ÉCLAIR', specialDesc: 'Une ruée éclair à travers l’adversaire.', badge: 'AGILE', short: 'RUÉE' },
+    cyber: { name: 'CYBER-C', tagline: 'TECH · ÉGIDE', specialName: 'ONDE ÉGIDE', specialDesc: 'Une onde d’énergie lourde qui rase le sol.', badge: 'CYBER', short: 'ÉGIDE' },
+    neko: { name: 'NEKO', tagline: 'ESPRIT · ÉVENTAIL', specialName: 'ÉVENTAIL D’ESPRIT', specialDesc: 'Trois éclats : haut, avant et bas.', badge: 'MALIN', short: 'ÉVENTAIL' },
+    orc: { name: 'ORC-F', tagline: 'BRUTE · SÉISME', specialName: 'FRAPPE SISMIQUE', specialDesc: 'Une frappe brutale au sol. Saute par-dessus l’onde.', badge: 'BRUTE', short: 'FRAPPE' },
+    rogue: { name: 'ROGUE-K', tagline: 'OMBRE · LAMES', specialName: 'COUPE D’OMBRE', specialDesc: 'Une ruée rapide avec lames à travers l’ennemi.', badge: 'VOLEUR', short: 'COUPE' }
   }
 };
 
@@ -1088,7 +1113,12 @@ const de = {
     nyx: { name: 'NYX', tagline: 'SCHATTEN · SPRINT', specialName: 'SCHATTENSPRINT', specialDesc: 'Schneller Sprint durch den Gegner. Nahkampf.', badge: 'VERBORGEN', short: 'SPRINT' },
     mira: { name: 'MIRA', tagline: 'EIS · FÄCHER', specialName: 'EISFÄCHER', specialDesc: 'Drei Splitter: hoch, vorwärts und runter.', badge: 'EISIG', short: 'FÄCHER' },
     storm: { name: 'STORM', tagline: 'STURM · BLITZ', specialName: 'HIMMELBLITZ', specialDesc: 'Der Blitz schlägt punktgenau ein — beweg dich rechtzeitig.', badge: 'GEWITTER', short: 'BLITZ' },
-    boss: { name: 'OVERLORD', tagline: 'LEERE · BOSS', specialName: 'LEERENSTOSS', specialDesc: 'Der Endboss. Trifft härter als alle anderen.', badge: 'BOSS', short: 'LEERE' }
+    boss: { name: 'OVERLORD', tagline: 'LEERE · BOSS', specialName: 'LEERENSTOSS', specialDesc: 'Der Endboss. Trifft härter als alle anderen.', badge: 'BOSS', short: 'LEERE' },
+    kai: { name: 'KAI', tagline: 'ENERGIE · SPRINT', specialName: 'FUNKENSPRINT', specialDesc: 'Ein blitzschneller Sprint durch den Gegner.', badge: 'FLINK', short: 'SPRINT' },
+    cyber: { name: 'CYBER-C', tagline: 'TECH · ÄGIS', specialName: 'ÄGIS-WELLE', specialDesc: 'Eine schwere Energiewelle am Boden.', badge: 'CYBER', short: 'ÄGIS' },
+    neko: { name: 'NEKO', tagline: 'GEIST · FÄCHER', specialName: 'GEISTFÄCHER', specialDesc: 'Drei Splitter: hoch, vorwärts und tief.', badge: 'LISTIG', short: 'FÄCHER' },
+    orc: { name: 'ORC-F', tagline: 'WUT · BEBEN', specialName: 'BODENSTOSS', specialDesc: 'Ein brutaler Schlag auf den Boden. Spring über die Welle.', badge: 'ROHLING', short: 'STOSS' },
+    rogue: { name: 'ROGUE-K', tagline: 'SCHATTEN · KLINGEN', specialName: 'SCHATTENSCHNITT', specialDesc: 'Ein schneller Klingensprint durch den Feind.', badge: 'SCHURKE', short: 'SCHNITT' }
   }
 };
 
@@ -1268,7 +1298,12 @@ const zh = {
     nyx: { name: 'NYX', tagline: '暗影 · 突进', specialName: '暗影突进', specialDesc: '快速穿过对手。近身战。', badge: '隐秘', short: '突进' },
     mira: { name: 'MIRA', tagline: '冰霜 · 碎片扇', specialName: '冰霜扇', specialDesc: '三枚碎片：上、前、下。', badge: '冰霜', short: '碎片扇' },
     storm: { name: 'STORM', tagline: '雷霆 · 闪电', specialName: '天雷', specialDesc: '闪电击中定点——及时闪开。', badge: '雷霆', short: '闪电' },
-    boss: { name: '霸主', tagline: '虚空 · BOSS', specialName: '虚空打击', specialDesc: '最终 BOSS，攻击力最强。', badge: 'BOSS', short: '虚空' }
+    boss: { name: '霸主', tagline: '虚空 · BOSS', specialName: '虚空打击', specialDesc: '最终 BOSS，攻击力最强。', badge: 'BOSS', short: '虚空' },
+    kai: { name: 'KAI', tagline: '能量 · 突进', specialName: '电光突进', specialDesc: '闪电般穿过对手。', badge: '灵动', short: '突进' },
+    cyber: { name: 'CYBER-C', tagline: '科技 · 圣盾', specialName: '圣盾波', specialDesc: '贴地推进的重型能量波。', badge: '赛博', short: '圣盾' },
+    neko: { name: 'NEKO', tagline: '灵猫 · 扇', specialName: '灵猫扇', specialDesc: '三枚灵片：上、前、下。', badge: '灵巧', short: '扇' },
+    orc: { name: 'ORC-F', tagline: '蛮力 · 震地', specialName: '地震重击', specialDesc: '猛烈砸地。跳过冲击波！', badge: '蛮族', short: '重击' },
+    rogue: { name: 'ROGUE-K', tagline: '暗影 · 双刃', specialName: '暗影斩', specialDesc: '双刃快速穿过敌人。', badge: '游侠', short: '暗斩' }
   }
 };
 
@@ -1448,7 +1483,12 @@ const ja = {
     nyx: { name: 'NYX', tagline: '影 · ダッシュ', specialName: 'シャドウダッシュ', specialDesc: '相手をすり抜ける快速ダッシュ。近接戦。', badge: 'ステルス', short: 'ダッシュ' },
     mira: { name: 'MIRA', tagline: '氷 · 扇', specialName: 'アイスファン', specialDesc: '3つの破片：上・前・下。', badge: 'アイス', short: '扇' },
     storm: { name: 'STORM', tagline: '嵐 · 雷', specialName: 'スカイストライク', specialDesc: '雷が地点に落ちる。早く離れろ。', badge: 'ストーム', short: '雷' },
-    boss: { name: 'オーバーロード', tagline: '虚空 · ボス', specialName: 'ヴォイドストライク', specialDesc: '最終ボス。誰よりも強烈な一撃。', badge: 'ボス', short: '虚空' }
+    boss: { name: 'オーバーロード', tagline: '虚空 · ボス', specialName: 'ヴォイドストライク', specialDesc: '最終ボス。誰よりも強烈な一撃。', badge: 'ボス', short: '虚空' },
+    kai: { name: 'KAI', tagline: 'エネルギー · ラッシュ', specialName: 'スパークラッシュ', specialDesc: '相手を貫く電光石火のダッシュ。', badge: '俊敏', short: 'ラッシュ' },
+    cyber: { name: 'CYBER-C', tagline: 'テック · イージス', specialName: 'イージスウェーブ', specialDesc: '地面を進む重いエネルギー波。', badge: 'サイバー', short: 'イージス' },
+    neko: { name: 'NEKO', tagline: '精霊 · 扇', specialName: 'スピリットファン', specialDesc: '3つの精霊片：上・前・下。', badge: 'トリッキー', short: '扇' },
+    orc: { name: 'ORC-F', tagline: '蛮力 · 震動', specialName: 'グラウンドスラム', specialDesc: '強烈な地面叩き。衝撃波を跳び越えろ。', badge: 'ブルート', short: 'スラム' },
+    rogue: { name: 'ROGUE-K', tagline: '影 · 双刃', specialName: 'シャドウカット', specialDesc: '双刃で敵を貫く快速ダッシュ。', badge: 'ローグ', short: '斬撃' }
   }
 };
 

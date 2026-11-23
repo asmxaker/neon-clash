@@ -117,6 +117,7 @@ export class Fighter {
     this.charId = char.id;
     this.variant = variant;
     this.style = char.style;
+    this.gear = char.gear || char.style;
     this.isBoss = !!char.boss;
     this.scale = char.scale || 1;
     this.special = char.special;
@@ -1731,28 +1732,12 @@ function polygon(ctx, pts, fill, stroke, width = 2) {
 }
 
 function drawHeadGear(ctx, f, hx, hy, col, accent) {
-  const style = f.style;
+  const gear = f.gear || f.style;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  if (style === 'nyx' && !f.isBoss) {
-    // кошачьи уши на капюшоне
-    for (const s of [-1, 1]) {
-      polygon(ctx, [
-        [hx + s * 5, hy - 14],
-        [hx + s * 13, hy - 35],
-        [hx + s * 17, hy - 15]
-      ], 'rgba(9,4,20,0.96)', hexA(col, 0.85), 2);
-      ctx.beginPath();
-      ctx.moveTo(hx + s * 9, hy - 20);
-      ctx.lineTo(hx + s * 13, hy - 30);
-      ctx.strokeStyle = hexA(accent, 0.65);
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-    }
-  } else if (f.isBoss) {
-    // корона из тёмных шипов
+  if (f.isBoss) {
     for (const s of [-1, 0, 1]) {
       polygon(ctx, [
         [hx + s * 9 - 3, hy - 14],
@@ -1760,8 +1745,64 @@ function drawHeadGear(ctx, f, hx, hy, col, accent) {
         [hx + s * 9 + 3, hy - 14]
       ], 'rgba(20,2,8,0.98)', hexA(col, 0.9), 1.6);
     }
-  } else if (style === 'mira') {
-    // кристалл на лбу и боковые льдинки
+  } else if (gear === 'bunny') {
+    for (const s of [-1, 1]) {
+      polygon(ctx, [
+        [hx + s * 6, hy - 13],
+        [hx + s * 9, hy - 53],
+        [hx + s * 16, hy - 15]
+      ], 'rgba(7,10,26,0.96)', hexA(col, 0.9), 2);
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 9, hy - 22);
+      ctx.lineTo(hx + s * 11, hy - 43);
+      ctx.strokeStyle = hexA(accent, 0.65);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  } else if (gear === 'cat') {
+    for (const s of [-1, 1]) {
+      polygon(ctx, [
+        [hx + s * 5, hy - 14], [hx + s * 13, hy - 35], [hx + s * 17, hy - 15]
+      ], 'rgba(5,18,10,0.96)', hexA(col, 0.9), 2);
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 9, hy - 20);
+      ctx.lineTo(hx + s * 13, hy - 30);
+      ctx.strokeStyle = hexA(accent, 0.7);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  } else if (gear === 'cyber') {
+    // кибер-гребень и визор
+    for (const s of [-1, 1]) {
+      polygon(ctx, [
+        [hx + s * 9, hy - 14], [hx + s * 18, hy - 28], [hx + s * 20, hy - 8]
+      ], 'rgba(14,4,24,0.98)', hexA(col, 0.85), 1.8);
+    }
+    ctx.beginPath();
+    ctx.moveTo(hx - 15, hy - 2);
+    ctx.lineTo(hx + 16, hy - 3);
+    ctx.strokeStyle = hexA(accent, 0.95);
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  } else if (gear === 'orc') {
+    for (const s of [-1, 1]) {
+      polygon(ctx, [
+        [hx + s * 8, hy - 13], [hx + s * 25, hy - 25], [hx + s * 20, hy - 5]
+      ], 'rgba(24,4,4,0.98)', hexA(col, 0.9), 1.8);
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 8, hy + 7);
+      ctx.lineTo(hx + s * 14, hy + 19);
+      ctx.strokeStyle = hexA(accent, 0.9);
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+    }
+  } else if (gear === 'rogue') {
+    for (const s of [-1, 1]) {
+      polygon(ctx, [
+        [hx + s * 7, hy - 14], [hx + s * 16, hy - 35], [hx + s * 18, hy - 12]
+      ], 'rgba(20,4,20,0.97)', hexA(col, 0.9), 1.8);
+    }
+  } else if (gear === 'mira') {
     polygon(ctx, [[hx, hy - 40], [hx + 6, hy - 26], [hx, hy - 15], [hx - 6, hy - 26]], hexA(accent, 0.32), hexA(accent, 0.95), 1.4);
     for (const s of [-1, 1]) {
       ctx.beginPath();
@@ -1771,8 +1812,7 @@ function drawHeadGear(ctx, f, hx, hy, col, accent) {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-  } else if (style === 'heavy') {
-    // клыки и тяжёлый воротник
+  } else if (gear === 'heavy') {
     for (const s of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(hx + s * 8, hy + 8);
@@ -1787,7 +1827,6 @@ function drawHeadGear(ctx, f, hx, hy, col, accent) {
     ctx.lineWidth = 4;
     ctx.stroke();
   } else {
-    // энергетические плавники Вольта
     for (const s of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(hx + s * 7, hy - 14);
@@ -1837,12 +1876,12 @@ function drawCostumeBack(ctx, f, col, accent, p) {
 }
 
 function drawGearBack(ctx, f, col, accent) {
-  const style = f.style;
+  const gear = f.gear || f.style;
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  if (style === 'nyx') {
+  if (gear === 'nyx' || gear === 'rogue') {
     // два клинка за спиной
     for (const s of [-1, 1]) {
       ctx.beginPath();
@@ -1858,7 +1897,7 @@ function drawGearBack(ctx, f, col, accent) {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-  } else if (style === 'heavy') {
+  } else if (gear === 'heavy' || gear === 'cyber') {
     // тяжёлый щит на спине
     ctx.save();
     ctx.translate(-39, -117);
@@ -1871,7 +1910,7 @@ function drawGearBack(ctx, f, col, accent) {
     polygon(ctx, pts, 'rgba(10,4,8,0.95)', hexA(col, 0.85), 2.4);
     polygon(ctx, pts.map(([x, y]) => [x * 0.62, y * 0.62]), 'rgba(20,8,12,0.8)', hexA(accent, 0.6), 1.4);
     ctx.restore();
-  } else if (style === 'mira') {
+  } else if (gear === 'mira' || gear === 'cat') {
     // ледяной посох с кристаллом
     ctx.beginPath();
     ctx.moveTo(20, -44);
@@ -1883,7 +1922,19 @@ function drawGearBack(ctx, f, col, accent) {
     ctx.lineWidth = 2.2;
     ctx.stroke();
     polygon(ctx, [[54, -262], [66, -242], [52, -222], [40, -242]], hexA(accent, 0.3), hexA(accent, 0.95), 1.6);
-  } else if (style === 'storm') {
+  } else if (gear === 'orc') {
+    // тяжёлая дубина
+    ctx.beginPath();
+    ctx.moveTo(-16, -70);
+    ctx.lineTo(-64, -208);
+    ctx.strokeStyle = 'rgba(14,3,4,0.96)';
+    ctx.lineWidth = 12;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.85);
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    polygon(ctx, [[-70, -232], [-44, -214], [-54, -186], [-86, -202]], 'rgba(20,5,6,0.98)', hexA(accent, 0.9), 1.8);
+  } else if (gear === 'storm') {
     // громовой трезубец
     ctx.beginPath();
     ctx.moveTo(15, -42);
@@ -1903,7 +1954,7 @@ function drawGearBack(ctx, f, col, accent) {
       ctx.stroke();
     }
   } else {
-    // плазменное копьё Вольта
+    // плазменное копьё / энергетический клинок
     ctx.beginPath();
     ctx.moveTo(-20, -70);
     ctx.lineTo(92, -230);
@@ -1923,6 +1974,7 @@ function drawGearBack(ctx, f, col, accent) {
 
 function drawGearFront(ctx, f, col, accent, p) {
   const style = f.style;
+  const gear = f.gear || f.style;
   const plate = (pt, size, tilt) => {
     ctx.save();
     ctx.translate(pt[0], pt[1]);
@@ -1940,7 +1992,7 @@ function drawGearFront(ctx, f, col, accent, p) {
     ctx.restore();
   };
 
-  if (style === 'heavy') {
+  if (gear === 'heavy' || gear === 'cyber') {
     plate(p.shF, 19, 0.16);
     plate(p.shB, 17, -0.18);
     // наручи
@@ -1953,8 +2005,8 @@ function drawGearFront(ctx, f, col, accent, p) {
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-  } else if (style === 'nyx') {
-    plate(p.shF, 11, 0.18);
+  } else if (gear === 'nyx' || gear === 'rogue' || gear === 'bunny') {
+    plate(p.shF, 13, 0.18);
     plate(p.shB, 10, -0.2);
     // кинжалы у кистей
     ctx.save();
@@ -1968,7 +2020,7 @@ function drawGearFront(ctx, f, col, accent, p) {
       ctx.stroke();
     }
     ctx.restore();
-  } else if (style === 'mira') {
+  } else if (gear === 'mira' || gear === 'cat') {
     plate(p.shF, 14, 0.14);
     plate(p.shB, 12, -0.16);
     // кристаллы на плече
@@ -1976,7 +2028,13 @@ function drawGearFront(ctx, f, col, accent, p) {
     ctx.globalCompositeOperation = 'lighter';
     polygon(ctx, [[p.shF[0], p.shF[1] - 16], [p.shF[0] + 6, p.shF[1] - 6], [p.shF[0], p.shF[1] + 4], [p.shF[0] - 6, p.shF[1] - 6]], hexA(accent, 0.25), hexA(accent, 0.9), 1.2);
     ctx.restore();
-  } else if (style === 'storm') {
+  } else if (gear === 'orc') {
+    plate(p.shF, 20, 0.2);
+    plate(p.shB, 17, -0.22);
+    for (const s of [-1, 1]) {
+      polygon(ctx, [[p.shF[0] + s * 12, p.shF[1] - 12], [p.shF[0] + s * 26, p.shF[1] + 2], [p.shF[0] + s * 12, p.shF[1] + 12]], 'rgba(24,4,4,0.95)', hexA(col, 0.7), 1.4);
+    }
+  } else if (gear === 'storm') {
     plate(p.shF, 16, 0.2);
     plate(p.shB, 14, -0.2);
     // молнии на плече

@@ -763,6 +763,11 @@ body {
 .fighter-card[data-char="nyx"] { --fc: #b06bff; --fc-glow: rgba(176, 107, 255, 0.3); }
 .fighter-card[data-char="mira"] { --fc: #6fffd2; --fc-glow: rgba(111, 255, 210, 0.26); }
 .fighter-card[data-char="storm"] { --fc: #ffd23f; --fc-glow: rgba(255, 210, 63, 0.26); }
+.fighter-card[data-char="kai"] { --fc: #4d8dff; --fc-glow: rgba(77, 141, 255, 0.3); }
+.fighter-card[data-char="cyber"] { --fc: #d94dff; --fc-glow: rgba(217, 77, 255, 0.3); }
+.fighter-card[data-char="neko"] { --fc: #5dff7a; --fc-glow: rgba(93, 255, 122, 0.28); }
+.fighter-card[data-char="orc"] { --fc: #ff4d3d; --fc-glow: rgba(255, 77, 61, 0.3); }
+.fighter-card[data-char="rogue"] { --fc: #ff4fd8; --fc-glow: rgba(255, 79, 216, 0.3); }
 
 .fighter-card:hover { border-color: var(--fc); }
 .fighter-card:active { transform: scale(0.985); }
@@ -814,7 +819,7 @@ body {
   align-items: flex-end;
   justify-content: center;
   width: 100%;
-  height: clamp(48px, 15vh, 86px);
+  height: clamp(40px, 12cqh, 72px);
   margin-top: -2px;
 }
 
@@ -973,7 +978,7 @@ body {
   .select-panel h2 { font-size: 19px; }
   .fighter-grid { gap: 4px; margin-bottom: 3px; }
   .fighter-card { padding: 3px 5px 5px; border-radius: 8px; }
-  .fc-art { height: 64px; }
+  .fc-art { height: 40px; }
   .fc-badge { font-size: 5.5px; }
   .fc-role { font-size: 6px; }
   .fc-name { font-size: 11px; }

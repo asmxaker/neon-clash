@@ -125,6 +125,51 @@ export const CHARACTERS = {
     badge: 'ГРОЗОВОЙ',
     short: 'МОЛНИЯ',
     stats: { speed: 4, power: 4, range: 5 }
+  },
+  kai: {
+    id: 'kai', name: 'KAI', style: 'nyx', gear: 'bunny',
+    tagline: 'ENERGY · RUSH', color: '#4d8dff', accent: '#d6ecff', deep: '#081a3a',
+    altColor: '#ff8a3d', altAccent: '#ffe0c0',
+    hp: 92, walkSpeed: 370, airSpeed: 275, jumpV: 1170,
+    damageMul: 0.92, startupMul: 0.9, recoveryMul: 0.9, reachMul: 1,
+    special: 'dash', specialName: 'SPARK RUSH', specialDesc: 'A lightning-fast dash through the opponent.',
+    badge: 'AGILE', short: 'RUSH', stats: { speed: 5, power: 3, range: 3 }
+  },
+  cyber: {
+    id: 'cyber', name: 'CYBER-C', style: 'heavy', gear: 'cyber',
+    tagline: 'TECH · AEGIS', color: '#d94dff', accent: '#f4d6ff', deep: '#2a0b3a',
+    altColor: '#35f0ff', altAccent: '#d8fbff',
+    hp: 118, walkSpeed: 300, airSpeed: 225, jumpV: 1060,
+    damageMul: 1.1, startupMul: 1.08, recoveryMul: 1.1, reachMul: 1.06,
+    special: 'wave', specialName: 'AEGIS WAVE', specialDesc: 'A heavy energy wave that hugs the ground.',
+    badge: 'CYBER', short: 'AEGIS', stats: { speed: 3, power: 5, range: 4 }
+  },
+  neko: {
+    id: 'neko', name: 'NEKO', style: 'mira', gear: 'cat',
+    tagline: 'SPIRIT · FAN', color: '#5dff7a', accent: '#d8ffe0', deep: '#0a3318',
+    altColor: '#ffd23f', altAccent: '#fff6c2',
+    hp: 96, walkSpeed: 340, airSpeed: 250, jumpV: 1130,
+    damageMul: 0.96, startupMul: 1, recoveryMul: 0.95, reachMul: 1.08,
+    special: 'fan', specialName: 'SPIRIT FAN', specialDesc: 'Three spirit shards: high, forward and low.',
+    badge: 'TRICKY', short: 'FAN', stats: { speed: 4, power: 3, range: 5 }
+  },
+  orc: {
+    id: 'orc', name: 'ORC-F', style: 'heavy', gear: 'orc',
+    tagline: 'BRUTE · QUAKE', color: '#ff4d3d', accent: '#ffd0c0', deep: '#3a0a08',
+    altColor: '#b8ff3d', altAccent: '#f0ffd0',
+    hp: 126, walkSpeed: 285, airSpeed: 215, jumpV: 1040,
+    damageMul: 1.2, startupMul: 1.12, recoveryMul: 1.15, reachMul: 1.1,
+    special: 'shockwave', specialName: 'GROUND SLAM', specialDesc: 'A brutal ground slam. Jump over the shockwave.',
+    badge: 'BRUTE', short: 'SLAM', stats: { speed: 2, power: 5, range: 4 }
+  },
+  rogue: {
+    id: 'rogue', name: 'ROGUE-K', style: 'nyx', gear: 'rogue',
+    tagline: 'SHADOW · BLADES', color: '#ff4fd8', accent: '#ffd6f5', deep: '#3a0830',
+    altColor: '#b8ff3d', altAccent: '#f0ffd0',
+    hp: 94, walkSpeed: 360, airSpeed: 265, jumpV: 1150,
+    damageMul: 0.94, startupMul: 0.92, recoveryMul: 0.92, reachMul: 1.02,
+    special: 'dash', specialName: 'SHADOW CUT', specialDesc: 'A quick blade dash through the enemy.',
+    badge: 'ROGUE', short: 'CUT', stats: { speed: 5, power: 4, range: 2 }
   }
 };
 
