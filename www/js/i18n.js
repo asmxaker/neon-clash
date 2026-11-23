@@ -25,6 +25,7 @@ const en = {
     link: 'VIA BLUETOOTH', linksub: 'play nearby',
     help: 'HOW TO PLAY',
     footer: 'Turn your phone horizontal · headphones on',
+    roundLength: 'ROUND LENGTH', hitsFast: 'Fast · 8 hits', hitsNormal: 'Normal · 12 hits', hitsLong: 'Long · 18 hits',
     story: 'STORY', storySub: 'fight all challengers',
     language: 'LANGUAGE'
   },
@@ -203,6 +204,7 @@ const ru = {
     link: 'ПО BLUETOOTH', linksub: 'игра рядом',
     help: 'КАК ИГРАТЬ',
     footer: 'Поверни телефон горизонтально · надень наушники',
+    roundLength: 'ДЛИНА РАУНДА', hitsFast: 'Быстро · 8', hitsNormal: 'Обычно · 12', hitsLong: 'Долго · 18',
     story: 'ИСТОРИЯ', storySub: 'пройти всех бойцов',
     language: 'ЯЗЫК'
   },
@@ -381,6 +383,7 @@ const es = {
     link: 'POR BLUETOOTH', linksub: 'jugar cerca',
     help: 'CÓMO JUGAR',
     footer: 'Gira el teléfono en horizontal · ponte auriculares',
+    roundLength: 'DURACIÓN', hitsFast: 'Rápida · 8', hitsNormal: 'Normal · 12', hitsLong: 'Larga · 18',
     story: 'HISTORIA', storySub: 'vence a todos',
     language: 'IDIOMA'
   },
@@ -559,6 +562,7 @@ const pt = {
     link: 'POR BLUETOOTH', linksub: 'jogar perto',
     help: 'COMO JOGAR',
     footer: 'Vire o celular na horizontal · use fones',
+    roundLength: 'DURAÇÃO', hitsFast: 'Rápida · 8', hitsNormal: 'Normal · 12', hitsLong: 'Longa · 18',
     story: 'HISTÓRIA', storySub: 'enfrente todos',
     language: 'IDIOMA'
   },
@@ -737,6 +741,7 @@ const fr = {
     link: 'PAR BLUETOOTH', linksub: 'jouer à proximité',
     help: 'COMMENT JOUER',
     footer: 'Mets le téléphone à l’horizontale · mets un casque',
+    roundLength: 'DURÉE', hitsFast: 'Rapide · 8', hitsNormal: 'Normale · 12', hitsLong: 'Longue · 18',
     story: 'HISTOIRE', storySub: 'bats tous les combattants',
     language: 'LANGUE'
   },
@@ -915,6 +920,7 @@ const de = {
     link: 'ÜBER BLUETOOTH', linksub: 'in der Nähe spielen',
     help: 'SO WIRD GESPIELT',
     footer: 'Handy quer halten · Kopfhörer auf',
+    roundLength: 'RUNDENLÄNGE', hitsFast: 'Kurz · 8', hitsNormal: 'Normal · 12', hitsLong: 'Lang · 18',
     story: 'STORY', storySub: 'alle Kämpfer besiegen',
     language: 'SPRACHE'
   },
@@ -1093,6 +1099,7 @@ const zh = {
     link: '蓝牙对战', linksub: '附近联机',
     help: '玩法说明',
     footer: '请横屏握持手机 · 建议戴耳机',
+    roundLength: '回合长度', hitsFast: '快速 · 8', hitsNormal: '普通 · 12', hitsLong: '持久 · 18',
     story: '剧情', storySub: '挑战所有角色',
     language: '语言'
   },
@@ -1271,6 +1278,7 @@ const ja = {
     link: 'Bluetooth対戦', linksub: '近くの友達と',
     help: '遊び方',
     footer: 'スマホを横向きに · ヘッドホン推奨',
+    roundLength: 'ラウンド長', hitsFast: '短い · 8', hitsNormal: '普通 · 12', hitsLong: '長い · 18',
     story: 'ストーリー', storySub: '全キャラと勝負',
     language: '言語'
   },

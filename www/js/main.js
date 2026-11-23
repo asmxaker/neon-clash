@@ -65,6 +65,7 @@ const linkNotice = $('linkNotice');
 const linkNoticeText = $('linkNoticeText');
 const transportBtns = [...document.querySelectorAll('.link-transport-btn')];
 const langSelect = $('langSelect');
+const hitsSelect = $('hitsSelect');
 
 initI18n();
 
@@ -76,6 +77,11 @@ try {
   if (savedTransport === 'ble') linkTransport = savedTransport;
 } catch (e) { /* ignore */ }
 let link = linkTransport === 'ble' ? new BleLinkManager() : new LinkManager();
+let hitTarget = 12;
+try {
+  const savedHits = parseInt(localStorage.getItem('nc_hits'), 10);
+  if ([8, 12, 18].includes(savedHits)) hitTarget = savedHits;
+} catch (e) { /* ignore */ }
 
 const game = new Game($('game'), {
   p1: controllers.p1,
@@ -83,6 +89,7 @@ const game = new Game($('game'), {
   ai,
   onMatchEnd: handleMatchEnd
 });
+game.hitTarget = hitTarget;
 
 window.__game = game;
 window.__audio = audio;
@@ -196,10 +203,40 @@ if (langSelect) {
   });
 }
 
+function renderHitOptions() {
+  if (!hitsSelect) return;
+  const options = [
+    [8, t('menu.hitsFast')],
+    [12, t('menu.hitsNormal')],
+    [18, t('menu.hitsLong')]
+  ];
+  hitsSelect.innerHTML = '';
+  for (const [value, label] of options) {
+    const opt = document.createElement('option');
+    opt.value = String(value);
+    opt.textContent = label;
+    hitsSelect.appendChild(opt);
+  }
+  hitsSelect.value = String(hitTarget);
+}
+
+if (hitsSelect) {
+  hitsSelect.addEventListener('change', () => {
+    const next = parseInt(hitsSelect.value, 10);
+    if (![8, 12, 18].includes(next)) return;
+    hitTarget = next;
+    game.hitTarget = next;
+    try { localStorage.setItem('nc_hits', String(next)); } catch (e) { /* ignore */ }
+    audio.ui();
+  });
+}
+renderHitOptions();
+
 onLangChange(() => {
   updateSelectUI();
   updateSoundIcon();
   updateLinkCharLine();
+  renderHitOptions();
   if (!pause.classList.contains('hidden')) renderPauseMoves();
 });
 

@@ -1247,6 +1247,7 @@ export class Game {
     this.screen = 'menu';
     this.mode = '1p';
     this.stageId = 'city';
+    this.hitTarget = 12;
     this.phase = 'idle';
     this.phaseT = 0;
     this.round = 1;
@@ -1361,6 +1362,7 @@ export class Game {
         controller: ctrl2, index: 1
       })
     ];
+    this.applyHitTarget();
     this.startRound(true);
   }
 
@@ -1396,6 +1398,17 @@ export class Game {
       new Fighter({ x: 872, facing: -1, charId: guestChar, variant: mirror ? 1 : 0, index: 1 })
     ];
     this.fighters.forEach(f => { f.locked = true; f.controller = null; });
+    this.applyHitTarget();
+  }
+
+  applyHitTarget() {
+    const scale = clamp((this.hitTarget || 12) / 12, 0.4, 3);
+    for (const f of this.fighters) {
+      if (!f) continue;
+      f.maxHealth = Math.max(20, Math.round(f.maxHealth * scale));
+      f.health = f.maxHealth;
+      f.displayHealth = f.maxHealth;
+    }
   }
 
   receiveSnapshot(snap) {

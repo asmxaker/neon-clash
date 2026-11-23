@@ -437,28 +437,36 @@ body {
 
 .menu-btn.wide { width: 100%; }
 
-.menu-lang {
+.menu-settings {
   position: absolute;
   top: clamp(8px, 2vh, 18px);
   right: clamp(10px, 2vw, 22px);
   z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-.menu-lang label {
+.menu-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.menu-settings label {
   font-size: clamp(7px, 1.2vh, 9px);
   font-weight: 800;
   letter-spacing: .16em;
   color: rgba(170, 185, 225, 0.55);
 }
 
-.menu-lang select {
+.menu-settings select {
   appearance: none;
   -webkit-appearance: none;
-  min-width: 112px;
+  min-width: 132px;
   padding: 5px 24px 5px 9px;
   border-radius: 7px;
   border: 1px solid rgba(53, 240, 255, 0.34);
@@ -474,8 +482,8 @@ body {
   cursor: pointer;
   touch-action: manipulation;
 }
-.menu-lang select:focus { outline: 1px solid rgba(53, 240, 255, 0.6); }
-.menu-lang select option { background: #0a0618; color: #e8fbff; }
+.menu-settings select:focus { outline: 1px solid rgba(53, 240, 255, 0.6); }
+.menu-settings select option { background: #0a0618; color: #e8fbff; }
 
 .menu-foot {
   font-family: system-ui, -apple-system, sans-serif;
