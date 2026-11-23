@@ -15,7 +15,7 @@ const STATES = ['idle', 'walk', 'jump', 'crouch', 'block', 'hit', 'attack', 'ko'
 const ATTACK_CODES = [null, 'punch', 'kick', 'airkick', 'special', 'shockwave', 'dash', 'fan', 'lightning'];
 const PROJ_CODES = [null, 'plasma', 'wave', 'shard', 'lightning'];
 const COMBO_CODES = [null, 'double', 'hook', 'switch', 'flurry'];
-const STAGE_CODES = ['city', 'dojo', 'reactor', 'orbit', 'tundra'];
+const STAGE_CODES = ['city', 'dojo', 'reactor', 'orbit', 'tundra', 'wastes', 'neon', 'market', 'station', 'bar'];
 
 const TX_PROPS = {
   broadcast: false, read: false, writeWithoutResponse: false, write: false,

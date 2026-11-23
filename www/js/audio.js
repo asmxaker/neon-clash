@@ -84,6 +84,13 @@ const TRACKS = {
   }
 };
 
+// Новые арены используют те же треки, что и базовые сцены.
+TRACKS.stage_wastes = TRACKS.stage_reactor;
+TRACKS.stage_neon = TRACKS.stage_city;
+TRACKS.stage_market = TRACKS.stage_city;
+TRACKS.stage_station = TRACKS.stage_orbit;
+TRACKS.stage_bar = TRACKS.stage_dojo;
+
 const MUSIC_FILES = {
   menu: 'audio/menu.ogg',
   stage_city: 'audio/battle_city.ogg',
@@ -91,6 +98,11 @@ const MUSIC_FILES = {
   stage_reactor: 'audio/battle_reactor.ogg',
   stage_orbit: 'audio/battle_orbit.ogg',
   stage_tundra: 'audio/battle_tundra.ogg',
+  stage_wastes: 'audio/battle_reactor.ogg',
+  stage_neon: 'audio/battle_city.ogg',
+  stage_market: 'audio/battle_city.ogg',
+  stage_station: 'audio/battle_orbit.ogg',
+  stage_bar: 'audio/battle_dojo.ogg',
   boss: 'audio/battle_boss.ogg',
   victory: 'audio/victory.ogg'
 };

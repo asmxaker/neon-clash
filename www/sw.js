@@ -1,4 +1,4 @@
-const CACHE = 'neon-clash-v22';
+const CACHE = 'neon-clash-v24';
 const ASSETS = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const ASSETS = [
   './js/characters.js',
   './js/link.js',
   './js/sprites.js',
+  './js/arenas.js',
   './js/ble-link.js',
   './js/input.js',
   './js/ai.js',
@@ -22,6 +23,11 @@ const ASSETS = [
   './sprites/kai/walk.png',
   './sprites/kai/punch.png',
   './sprites/kai/kick.png',
+  './arenas/wastes.jpg',
+  './arenas/neon.jpg',
+  './arenas/market.jpg',
+  './arenas/station.jpg',
+  './arenas/bar.jpg',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];

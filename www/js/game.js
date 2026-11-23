@@ -1,6 +1,6 @@
 // Игровой цикл, раунды, HUD и вся сцена (неоновый город на крыше).
 
-import { Fighter, drawFighter, drawFighterPortrait, GROUND_Y, ARENA, ATTACKS } from './fighter.js';
+import { Fighter, drawFighter, drawFighterPortrait, GROUND_Y, WORLD_W, ARENA, ATTACKS } from './fighter.js';
 import { otherCharacter } from './characters.js';
 
 const ATTACK_BY_KIND = Object.values(ATTACKS).reduce((map, a) => {
@@ -9,10 +9,12 @@ const ATTACK_BY_KIND = Object.values(ATTACKS).reduce((map, a) => {
 }, {});
 import { FX } from './fx.js';
 import { audio } from './audio.js';
+import { isImageStage, drawArenaBackground } from './arenas.js';
 import { t as tr, hitsText } from './i18n.js';
 
 const W = 1280;
 const H = 720;
+const CAM_START = (WORLD_W - W) / 2;
 const ROUND_TIME = 75;
 const WINS_NEEDED = 2;
 const TAU = Math.PI * 2;
@@ -167,10 +169,10 @@ function drawCity(ctx, city) {
 }
 
 // ---------------------------------------------------------------------------
-// Фоны арен: город, додзё, реактор, орбита, тундра
+// Фоны арен: процедурные сцены и готовые изображения.
 // ---------------------------------------------------------------------------
 
-export const STAGE_IDS = ['city', 'dojo', 'reactor', 'orbit', 'tundra'];
+export const STAGE_IDS = ['city', 'dojo', 'reactor', 'orbit', 'tundra', 'wastes', 'neon', 'market', 'station', 'bar'];
 let lastStageId = null;
 
 export function pickStageId() {
@@ -897,7 +899,16 @@ function drawCityBackground(ctx, t) {
   ctx.restore();
 }
 
-export function drawBackground(ctx, t, stageId = 'city') {
+export function drawBackground(ctx, t, stageId = 'city', camX = 0) {
+  if (isImageStage(stageId)) {
+    drawArenaBackground(ctx, stageId, W, H, WORLD_W, GROUND_Y, t, camX);
+    return;
+  }
+  const p = 0.55;
+  const offset = -camX * p - CAM_START * (1 - p);
+  ctx.save();
+  ctx.translate(offset, 0);
+  ctx.scale(WORLD_W / W, 1);
   switch (stageId) {
     case 'dojo': drawDojoBackground(ctx, t); break;
     case 'reactor': drawReactorBackground(ctx, t); break;
@@ -905,6 +916,17 @@ export function drawBackground(ctx, t, stageId = 'city') {
     case 'tundra': drawTundraBackground(ctx, t); break;
     default: drawCityBackground(ctx, t);
   }
+  ctx.restore();
+}
+
+function drawArenaFloorOverlay(ctx, stageId) {
+  if (!isImageStage(stageId)) return;
+  const g = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+  g.addColorStop(0, 'rgba(3, 2, 10, 0.10)');
+  g.addColorStop(0.35, 'rgba(3, 2, 10, 0.20)');
+  g.addColorStop(1, 'rgba(3, 2, 10, 0.42)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, GROUND_Y, WORLD_W, H - GROUND_Y);
 }
 
 const EMBER_PALETTES = {
@@ -912,18 +934,23 @@ const EMBER_PALETTES = {
   dojo: ['#ffb36b', '#ff7aa8', '#ffd27a'],
   reactor: ['#7dff9a', '#35f0ff', '#d7ff5a'],
   orbit: ['#8fd8ff', '#c9a2ff', '#ffffff'],
-  tundra: ['#c9fbff', '#8ff6ff', '#ffffff']
+  tundra: ['#c9fbff', '#8ff6ff', '#ffffff'],
+  wastes: ['#ffb36b', '#ff8a3d', '#ffe0a0'],
+  neon: [PINK, CYAN, '#ff8ad8'],
+  market: ['#5dffd0', '#ff5ad8', '#b4a2ff'],
+  station: ['#8fd8ff', '#ff6bd6', '#ffffff'],
+  bar: ['#5dffd0', '#ff5ad8', '#c9a2ff']
 };
 
 function drawEmbers(ctx, t, stageId = 'city') {
   const palette = EMBER_PALETTES[stageId] || EMBER_PALETTES.city;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 34; i++) {
     const s = (i * 0.754877666) % 1;
     const speed = 14 + s * 26;
     const y = GROUND_Y + 60 - ((t * speed + s * 700) % 720);
-    const x = (s * W + Math.sin(t * 0.8 + i) * 18) % W;
+    const x = (s * WORLD_W + Math.sin(t * 0.8 + i) * 18) % WORLD_W;
     const a = (0.16 + s * 0.25) * clamp((y - 80) / 560, 0, 1);
     const col = palette[i % palette.length];
     ctx.fillStyle = hexA(col, a);
@@ -1327,6 +1354,7 @@ export class Game {
   enterMenu() {
     this.screen = 'menu';
     this.stageId = 'city';
+    this.camX = null;
     audio.setMusic('menu');
     this.phase = 'idle';
     this.paused = false;
@@ -1339,8 +1367,8 @@ export class Game {
     this.projectiles = [];
     this.fx.clear();
     this.fighters = [
-      new Fighter({ x: 388, facing: 1, charId: 'volt', index: 0 }),
-      new Fighter({ x: 892, facing: -1, charId: 'blaze', index: 1 })
+      new Fighter({ x: CAM_START + 388, facing: 1, charId: 'volt', index: 0 }),
+      new Fighter({ x: CAM_START + 892, facing: -1, charId: 'blaze', index: 1 })
     ];
     this.fighters.forEach(f => { f.locked = true; f.animT = Math.random() * 8; });
   }
@@ -1348,6 +1376,7 @@ export class Game {
   startMatch(mode = '1p', p1CharId = 'volt', p2CharId = null) {
     this.mode = mode;
     this.stageId = pickStageId();
+    this.camX = null;
     this.storyChapter = 0;
     this.storyTotal = 0;
     this.netGuest = false;
@@ -1370,11 +1399,11 @@ export class Game {
     const mirror = this.p1CharId === this.p2CharId;
     this.fighters = [
       new Fighter({
-        x: 408, facing: 1, charId: this.p1CharId, variant: 0,
+        x: CAM_START + 408, facing: 1, charId: this.p1CharId, variant: 0,
         controller: this.p1, index: 0
       }),
       new Fighter({
-        x: 872, facing: -1, charId: this.p2CharId, variant: mirror ? 1 : 0,
+        x: CAM_START + 872, facing: -1, charId: this.p2CharId, variant: mirror ? 1 : 0,
         controller: ctrl2, index: 1
       })
     ];
@@ -1386,6 +1415,7 @@ export class Game {
     const mirror = hostChar === guestChar;
     this.mode = 'link';
     this.stageId = 'city';
+    this.camX = null;
     audio.setMusic('stage_city');
     this.netGuest = true;
     this.netHost = false;
@@ -1411,8 +1441,8 @@ export class Game {
     this.p1CharId = hostChar;
     this.p2CharId = guestChar;
     this.fighters = [
-      new Fighter({ x: 408, facing: 1, charId: hostChar, index: 0 }),
-      new Fighter({ x: 872, facing: -1, charId: guestChar, variant: mirror ? 1 : 0, index: 1 })
+      new Fighter({ x: CAM_START + 408, facing: 1, charId: hostChar, index: 0 }),
+      new Fighter({ x: CAM_START + 872, facing: -1, charId: guestChar, variant: mirror ? 1 : 0, index: 1 })
     ];
     this.fighters.forEach(f => { f.locked = true; f.controller = null; });
     this.applyHitTarget();
@@ -1564,8 +1594,8 @@ export class Game {
     this.projectiles = [];
     this.fx.hitstop = 0;
     const pos = [
-      [408, 1],
-      [872, -1]
+      [CAM_START + 408, 1],
+      [CAM_START + 872, -1]
     ];
     this.fighters.forEach((f, i) => {
       f.resetForRound(pos[i][0], pos[i][1]);
@@ -1736,6 +1766,25 @@ export class Game {
           } else if (b.x >= ARENA.right - 1) {
             a.x = clamp(a.x - extra, ARENA.left, ARENA.right);
           }
+        }
+      }
+    }
+
+    // не даём разбежаться так, чтобы один боец ушёл за кадр
+    if (a && b && a.state !== 'ko' && b.state !== 'ko') {
+      const dx = b.x - a.x;
+      const adx = Math.abs(dx);
+      const maxGap = 1100;
+      if (adx > maxGap) {
+        const need = adx - maxGap;
+        const s = dx === 0 ? 1 : Math.sign(dx);
+        a.x = clamp(a.x + need / 2 * s, ARENA.left, ARENA.right);
+        b.x = clamp(b.x - need / 2 * s, ARENA.left, ARENA.right);
+        const gap = Math.abs(b.x - a.x);
+        if (gap > maxGap) {
+          const extra = gap - maxGap;
+          if (a.x <= ARENA.left + 1) b.x = clamp(b.x - extra, ARENA.left, ARENA.right);
+          else if (b.x >= ARENA.right - 1) a.x = clamp(a.x + extra, ARENA.left, ARENA.right);
         }
       }
     }
@@ -1957,7 +2006,7 @@ export class Game {
         }
       }
 
-      if (remove || p.life <= 0 || p.x < -100 || p.x > W + 100 || p.y < -140 || p.y > H + 140) {
+      if (remove || p.life <= 0 || p.x < -100 || p.x > WORLD_W + 100 || p.y < -140 || p.y > H + 140) {
         this.projectiles.splice(i, 1);
       }
     }
@@ -2106,6 +2155,23 @@ export class Game {
   // Отрисовка
   // -------------------------------------------------------------------------
 
+  updateCamera(now) {
+    let target = CAM_START;
+    if (this.fighters.length >= 2) {
+      const mid = (this.fighters[0].x + this.fighters[1].x) / 2;
+      target = clamp(mid - W / 2, 0, WORLD_W - W);
+    }
+    if (this.camX == null) {
+      this.camX = target;
+      this._camLast = now;
+    } else {
+      const dt = Math.min(0.05, Math.max(0, now - (this._camLast || now)));
+      this._camLast = now;
+      this.camX += (target - this.camX) * Math.min(1, dt * 7);
+    }
+    return this.camX;
+  }
+
   render(now) {
     const ctx = this.ctx;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -2115,11 +2181,17 @@ export class Game {
     if (this.stageEl) this.stageEl.classList.toggle('in-match', this.screen === 'match');
 
     const t = this.time;
+    const camX = this.updateCamera(now);
 
     ctx.save();
     ctx.translate(this.fx.shakeX, this.fx.shakeY);
+    drawBackground(ctx, t, this.stageId, camX);
+    ctx.restore();
 
-    drawBackground(ctx, t, this.stageId);
+    ctx.save();
+    ctx.translate(this.fx.shakeX - camX, this.fx.shakeY);
+
+    drawArenaFloorOverlay(ctx, this.stageId);
 
     // отражения бойцов
     for (const f of this.fighters) drawReflection(ctx, f);

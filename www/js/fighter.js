@@ -6,7 +6,8 @@ import { t } from './i18n.js';
 import { getSpriteFrame } from './sprites.js';
 
 export const GROUND_Y = 604;
-export const ARENA = { left: 112, right: 1168 };
+export const WORLD_W = 1920;
+export const ARENA = { left: 112, right: WORLD_W - 112 };
 
 const GRAVITY = 3150;
 const BODY_HALF = 32;

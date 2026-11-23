@@ -1,6 +1,7 @@
 // Простой, но живой ИИ: держит дистанцию, блокирует, прыгает и бьёт.
 
 import { Controller } from './input.js';
+import { ARENA } from './fighter.js';
 
 export class AIController extends Controller {
   constructor() {
@@ -141,7 +142,7 @@ export class AIController extends Controller {
       this.state[toward] = true;
     } else if (this.tactic === 'retreat') {
       // не зажиматься в угол
-      const atWall = self.x < 190 || self.x > 1090;
+      const atWall = self.x < ARENA.left + 78 || self.x > ARENA.right - 78;
       this.state[atWall ? toward : away] = true;
     } else if (this.tactic === 'jumpIn') {
       this.state[toward] = true;
