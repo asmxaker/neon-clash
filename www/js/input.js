@@ -174,7 +174,7 @@ export class TouchController extends Controller {
   }
 
   setDpadDirs(dirs) {
-    const wasUp = this.state.up;
+    const prev = { left: this.state.left, right: this.state.right, up: this.state.up, down: this.state.down };
     this.dpadDir = dirs[0] || null;
     this.state.left = dirs.includes('left');
     this.state.right = dirs.includes('right');
@@ -183,7 +183,9 @@ export class TouchController extends Controller {
     for (const b of this.dirButtons) {
       b.classList.toggle('pressed', dirs.includes(b.dataset.dir));
     }
-    if (this.state.up && !wasUp) this.press('up');
+    for (const d of ['left', 'right', 'up', 'down']) {
+      if (this.state[d] && !prev[d]) this.press(d);
+    }
   }
 
   bindStick() {

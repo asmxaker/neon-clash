@@ -59,10 +59,40 @@ export const ATTACKS = {
 
 const COMBOS = [
   { seq: ['punch', 'punch', 'kick'], name: 'flurry', damage: 1.55, kb: 1.45, hitstun: 1.2, startup: 0.88, recovery: 1.0 },
-  { seq: ['punch', 'kick'], name: 'hook', damage: 1.3, kb: 1.15, startup: 0.95 },
+  { seq: ['kick', 'punch', 'kick'], name: 'reversal', damage: 1.5, kb: 1.35, hitstun: 1.15, startup: 0.95, recovery: 1.05 },
+  { seq: ['punch', 'punch', 'punch'], name: 'triple', damage: 1.4, kb: 1.2, startup: 0.9, recovery: 0.95 },
   { seq: ['kick', 'punch'], name: 'switch', damage: 1.35, startup: 0.9, recovery: 0.95 },
+  { seq: ['punch', 'kick'], name: 'hook', damage: 1.3, kb: 1.15, startup: 0.95 },
+  { seq: ['kick', 'kick'], name: 'doubleKick', damage: 1.3, kb: 1.1, startup: 0.95, recovery: 0.98 },
   { seq: ['punch', 'punch'], name: 'double', damage: 1.28, startup: 0.9, recovery: 0.92 }
 ];
+
+const COMMAND_MOVES = {
+  rush: {
+    key: 'rush', base: 'punch', damage: 1.75, reach: 1.2, kb: 0.9,
+    hitstun: 1.1, startup: 0.8, recovery: 0.9, dash: true, dashSpeed: 700
+  },
+  charge: {
+    key: 'charge', base: 'kick', damage: 1.9, reach: 1.2, kb: 1.25,
+    hitstun: 1.25, startup: 1.0, recovery: 1.15, dash: true, dashSpeed: 780
+  },
+  uppercut: {
+    key: 'uppercut', base: 'punch', damage: 2.05, reach: 1.05, kb: 0.55,
+    hitstun: 1.45, y0: 45, y1: 228, launch: 560, startup: 1.05, recovery: 1.25
+  },
+  sweep: {
+    key: 'sweep', base: 'kick', damage: 1.35, reach: 1.25, y0: 0, y1: 62,
+    kb: 1.05, hitstun: 1.3, launch: 240, startup: 1.05, recovery: 1.1
+  },
+  breakerPunch: {
+    key: 'breakerPunch', base: 'kick', damage: 2.5, reach: 1.15, kb: 1.45,
+    hitstun: 1.5, unblockable: true, startup: 1.3, recovery: 1.25
+  },
+  breakerKick: {
+    key: 'breakerKick', base: 'kick', damage: 2.25, reach: 1.25, kb: 1.4,
+    hitstun: 1.5, launch: 520, startup: 1.25, recovery: 1.3
+  }
+};
 
 function findCombo(chain) {
   const key = chain.join('>');
@@ -138,6 +168,8 @@ export class Fighter {
     this.attackBuffer = null;
     this.comboLabel = '';
     this.comboLabelT = 0;
+    this.motion = [];
+    this.landSquash = 0;
   }
 
   resetForRound(x, facing) {
@@ -170,6 +202,8 @@ export class Fighter {
     this.attackBuffer = null;
     this.comboLabel = '';
     this.comboLabelT = 0;
+    this.motion = [];
+    this.landSquash = 0;
   }
 
   resetMeter() {
@@ -228,6 +262,7 @@ export class Fighter {
     const base = kind === 'special' ? this.getSpecialDef() : ATTACKS[kind];
     if (!base) return false;
     this.attackBuffer = null;
+    this.motion = [];
     if (base.projectile) {
       if (this.meter < base.cost) return false;
       this.meter -= base.cost;
@@ -237,7 +272,7 @@ export class Fighter {
     if (kind === 'punch' || kind === 'kick') {
       if (this.comboReady && this.chainT > 0) combo = findCombo([...this.chain, kind]);
       this.chain = (combo ? [...this.chain, kind] : [kind]).slice(-3);
-      this.chainT = 0.8;
+      this.chainT = 0.95;
       this.comboReady = false;
     } else {
       this.chain = [];
@@ -281,6 +316,64 @@ export class Fighter {
     return true;
   }
 
+  recordMotion(dir) {
+    const now = performance.now();
+    this.motion.push({ dir, t: now });
+    this.motion = this.motion.filter((m) => now - m.t <= 1100).slice(-8);
+  }
+
+  recordDirections() {
+    const c = this.controller;
+    if (!c || this.locked) return;
+    if (c.consume('right')) this.recordMotion(this.facing > 0 ? 'forward' : 'back');
+    if (c.consume('left')) this.recordMotion(this.facing < 0 ? 'forward' : 'back');
+    if (c.consume('down')) this.recordMotion('down');
+  }
+
+  detectCommand(button) {
+    const seq = this.motion.map((m) => m.dir);
+    const ends = (pattern) => {
+      if (seq.length < pattern.length) return false;
+      const off = seq.length - pattern.length;
+      return pattern.every((d, i) => seq[off + i] === d);
+    };
+    if (ends(['forward', 'down', 'back'])) {
+      return button === 'kick' ? COMMAND_MOVES.breakerKick : COMMAND_MOVES.breakerPunch;
+    }
+    if (ends(['down', 'back']) && button === 'kick') return COMMAND_MOVES.sweep;
+    if (ends(['down', 'forward']) && button === 'punch') return COMMAND_MOVES.uppercut;
+    if (ends(['forward', 'forward'])) {
+      return button === 'kick' ? COMMAND_MOVES.charge : COMMAND_MOVES.rush;
+    }
+    return null;
+  }
+
+  startCommand(def) {
+    this.chain = [];
+    this.comboReady = false;
+    if (!this.startAttack(def.base)) return false;
+    const a = this.attack;
+    a.damage *= def.damage;
+    a.kb *= def.kb || 1;
+    a.hitstun *= def.hitstun || 1;
+    a.startup *= def.startup || 1;
+    a.recovery *= def.recovery || 1;
+    a.reach *= def.reach || 1;
+    if (def.y0 != null) a.y0 = def.y0;
+    if (def.y1 != null) a.y1 = def.y1;
+    if (def.dash) {
+      a.dash = true;
+      a.dashSpeed = def.dashSpeed || 700;
+    }
+    a.unblockable = !!def.unblockable;
+    a.launch = def.launch || 0;
+    a.commandKey = def.key;
+    a.comboName = def.key;
+    this.motion = [];
+    audio.command?.(def.key);
+    return true;
+  }
+
   pollAttackBuffer() {
     const c = this.controller;
     if (!c || this.locked) return;
@@ -290,7 +383,7 @@ export class Fighter {
 
   freshAttackBuffer() {
     if (!this.attackBuffer) return null;
-    if (performance.now() - this.attackBuffer.t > 320) {
+    if (performance.now() - this.attackBuffer.t > 420) {
       this.attackBuffer = null;
       return null;
     }
@@ -318,7 +411,8 @@ export class Fighter {
       this.comboReady = false;
     }
     this.comboLabelT = Math.max(0, this.comboLabelT - dt);
-    if (this.attackBuffer && performance.now() - this.attackBuffer.t > 320) this.attackBuffer = null;
+    if (this.attackBuffer && performance.now() - this.attackBuffer.t > 420) this.attackBuffer = null;
+    this.landSquash = Math.max(0, this.landSquash - dt * 6);
     this.flash = Math.max(0, this.flash - dt * 5);
     this.displayHealth += (this.health - this.displayHealth) * Math.min(1, dt * 7);
     if (Math.abs(this.displayHealth - this.health) < 0.03) this.displayHealth = this.health;
@@ -389,6 +483,8 @@ export class Fighter {
       return;
     }
 
+    this.recordDirections();
+
     if (this.y <= 0) {
       if (c.isDown('block')) {
         this.setState('block');
@@ -429,11 +525,18 @@ export class Fighter {
     const kick = c.consume('kick');
     const special = c.consume('special');
     const specialCost = this.getSpecialDef().cost;
+    const button = kick ? 'kick' : punch ? 'punch' : null;
+    const command = button && this.y <= 0 ? this.detectCommand(button) : null;
 
     if (special && this.y <= 0 && this.meter >= specialCost) {
       this.startAttack('special');
     } else if (this.y > 0) {
       if ((punch || kick) && !this.airAttackUsed) this.startAttack('airkick');
+    } else if (command && this.startCommand(command)) {
+      if (game?.fx) {
+        game.fx.ring(this.x + this.facing * 24, GROUND_Y - this.y - 104, this.accent, 10, 88, 0.26, 4);
+        game.fx.dust(this.x, GROUND_Y, 7, this.color);
+      }
     } else if (kick) {
       this.startAttack('kick');
     } else if (punch) {
@@ -460,7 +563,10 @@ export class Fighter {
       if (this.y <= 0) {
         this.y = 0;
         this.vy = 0;
-        if (wasAir) this.landed = true;
+        if (wasAir) {
+          this.landed = true;
+          this.landSquash = 1;
+        }
         if (this.attack?.air) {
           this.attack = null;
           this.setState('idle');
@@ -545,11 +651,27 @@ function buildPose(f) {
   p.haF[1] += Math.sin(t * 3.4 + f.phase) * 1.4;
 
   const st = f.state;
+  const sway = Math.sin(t * 2.2 + f.phase);
 
-  if (st === 'walk') {
+  if (st === 'idle') {
+    upper(sway * 1.2, breath * 0.25);
+    p.hip[0] += sway * 1.6;
+    p.hip[1] += Math.abs(sway) * 1.1;
+    p.hipF[0] += sway * 0.9;
+    p.hipB[0] += sway * 0.9;
+    p.knF[0] += sway * 0.55;
+    p.knB[0] -= sway * 0.35;
+    p.head[1] += Math.sin(t * 3.9 + f.phase) * 0.9;
+    p.haF[1] += Math.sin(t * 3.2 + 0.8) * 1.8;
+    p.haB[1] += Math.sin(t * 3.2 + 2.2) * 1.3;
+    p.shF[1] += Math.sin(t * 2.6) * 0.6;
+  } else if (st === 'walk') {
     const sw = Math.sin(f.walkPhase);
     const bob = Math.abs(Math.cos(f.walkPhase)) * 2.4;
     upper(0, -bob);
+    p.chest[0] += sw * 1.8;
+    p.head[0] += sw * 1.4;
+    p.hip[0] += sw * 0.8;
     p.ftF = [26 + sw * 17, -Math.max(0, sw) * 17];
     p.ftB = [-26 - sw * 17, -Math.max(0, -sw) * 17];
     p.knF = [(p.hipF[0] + p.ftF[0]) / 2 + 7, -50 + Math.min(0, sw) * 4];
@@ -603,7 +725,10 @@ function buildPose(f) {
     p.ftF = [32, -2];
     p.knB = [-26, -48];
     p.ftB = [-34, -2];
-    upper(-3, 0);
+    const guard = Math.sin(f.stateTime * 8) * 0.8;
+    upper(-3, guard * 0.5);
+    p.haF[1] += guard;
+    p.haB[1] += guard * 0.7;
   } else if (st === 'hit') {
     const shake = Math.sin(f.stateTime * 55) * 2.5;
     upper(-13 + shake, 2);
@@ -617,6 +742,7 @@ function buildPose(f) {
     p.ftB = [-34, -2];
     p.knF = [30, -48];
     p.knB = [-32, -48];
+    p.chest[0] += Math.sin(f.stateTime * 28) * 2.2;
   } else if (st === 'win') {
     const bob = Math.sin(f.winTime * 4.5) * 4;
     upper(0, bob * 0.4);
@@ -635,29 +761,62 @@ function buildPose(f) {
     else if (f.attackT < a.startup + a.active) e = 1;
     else e = 1 - smooth((f.attackT - a.startup - a.active) / a.recovery);
 
-    if (a.kind === 'punch') {
-      upper(5 * e, 0);
-      p.shF[0] += 5 * e;
-      p.elF = lerp2([32, -128], [58, -149], e);
-      p.haF = lerp2([30, -156], [104, -150], e);
-      p.elB = lerp2([-32, -128], [-40, -124], e);
-      p.haB = lerp2([-16, -150], [-26, -140], e);
+    const ck = a.commandKey;
+    if (a.kind === 'punch' && ck === 'uppercut') {
+      upper(4 * e, -4 * e);
+      p.shF[0] += 7 * e;
+      p.elF = lerp2([32, -128], [48, -182], e);
+      p.haF = lerp2([30, -156], [54, -232], e);
+      p.elB = lerp2([-32, -128], [-40, -136], e);
+      p.haB = lerp2([-16, -150], [-30, -168], e);
+      p.chest[1] -= 3 * e;
+      p.head[1] -= 2 * e;
+      p.ftF = [28, -2];
+      p.ftB = [-34, -2];
+      p.knF = [24, -50];
+      p.knB = [-26, -50];
+    } else if (a.kind === 'punch') {
+      const lean = ck === 'rush' ? 9 : 5;
+      upper(lean * e, 0);
+      p.shF[0] += lean * e;
+      p.elF = lerp2([32, -128], [58 + lean * e, -149], e);
+      p.haF = lerp2([30, -156], [104 + lean * 2 * e, -150], e);
+      p.elB = lerp2([-32, -128], [-40 - lean * e, -124], e);
+      p.haB = lerp2([-16, -150], [-26 - lean * e, -140], e);
       p.ftF = [26 + 10 * e, -2];
       p.knF = [22 + 8 * e, -50];
       p.ftB = [-26 - 8 * e, -2];
       p.knB = [-20 - 6 * e, -50];
+    } else if (a.kind === 'kick' && ck === 'sweep') {
+      upper(-8 * e, 7 * e);
+      p.hip = [-4 * e, -78];
+      p.chest = [4 * e, -124];
+      p.head[1] += 4 * e;
+      p.knF = lerp2([22, -50], [58, -34], e);
+      p.ftF = lerp2([26, -2], [136, -16], e);
+      p.ftB = [-32, -2];
+      p.knB = [-30, -40];
+      p.elF = lerp2([32, -128], [28, -156], e);
+      p.haF = lerp2([30, -156], [34, -184], e);
+      p.elB = lerp2([-32, -128], [-38, -138], e);
+      p.haB = lerp2([-16, -150], [-38, -158], e);
     } else if (a.kind === 'kick') {
-      upper(-9 * e, -2 * e);
+      const brake = ck === 'breakerPunch' || ck === 'breakerKick';
+      upper((-9 - (brake ? 6 : 0)) * e, (-2 - (brake ? 2 : 0)) * e);
       p.hip = [-4 * e, -94];
       p.hipF = [9 - 4 * e, -92];
-      p.knF = lerp2([22, -50], [60, -74], e);
-      p.ftF = lerp2([26, -2], [130, -86], e);
+      p.knF = lerp2([22, -50], [60 + (brake ? 5 : 0), -74], e);
+      p.ftF = lerp2([26, -2], [130 + (brake ? 8 : 0), -86], e);
       p.ftB = [-30, -2];
       p.knB = [-24, -50];
       p.elF = lerp2([32, -128], [24, -166], e);
       p.haF = lerp2([30, -156], [30, -190], e);
       p.elB = lerp2([-32, -128], [-42, -142], e);
       p.haB = lerp2([-16, -150], [-44, -162], e);
+      if (brake) {
+        p.chest[0] += 5 * e;
+        p.head[0] += 4 * e;
+      }
     } else if (a.kind === 'airkick') {
       upper(-5 * e, 0);
       p.knF = lerp2([32, -66], [56, -82], e);
@@ -1570,7 +1729,8 @@ export function drawFighter(ctx, f) {
     ctx.translate(-14 * e, -2 * e);
     ctx.rotate(-1.5 * e);
   }
-  ctx.scale(f.facing * (f.scale || 1), f.scale || 1);
+  const squash = f.landSquash || 0;
+  ctx.scale(f.facing * (f.scale || 1) * (1 + squash * 0.05), (f.scale || 1) * (1 - squash * 0.07));
 
   const p = buildPose(f);
 

@@ -10,6 +10,7 @@ export class RemoteController extends Controller {
   constructor() {
     super();
     this.prev = { up: false, punch: false, kick: false, special: false };
+    this.dirPrev = { left: false, right: false, down: false };
   }
 
   applyState(s) {
@@ -24,13 +25,19 @@ export class RemoteController extends Controller {
     for (const a of ['up', 'punch', 'kick', 'special']) {
       if (btn[a] && !this.prev[a]) this.press(a);
     }
+    const dirs = { left: st.left, right: st.right, down: st.down };
+    for (const a of ['left', 'right', 'down']) {
+      if (dirs[a] && !this.dirPrev[a]) this.press(a);
+    }
     this.state = st;
     this.prev = btn;
+    this.dirPrev = dirs;
   }
 
   reset() {
     super.reset();
     this.prev = { up: false, punch: false, kick: false, special: false };
+    this.dirPrev = { left: false, right: false, down: false };
   }
 }
 

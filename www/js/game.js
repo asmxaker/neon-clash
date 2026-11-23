@@ -13,7 +13,7 @@ import { t as tr, hitsText } from './i18n.js';
 
 const W = 1280;
 const H = 720;
-const ROUND_TIME = 60;
+const ROUND_TIME = 75;
 const WINS_NEEDED = 2;
 const TAU = Math.PI * 2;
 
@@ -1936,7 +1936,7 @@ export class Game {
       ? (projectile.hitDir ?? (Math.sign(projectile.vx) || 1))
       : (def.x >= atk.x ? 1 : -1);
     const facingThreat = projectile ? -dir : (atk.x >= def.x ? 1 : -1);
-    const blocked = !(projectile && projectile.unblockable) && def.isBlocking() && def.facing === facingThreat;
+    const blocked = !(projectile && projectile.unblockable) && !a.unblockable && def.isBlocking() && def.facing === facingThreat;
 
     const cx = projectile ? projectile.x : (atk.x + def.x) / 2;
     const cy = projectile ? projectile.y : GROUND_Y - def.y - def.getHurtHeight() * 0.58;
@@ -1973,6 +1973,10 @@ export class Game {
     def.setState('hit');
     // Джаб почти не отталкивает — так проще попасть вторым ударом комбо.
     def.kb = dir * a.kb * (a.kind === 'punch' ? 0.78 : 1);
+    if (a.launch) {
+      def.vy = Math.max(def.vy, a.launch);
+      def.y = Math.max(def.y, 1);
+    }
     def.addMeter(6);
     atk.addMeter(a.meterGain ?? 8);
     def.comboReady = false;
@@ -1991,6 +1995,9 @@ export class Game {
 
     this.fx.hitSpark(cx, cy, atk.accent, dir, Math.min(1.7, 0.7 + dmg / 12));
     this.fx.popup(def.x, GROUND_Y - def.y - def.getHurtHeight() - 14, `−${dmg}`, atk.accent, 26 + Math.min(12, dmg));
+    if (a.commandKey) {
+      this.fx.popup(atk.x, GROUND_Y - atk.y - atk.getHurtHeight() - 52, tr(`combo.${a.commandKey}`), atk.accent, 22);
+    }
     this.fx.shakeIt(5 + dmg * 0.7);
     this.fx.hitstop = 0.04 + dmg * 0.004;
     audio.hit(0.65 + dmg / 22);

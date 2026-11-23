@@ -38,6 +38,7 @@ const en = {
     special: '<b>SPECIAL</b> — unique attack. Costs 50 energy.',
     combo: '<b>COMBO</b> — PUNCH→PUNCH “Double”, PUNCH→PUNCH→KICK “Flurry”, KICK→PUNCH “Switch”. Land the first hit to continue.',
     roster: '<b>VOLT</b> — plasma. <b>BLAZE</b> — shockwave. <b>NYX</b> — dash. <b>MIRA</b> — shard fan. <b>STORM</b> — lightning.',
+    commands: 'COMMANDS — F,F+PUNCH Rush, F,F+KICK Charge, D,F+PUNCH Uppercut, D,B+KICK Sweep, F,D,B+ATTACK Breaker.',
     p2title: '2 PLAYERS',
     split: 'The screen splits in half: each player gets a D-pad and buttons.',
     sides: 'Player 1 is on the left, player 2 on the right. Colors follow the chosen fighter.',
@@ -177,7 +178,7 @@ const en = {
     story: 'STORY {n}/{total}',
     hits: '{n} HITS'
   },
-  combo: { double: 'Double', hook: 'Hook', switch: 'Switch', flurry: 'Flurry' },
+  combo: { double: 'Double', hook: 'Hook', switch: 'Switch', flurry: 'Flurry', triple: 'Triple', doubleKick: 'Double Kick', reversal: 'Reversal', rush: 'Rush', charge: 'Charge', uppercut: 'Uppercut', sweep: 'Sweep', breakerPunch: 'Breaker Punch', breakerKick: 'Breaker Kick' },
   char: {
     volt: { name: 'VOLT', tagline: 'SPEED · PLASMA', specialName: 'PLASMA CHARGE', specialDesc: 'A flying projectile. Keep your distance.', badge: 'FAST', short: 'PLASMA' },
     blaze: { name: 'BLAZE', tagline: 'POWER · SHOCKWAVE', specialName: 'SHOCKWAVE', specialDesc: 'Travels along the ground. Jump over it!', badge: 'HEAVY', short: 'WAVE' },
@@ -214,6 +215,7 @@ const ru = {
     special: '<b>СПЕЦ</b> — особая атака. Нужно 50 энергии.',
     combo: '<b>КОМБО</b> — РУКА→РУКА «Двойка», РУКА→РУКА→НОГА «Шквал», НОГА→РУКА «Смена». Главное — попасть первым ударом.',
     roster: '<b>ВОЛЬТ</b> — плазма. <b>БЛЕЙЗ</b> — ударная волна. <b>НИКС</b> — рывок. <b>МИРА</b> — веер осколков. <b>СТОРМ</b> — молния.',
+    commands: 'ПРИЁМЫ — ВПЕРЁД,ВПЕРЁД+РУКА «Рывок», ВПЕРЁД,ВПЕРЁД+НОГА «Таран», ВНИЗ,ВПЕРЁД+РУКА «Апперкот», ВНИЗ,НАЗАД+НОГА «Подсечка», ВПЕРЁД,ВНИЗ,НАЗАД+УДАР «Пробой».',
     p2title: '2 ИГРОКА',
     split: 'Экран делится пополам: у каждого своя крестовина и кнопки.',
     sides: 'Игрок 1 — слева, игрок 2 — справа. Цвета зависят от выбранного бойца.',
@@ -353,7 +355,7 @@ const ru = {
     story: 'ИСТОРИЯ {n}/{total}',
     hits: '{n} ХИТОВ'
   },
-  combo: { double: 'Двойка', hook: 'Крюк', switch: 'Смена', flurry: 'Шквал' },
+  combo: { double: 'Двойка', hook: 'Крюк', switch: 'Смена', flurry: 'Шквал', triple: 'Тройка', doubleKick: 'Двойная нога', reversal: 'Реверс', rush: 'Рывок', charge: 'Таран', uppercut: 'Апперкот', sweep: 'Подсечка', breakerPunch: 'Пробой рукой', breakerKick: 'Пробой ногой' },
   char: {
     volt: { name: 'ВОЛЬТ', tagline: 'СКОРОСТЬ · ПЛАЗМА', specialName: 'ПЛАЗМЕННЫЙ ЗАРЯД', specialDesc: 'Летящий снаряд. Держи дистанцию.', badge: 'БЫСТРЫЙ', short: 'ПЛАЗМА' },
     blaze: { name: 'БЛЕЙЗ', tagline: 'СИЛА · УДАРНАЯ ВОЛНА', specialName: 'УДАРНАЯ ВОЛНА', specialDesc: 'Идёт по земле. Перепрыгни!', badge: 'ТЯЖЁЛЫЙ', short: 'ВОЛНА' },
@@ -390,6 +392,7 @@ const es = {
     special: '<b>ESPECIAL</b> — ataque único. Cuesta 50 de energía.',
     combo: '<b>COMBO</b> — PUÑO→PUÑO «Doble», PUÑO→PUÑO→PATADA «Ráfaga», PATADA→PUÑO «Cambio». Acierta el primer golpe.',
     roster: '<b>VOLT</b> — plasma. <b>BLAZE</b> — onda. <b>NYX</b> — embestida. <b>MIRA</b> — abanico. <b>STORM</b> — rayo.',
+    commands: 'COMANDOS — ADELANTE,ADELANTE+PUÑO Embestida; ADELANTE,ADELANTE+PATADA Carga; ABAJO,ADELANTE+PUÑO Uppercut; ABAJO,ATRÁS+PATADA Barrido; ADELANTE,ABAJO,ATRÁS+ATAQUE Rompebloqueo.',
     p2title: '2 JUGADORES',
     split: 'La pantalla se divide: cada jugador tiene su cruz y botones.',
     sides: 'Jugador 1 a la izquierda, jugador 2 a la derecha. Los colores siguen al luchador.',
@@ -529,7 +532,7 @@ const es = {
     story: 'HISTORIA {n}/{total}',
     hits: '{n} GOLPES'
   },
-  combo: { double: 'Doble', hook: 'Gancho', switch: 'Cambio', flurry: 'Ráfaga' },
+  combo: { double: 'Doble', hook: 'Gancho', switch: 'Cambio', flurry: 'Ráfaga', triple: 'Triple', doubleKick: 'Patada doble', reversal: 'Reversión', rush: 'Embestida', charge: 'Carga', uppercut: 'Uppercut', sweep: 'Barrido', breakerPunch: 'Rompebloqueo', breakerKick: 'Patada rota' },
   char: {
     volt: { name: 'VOLT', tagline: 'VELOCIDAD · PLASMA', specialName: 'CARGA DE PLASMA', specialDesc: 'Proyectil volador. Mantén la distancia.', badge: 'RÁPIDO', short: 'PLASMA' },
     blaze: { name: 'BLAZE', tagline: 'FUERZA · ONDA', specialName: 'ONDA SÍSMICA', specialDesc: 'Viaja por el suelo. ¡Salta!', badge: 'PESADO', short: 'ONDA' },
@@ -566,6 +569,7 @@ const pt = {
     special: '<b>ESPECIAL</b> — ataque único. Custa 50 de energia.',
     combo: '<b>COMBO</b> — SOC→SOC «Dupla», SOC→SOC→CHUTE «Rajada», CHUTE→SOC «Troca». Acerte o primeiro golpe.',
     roster: '<b>VOLT</b> — plasma. <b>BLAZE</b> — onda. <b>NYX</b> — avanço. <b>MIRA</b> — leque. <b>STORM</b> — raio.',
+    commands: 'COMANDOS — FRENTE,FRENTE+SOC Avanço; FRENTE,FRENTE+CHUTE Carga; BAIXO,FRENTE+SOC Uppercut; BAIXO,TRÁS+CHUTE Rasteira; FRENTE,BAIXO,TRÁS+ATAQUE Quebra-guarda.',
     p2title: '2 JOGADORES',
     split: 'A tela se divide: cada jogador tem sua cruzeta e botões.',
     sides: 'Jogador 1 à esquerda, jogador 2 à direita. As cores seguem o lutador.',
@@ -705,7 +709,7 @@ const pt = {
     story: 'HISTÓRIA {n}/{total}',
     hits: '{n} GOLPES'
   },
-  combo: { double: 'Dupla', hook: 'Gancho', switch: 'Troca', flurry: 'Rajada' },
+  combo: { double: 'Dupla', hook: 'Gancho', switch: 'Troca', flurry: 'Rajada', triple: 'Tripla', doubleKick: 'Chute duplo', reversal: 'Reversão', rush: 'Avanço', charge: 'Carga', uppercut: 'Uppercut', sweep: 'Rasteira', breakerPunch: 'Quebra-guarda', breakerKick: 'Chute quebra' },
   char: {
     volt: { name: 'VOLT', tagline: 'VELOCIDADE · PLASMA', specialName: 'CARGA DE PLASMA', specialDesc: 'Projétil voador. Mantenha distância.', badge: 'RÁPIDO', short: 'PLASMA' },
     blaze: { name: 'BLAZE', tagline: 'FORÇA · ONDA', specialName: 'ONDA DE CHOQUE', specialDesc: 'Anda pelo chão. Pule!', badge: 'PESADO', short: 'ONDA' },
@@ -742,6 +746,7 @@ const fr = {
     special: '<b>SPÉCIAL</b> — attaque unique. Coûte 50 d’énergie.',
     combo: '<b>COMBO</b> — POING→POING «Double», POING→POING→PIED «Déluge», PIED→POING «Bascule». Touche avec le premier coup.',
     roster: '<b>VOLT</b> — plasma. <b>BLAZE</b> — onde. <b>NYX</b> — ruée. <b>MIRA</b> — éventail. <b>STORM</b> — foudre.',
+    commands: 'COMMANDES — AVANT,AVANT+POING Ruée ; AVANT,AVANT+PIED Charge ; BAS,AVANT+POING Uppercut ; BAS,ARRIÈRE+PIED Balayage ; AVANT,BAS,ARRIÈRE+ATTAQUE Brise-garde.',
     p2title: '2 JOUEURS',
     split: 'L’écran se coupe en deux : chacun a sa croix et ses boutons.',
     sides: 'Joueur 1 à gauche, joueur 2 à droite. Les couleurs suivent le combattant.',
@@ -881,7 +886,7 @@ const fr = {
     story: 'HISTOIRE {n}/{total}',
     hits: '{n} COUPS'
   },
-  combo: { double: 'Double', hook: 'Crochet', switch: 'Bascule', flurry: 'Déluge' },
+  combo: { double: 'Double', hook: 'Crochet', switch: 'Bascule', flurry: 'Déluge', triple: 'Triple', doubleKick: 'Double coup de pied', reversal: 'Revers', rush: 'Ruée', charge: 'Charge', uppercut: 'Uppercut', sweep: 'Balayage', breakerPunch: 'Brise-garde', breakerKick: 'Coup de pied briseur' },
   char: {
     volt: { name: 'VOLT', tagline: 'VITESSE · PLASMA', specialName: 'CHARGE PLASMA', specialDesc: 'Projectile volant. Garde tes distances.', badge: 'RAPIDE', short: 'PLASMA' },
     blaze: { name: 'BLAZE', tagline: 'FORCE · ONDE', specialName: 'ONDE DE CHOC', specialDesc: 'Rase le sol. Saute par-dessus !', badge: 'LOURD', short: 'ONDE' },
@@ -918,6 +923,7 @@ const de = {
     special: '<b>SPEZIAL</b> — einzigartige Attacke. Kostet 50 Energie.',
     combo: '<b>COMBO</b> — FAUST→FAUST „Doppel“, FAUST→FAUST→TRITT „Salve“, TRITT→FAUST „Wechsel“. Triff mit dem ersten Schlag.',
     roster: '<b>VOLT</b> — Plasma. <b>BLAZE</b> — Schockwelle. <b>NYX</b> — Sprint. <b>MIRA</b> — Fächer. <b>STORM</b> — Blitz.',
+    commands: 'KOMMANDOS — VOR,VOR+FAUST Sprint; VOR,VOR+TRITT Ansturm; RUNTER,VOR+FAUST Uppercut; RUNTER,ZURÜCK+TRITT Tiefkick; VOR,RUNTER,ZURÜCK+ANGRIFF Guardbrecher.',
     p2title: '2 SPIELER',
     split: 'Der Bildschirm wird geteilt: jeder hat ein Steuerkreuz und Tasten.',
     sides: 'Spieler 1 links, Spieler 2 rechts. Farben richten sich nach dem Kämpfer.',
@@ -1057,7 +1063,7 @@ const de = {
     story: 'STORY {n}/{total}',
     hits: '{n} TREFFER'
   },
-  combo: { double: 'Doppel', hook: 'Haken', switch: 'Wechsel', flurry: 'Salve' },
+  combo: { double: 'Doppel', hook: 'Haken', switch: 'Wechsel', flurry: 'Salve', triple: 'Dreifach', doubleKick: 'Doppeltritt', reversal: 'Reversal', rush: 'Sprint', charge: 'Ansturm', uppercut: 'Uppercut', sweep: 'Tiefkick', breakerPunch: 'Guardbrecher', breakerKick: 'Brechertritt' },
   char: {
     volt: { name: 'VOLT', tagline: 'TEMPO · PLASMA', specialName: 'PLASMALADUNG', specialDesc: 'Fliegendes Geschoss. Halte Abstand.', badge: 'SCHNELL', short: 'PLASMA' },
     blaze: { name: 'BLAZE', tagline: 'KRAFT · SCHOCKWELLE', specialName: 'SCHOCKWELLE', specialDesc: 'Läuft über den Boden. Spring drüber!', badge: 'SCHWER', short: 'WELLE' },
@@ -1094,6 +1100,7 @@ const zh = {
     special: '<b>必杀</b> — 独有招式。消耗 50 能量。',
     combo: '<b>连招</b> — 拳→拳「双击」，拳→拳→腿「连破」，腿→拳「换手」。第一下必须命中。',
     roster: '<b>VOLT</b> — 等离子。<b>BLAZE</b> — 冲击波。<b>NYX</b> — 突进。<b>MIRA</b> — 碎片扇。<b>STORM</b> — 闪电。',
+    commands: '指令技 — 前,前+拳 突进；前,前+腿 冲锋；下,前+拳 上勾拳；下,后+腿 扫腿；前,下,后+攻击 破防。',
     p2title: '双人',
     split: '屏幕一分为二：双方各有十字键和按钮。',
     sides: '玩家 1 在左，玩家 2 在右。颜色随所选角色变化。',
@@ -1233,7 +1240,7 @@ const zh = {
     story: '剧情 {n}/{total}',
     hits: '{n} 连击'
   },
-  combo: { double: '双击', hook: '勾拳', switch: '换手', flurry: '连破' },
+  combo: { double: '双击', hook: '勾拳', switch: '换手', flurry: '连破', triple: '三连击', doubleKick: '二连踢', reversal: '逆袭', rush: '突进', charge: '冲锋', uppercut: '上勾拳', sweep: '扫腿', breakerPunch: '破防拳', breakerKick: '破防踢' },
   char: {
     volt: { name: 'VOLT', tagline: '速度 · 等离子', specialName: '等离子冲击', specialDesc: '飞行能量弹。保持距离。', badge: '迅捷', short: '等离子' },
     blaze: { name: 'BLAZE', tagline: '力量 · 冲击波', specialName: '地面冲击波', specialDesc: '沿地面推进。跳过去！', badge: '重装', short: '冲击波' },
@@ -1270,6 +1277,7 @@ const ja = {
     special: '<b>必殺</b> — 固有技。エネルギー50を消費。',
     combo: '<b>コンボ</b> — パンチ→パンチ「ダブル」、パンチ→パンチ→キック「連撃」、キック→パンチ「スイッチ」。最初の一撃を当てること。',
     roster: '<b>VOLT</b> — プラズマ。<b>BLAZE</b> — 衝撃波。<b>NYX</b> — ダッシュ。<b>MIRA</b> — 扇。<b>STORM</b> — 雷。',
+    commands: 'コマンド技 — 前,前+パンチ ラッシュ；前,前+キック チャージ；下,前+パンチ アッパー；下,後+キック スイープ；前,下,後+攻撃 ガードブレイク。',
     p2title: '2人プレイ',
     split: '画面を半分に分割。それぞれ十字キーとボタンを使う。',
     sides: 'プレイヤー1は左、プレイヤー2は右。色は選んだキャラに合わせて変わる。',
@@ -1409,7 +1417,7 @@ const ja = {
     story: 'ストーリー {n}/{total}',
     hits: '{n} ヒット'
   },
-  combo: { double: 'ダブル', hook: 'フック', switch: 'スイッチ', flurry: '連撃' },
+  combo: { double: 'ダブル', hook: 'フック', switch: 'スイッチ', flurry: '連撃', triple: 'トリプル', doubleKick: 'ダブルキック', reversal: 'リバーサル', rush: 'ラッシュ', charge: 'チャージ', uppercut: 'アッパー', sweep: 'スイープ', breakerPunch: 'ガードブレイク', breakerKick: 'ブレイカ―キック' },
   char: {
     volt: { name: 'VOLT', tagline: 'スピード · プラズマ', specialName: 'プラズマチャージ', specialDesc: '飛ぶエネルギー弾。距離を保て。', badge: 'スピード', short: 'プラズマ' },
     blaze: { name: 'BLAZE', tagline: 'パワー · 衝撃波', specialName: 'グラウンドウェーブ', specialDesc: '地面を進む。跳び越えろ！', badge: 'ヘビー', short: '波動' },

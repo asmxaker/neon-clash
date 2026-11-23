@@ -142,6 +142,12 @@ class AudioEngine {
     this.tone({ freq: 300, freqEnd: 560, dur: 0.09, type: 'sine', vol: 0.06 });
   }
 
+  command(key = '') {
+    const heavy = key === 'breakerPunch' || key === 'breakerKick';
+    this.noise({ dur: heavy ? 0.24 : 0.14, vol: heavy ? 0.12 : 0.07, type: 'bandpass', freq: heavy ? 500 : 900, freqEnd: heavy ? 1800 : 2200, q: 1.2 });
+    this.tone({ freq: heavy ? 120 : 240, freqEnd: heavy ? 60 : 430, dur: heavy ? 0.22 : 0.12, type: 'sawtooth', vol: heavy ? 0.08 : 0.05 });
+  }
+
   specialCharge() {
     this.tone({ freq: 110, freqEnd: 470, dur: 0.24, type: 'sawtooth', vol: 0.07 });
     this.noise({ dur: 0.22, vol: 0.035, type: 'bandpass', freq: 400, freqEnd: 2200, q: 1.6 });
