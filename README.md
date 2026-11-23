@@ -219,11 +219,11 @@ www/
     fx.js             частицы, кольца, урон, тряска, хитстоп
     audio.js          OGG-музыка, WebAudio-синтез SFX и fallback
     ending.js         финальная сцена: кабриолет, закат, ретровейв
-    sprites.js        загрузчик внешних PNG-спрайтов (выключен по умолчанию)
+    sprites.js        загрузчик PNG-спрайтов и выбор кадра (включён для KAI)
   manifest.webmanifest
   sw.js               офлайн-кэш
   audio/              OGG-треки меню, арен, босса и победы
-  sprites/            PNG-спрайты и manifest (KAI подготовлен)
+  sprites/            PNG-спрайты и manifest (KAI: idle, walk, punch, kick)
   icons/
 docs/
   ARCHITECTURE.md     архитектура проекта и поток данных

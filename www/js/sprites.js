@@ -1,8 +1,7 @@
 // Загрузчик внешних спрайт-листов. Если ассетов нет — игра рисует бойца процедурно.
 
 // Чтобы включить спрайты, добавь id после того, как PNG-файлы будут готовы:
-// SPRITE_ENABLED.add('kai');
-const SPRITE_ENABLED = new Set();
+const SPRITE_ENABLED = new Set(['kai']);
 const sets = new Map();
 
 export function enableSprite(charId) {
@@ -96,9 +95,10 @@ export function getSpriteFrame(f) {
   }
   if (frame < 0) frame = 0;
 
+  const start = anim.start || 0;
   return {
     img,
-    sx: frame * set.manifest.frameW,
+    sx: (start + frame) * set.manifest.frameW,
     sy: 0,
     sw: set.manifest.frameW,
     sh: set.manifest.frameH,
@@ -107,3 +107,6 @@ export function getSpriteFrame(f) {
     scale: set.manifest.scale || 1
   };
 }
+
+// прогреваем включённые спрайты сразу при старте
+for (const id of SPRITE_ENABLED) ensureSet(id);

@@ -117,88 +117,70 @@ www/audio/sfx/
 
 ## 3. Спрайты бойцов
 
-Бойцы по умолчанию рисуются процедурно и пикселизуются через offscreen Canvas. Спрайтовый загрузчик уже подготовлен в `www/js/sprites.js`, но выключен, пока нет PNG.
+KAI подключён к спрайтовому рендеру: `www/js/sprites.js` загружает PNG из `www/sprites/kai/`, а `drawFighter()` рисует кадр вместо процедурного бойца. Остальные бойцы пока процедурные.
 
-Первый подготовленный персонаж — KAI:
+Если PNG, manifest или отдельная анимация не загрузились, игра автоматически возвращается к процедурной отрисовке для этого состояния.
+
+KAI:
 
 - дизайн-бриф: [`CHARACTER_KAI.md`](CHARACTER_KAI.md);
 - manifest: [`www/sprites/kai/manifest.json`](../www/sprites/kai/manifest.json);
 - шаблон сетки: [`www/sprites/kai/_layout.svg`](../www/sprites/kai/_layout.svg);
 - инструкция: [`www/sprites/README.md`](../www/sprites/README.md).
 
-Формат:
+Файлы KAI:
 
 ```text
-www/sprites/
-  volt/
-    idle.png
-    walk.png
-    jump.png
-    punch.png
-    kick.png
-    special.png
-    block.png
-    hit.png
-    ko.png
-  blaze/
-  nyx/
-  mira/
-  storm/
-  kai/
-  cyber/
-  neko/
-  orc/
-  rogue/
-  boss/
+www/sprites/kai/
+  manifest.json
+  idle.png      6 кадров
+  walk.png      8 кадров
+  punch.png     5 кадров
+  kick.png      5 кадров
+  _layout.svg
 ```
+
+`jump`, `special`, `block`, `hit` и `ko` собираются из этих же полос через `start` в manifest. Это позволяет держать один художественный стиль без девяти отдельных файлов.
 
 | Параметр | Значение |
 | --- | --- |
 | Формат | PNG с прозрачностью |
-| Кадр | 192×192 или 256×256 |
+| Кадр | 256×256 |
 | Раскладка | горизонтальная полоса |
 | Взгляд | вправо |
-| Anchor | ступни по центру нижнего края |
-| Масштаб | одинаковый во всех анимациях |
+| Anchor | X=128, Y=242 (ступни) |
+| Масштаб | одинаковый внутри полосы |
 | Фон | прозрачный |
 | Тени | не включать |
 | Текст/UI | не включать |
 
-Минимальный набор для теста:
-
-- `idle.png` — 4–8 кадров;
-- `walk.png` — 6–8 кадров;
-- `punch.png` — 4–6 кадров.
-
-Для полного набора: `jump`, `kick`, `special`, `block`, `hit`, `ko`.
-
-Нужен единый JSON-манифест:
+Manifest лежит **в папке персонажа**:
 
 ```json
 {
-  "volt": {
-    "frameW": 256,
-    "frameH": 256,
-    "anchorX": 128,
-    "anchorY": 240,
-    "animations": {
-      "idle": { "file": "idle.png", "frames": 6, "fps": 10 },
-      "walk": { "file": "walk.png", "frames": 8, "fps": 12 },
-      "punch": { "file": "punch.png", "frames": 5, "fps": 18 }
-    }
+  "charId": "kai",
+  "frameW": 256,
+  "frameH": 256,
+  "anchorX": 128,
+  "anchorY": 242,
+  "scale": 0.96,
+  "animations": {
+    "idle": { "file": "idle.png", "frames": 6, "start": 0, "fps": 10, "loop": true },
+    "hit":  { "file": "punch.png", "frames": 1, "start": 4, "fps": 8, "loop": false }
   }
 }
 ```
 
-Загрузчик уже умеет:
+Загрузчик умеет:
 
-1. Читать `manifest.json`.
-2. Загружать PNG-полосы.
-3. Выбирать анимацию по `f.state` и `f.attack.kind`.
+1. Читать `manifest.json` и загружать PNG-полосы.
+2. Выбирать анимацию по `f.state` и `f.attack.kind`.
+3. Брать нужный диапазон кадров через `start`/`frames`.
 4. Рисовать кадр с anchor и flip по `f.facing`.
-5. Оставлять процедурный fallback для отсутствующих кадров.
+5. Тонировать mirror-вариант (`f.variant === 1`).
+6. Оставлять процедурный fallback для отсутствующих кадров.
 
-Включение: `SPRITE_ENABLED.add('kai')` в `www/js/sprites.js` после добавления файлов.
+Включение нового бойца: добавить id в `SPRITE_ENABLED` в `www/js/sprites.js`, положить файлы и обновить `ASSETS`/`CACHE` в `www/sw.js`.
 
 ## 4. Иконки и PWA
 

@@ -2338,9 +2338,17 @@ function drawSpriteFrame(ctx, f, sprite) {
   ctx.save();
   ctx.translate(f.x, GROUND_Y - f.y);
   ctx.scale(f.facing, 1);
+  if (f.state === 'ko') {
+    const e = easeOut(Math.min(1, f.koTime * 1.5));
+    ctx.translate(-14 * e, -2 * e);
+    ctx.rotate(-1.5 * e);
+  }
   ctx.scale(1 + squash * 0.05, 1 - squash * 0.07);
-  if (f.flash > 0.42) {
-    try { ctx.filter = 'brightness(2.6)'; } catch (e) { /* filter не поддерживается */ }
+  let filter = '';
+  if (f.variant === 1) filter += 'hue-rotate(195deg) saturate(1.35) ';
+  if (f.flash > 0.42) filter += 'brightness(2.6) ';
+  if (filter) {
+    try { ctx.filter = filter.trim(); } catch (e) { /* filter не поддерживается */ }
   }
   const prevSmooth = ctx.imageSmoothingEnabled;
   ctx.imageSmoothingEnabled = false;

@@ -1,4 +1,4 @@
-const CACHE = 'neon-clash-v19';
+const CACHE = 'neon-clash-v21';
 const ASSETS = [
   './',
   './index.html',
@@ -17,6 +17,11 @@ const ASSETS = [
   './js/fx.js',
   './js/audio.js',
   './js/ending.js',
+  './sprites/kai/manifest.json',
+  './sprites/kai/idle.png',
+  './sprites/kai/walk.png',
+  './sprites/kai/punch.png',
+  './sprites/kai/kick.png',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];

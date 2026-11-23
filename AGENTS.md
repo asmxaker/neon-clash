@@ -149,8 +149,9 @@ dist/NeonClash-MVP.apk       собранный APK (dist/ в .gitignore)
 
 - Загрузчик: `www/js/sprites.js`.
 - Формат: `www/sprites/README.md`.
-- Первый персонаж: `www/sprites/kai/`, бриф `docs/CHARACTER_KAI.md`.
-- По умолчанию спрайты выключены (`SPRITE_ENABLED` пуст). Включать только после добавления PNG и manifest.
+- KAI уже подключён: `SPRITE_ENABLED = new Set(['kai'])`, файлы в `www/sprites/kai/`, бриф `docs/CHARACTER_KAI.md`.
+- `jump`, `special`, `block`, `hit`, `ko` собираются из `punch.png`/`kick.png` через `start` и `frames` в manifest.
+- Нового бойца включать только после добавления PNG и manifest; id добавлять в `SPRITE_ENABLED`.
 - Если спрайт/анимация не загрузились, обязателен процедурный fallback.
 
 ### 6.6 Музыка/SFX
@@ -242,7 +243,7 @@ adb forward tcp:9222 localabstract:webview_devtools_remote_$PID
 ## 8. Известные ловушки
 
 - **Service worker и APK.** После изменения `www/` старый кэш может отдавать старые JS. Поднимай `CACHE` в `www/sw.js` и делай `cap sync`/переустановку.
-- **Спрайтовый кэш в браузере.** При тестировании используй новый порт или hard reload, иначе можно проверять старый `fighter.js`.
+- **Спрайтовый кэш в браузере.** При тестировании используй новый порт или hard reload, иначе можно проверять старые `fighter.js` и PNG. После замены PNG поднимай `CACHE` в `www/sw.js`.
 - **rAF в фоне.** В неактивной вкладке анимация может не обновляться: не делай вывод «игра зависла» по `game.time`.
 - **`drawCostumeBack`.** Не удаляй функции костюмов при рефакторинге `drawHeadGear` — они вызываются из `drawFighterBody`.
 - **Boss.** `BOSS_CHARACTER` не входит в `CHARACTER_LIST`; не добавляй его в карточки выбора.
