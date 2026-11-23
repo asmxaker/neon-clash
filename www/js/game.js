@@ -1,6 +1,6 @@
 // Игровой цикл, раунды, HUD и вся сцена (неоновый город на крыше).
 
-import { Fighter, drawFighter, GROUND_Y, ARENA, ATTACKS } from './fighter.js';
+import { Fighter, drawFighter, drawFighterPortrait, GROUND_Y, ARENA, ATTACKS } from './fighter.js';
 import { otherCharacter } from './characters.js';
 
 const ATTACK_BY_KIND = Object.values(ATTACKS).reduce((map, a) => {
@@ -978,6 +978,10 @@ function drawHUD(ctx, game) {
   const [p1, p2] = game.fighters;
   if (!p1 || !p2) return;
 
+  // ---- портреты ----
+  drawFighterPortrait(ctx, p1, 14, 14, 72, false);
+  drawFighterPortrait(ctx, p2, W - 14 - 72, 14, 72, true);
+
   // ---- здоровье ----
   const barW = 452;
   const barH = 27;
@@ -1006,6 +1010,16 @@ function drawHUD(ctx, game) {
   ctx.shadowColor = p2.color;
   ctx.textAlign = 'right';
   ctx.fillText(p2.name, right - 2, 87);
+
+  // ---- HP ----
+  ctx.font = '700 9px system-ui, sans-serif';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '.5px';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(215,225,250,0.6)';
+  ctx.textAlign = 'left';
+  ctx.fillText(`HP ${Math.max(0, Math.ceil(p1.health))} / ${p1.maxHealth}`, left + 2, 72);
+  ctx.textAlign = 'right';
+  ctx.fillText(`HP ${Math.max(0, Math.ceil(p2.health))} / ${p2.maxHealth}`, right - 2, 72);
   ctx.restore();
 
   // ---- раунды ----

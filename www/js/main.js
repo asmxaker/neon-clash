@@ -9,6 +9,7 @@ import { LinkManager } from './link.js';
 import { BleLinkManager } from './ble-link.js';
 import { audio } from './audio.js';
 import { initI18n, getLang, setLang, LANGS, t, charText, onLangChange } from './i18n.js';
+import { playEnding } from './ending.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -364,7 +365,7 @@ function openSelect(mode) {
   updateSelectUI();
   audio.unlock();
   audio.ui();
-  audio.setMusic('select');
+  audio.setMusic('menu');
   hideAllOverlays();
   select.classList.remove('hidden');
   stage.classList.remove('in-match');
@@ -565,7 +566,7 @@ function openLinkLobby(charId) {
   pauseBtn.classList.remove('hidden');
   game.toMenu();
   audio.unlock();
-  audio.setMusic('select');
+  audio.setMusic('menu');
   audio.ui();
 
   const mgr = link;
@@ -687,7 +688,7 @@ function handleLinkDisconnected(reason) {
     linkStatus.className = 'link-status error';
     btnHost.disabled = !link.available;
     btnJoin.disabled = !link.available;
-    audio.setMusic('select');
+    audio.setMusic('menu');
     audio.ui();
   } else {
     linkStatus.textContent = reason || t('link.connectionLost');
@@ -932,10 +933,12 @@ function handleMatchEnd(winner) {
     const p1Won = winner === 0;
     const winnerF = game.fighters[winner];
     resultTitle.classList.remove('win1', 'win2');
+    let endingPending = false;
 
     if (story) {
       lastStoryWin = p1Won;
       const final = story.index >= story.opponents.length - 1;
+      endingPending = p1Won && final;
       const nextId = story.opponents[story.index + 1];
       resultKicker.textContent = final
         ? t('story.finalBattle')
@@ -966,8 +969,23 @@ function handleMatchEnd(winner) {
       btnRematch.textContent = t('result.rematch');
     }
 
-    result.classList.remove('hidden');
-    audio.ui();
+    const reveal = () => {
+      if (p1Won) audio.setMusic('victory');
+      result.classList.remove('hidden');
+      audio.ui();
+    };
+
+    if (endingPending && story) {
+      const hero = game.fighters[0];
+      playEnding({
+        charId: story.charId,
+        charName: charText(story.charId).name,
+        color: hero?.color,
+        accent: hero?.accent
+      }).then(reveal);
+    } else {
+      reveal();
+    }
   }, 900);
 }
 

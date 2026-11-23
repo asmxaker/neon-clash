@@ -1703,35 +1703,476 @@ function drawAttackTrail(ctx, f, col) {
   ctx.restore();
 }
 
-export function drawFighter(ctx, f) {
+const PIXEL_VIEW_W = 420;
+const PIXEL_VIEW_H = 400;
+const PIXEL_ORIGIN_X = 210;
+const PIXEL_ORIGIN_Y = 360;
+const PIXEL_RES = 0.43;
+let pixelCanvas = null;
+let pixelCtx = null;
+
+function getPixelCanvas() {
+  if (!pixelCanvas) {
+    pixelCanvas = document.createElement('canvas');
+    pixelCanvas.width = Math.ceil(PIXEL_VIEW_W * PIXEL_RES);
+    pixelCanvas.height = Math.ceil(PIXEL_VIEW_H * PIXEL_RES);
+    pixelCtx = pixelCanvas.getContext('2d');
+  }
+  return pixelCtx;
+}
+
+function polygon(ctx, pts, fill, stroke, width = 2) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.stroke(); }
+}
+
+function drawHeadGear(ctx, f, hx, hy, col, accent) {
+  const style = f.style;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (style === 'nyx' && !f.isBoss) {
+    // кошачьи уши на капюшоне
+    for (const s of [-1, 1]) {
+      polygon(ctx, [
+        [hx + s * 5, hy - 14],
+        [hx + s * 13, hy - 35],
+        [hx + s * 17, hy - 15]
+      ], 'rgba(9,4,20,0.96)', hexA(col, 0.85), 2);
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 9, hy - 20);
+      ctx.lineTo(hx + s * 13, hy - 30);
+      ctx.strokeStyle = hexA(accent, 0.65);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  } else if (f.isBoss) {
+    // корона из тёмных шипов
+    for (const s of [-1, 0, 1]) {
+      polygon(ctx, [
+        [hx + s * 9 - 3, hy - 14],
+        [hx + s * 15, hy - 38 - Math.abs(s) * 4],
+        [hx + s * 9 + 3, hy - 14]
+      ], 'rgba(20,2,8,0.98)', hexA(col, 0.9), 1.6);
+    }
+  } else if (style === 'mira') {
+    // кристалл на лбу и боковые льдинки
+    polygon(ctx, [[hx, hy - 40], [hx + 6, hy - 26], [hx, hy - 15], [hx - 6, hy - 26]], hexA(accent, 0.32), hexA(accent, 0.95), 1.4);
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 14, hy - 10);
+      ctx.lineTo(hx + s * 24, hy - 22);
+      ctx.strokeStyle = hexA(col, 0.7);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  } else if (style === 'heavy') {
+    // клыки и тяжёлый воротник
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 8, hy + 8);
+      ctx.lineTo(hx + s * 12, hy + 18);
+      ctx.strokeStyle = hexA(accent, 0.85);
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(hx, hy + 6, 23, 0.18, Math.PI - 0.18);
+    ctx.strokeStyle = hexA(col, 0.55);
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  } else {
+    // энергетические плавники Вольта
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 7, hy - 14);
+      ctx.quadraticCurveTo(hx + s * 17, hy - 38, hx + s * 9, hy - 48);
+      ctx.strokeStyle = hexA(col, 0.22);
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(accent, 0.9);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function drawCostumeBack(ctx, f, col, accent, p) {
+  const style = f.style;
+  const long = style === 'mira' ? 86 : style === 'nyx' ? 76 : style === 'storm' ? 70 : style === 'heavy' ? 54 : 48;
+  if (f.isBoss) return;
+
+  ctx.save();
+  ctx.lineJoin = 'round';
+  for (const s of [-1, 1]) {
+    const sway = Math.sin(f.animT * 2.6 + (s > 0 ? 0.7 : 0)) * (5 + Math.min(8, Math.abs(f.kb) / 60));
+    const top = [p.hip[0] + s * 9, p.hip[1] + 2];
+    const mid = [p.hip[0] + s * 27 + sway, p.hip[1] + long * 0.62];
+    const tip = [p.hip[0] + s * (15 + long * 0.08) + sway * 1.4, p.hip[1] + long];
+    ctx.beginPath();
+    ctx.moveTo(top[0] - s * 5, top[1]);
+    ctx.lineTo(mid[0], mid[1]);
+    ctx.lineTo(tip[0], tip[1]);
+    ctx.lineTo(top[0] + s * 6, top[1] + 3);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(6,3,12,0.93)';
+    ctx.fill();
+    ctx.strokeStyle = hexA(col, 0.45);
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(top[0], top[1] + 4);
+    ctx.lineTo(mid[0] + s * 2, mid[1] - 4);
+    ctx.strokeStyle = hexA(accent, 0.32);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawGearBack(ctx, f, col, accent) {
+  const style = f.style;
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (style === 'nyx') {
+    // два клинка за спиной
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(-8 + s * 5, -142);
+      ctx.quadraticCurveTo(-48 + s * 18, -184, -44 + s * 31, -234);
+      ctx.strokeStyle = 'rgba(4,2,10,0.92)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(col, 0.9);
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+      ctx.strokeStyle = hexA(accent, 0.7);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  } else if (style === 'heavy') {
+    // тяжёлый щит на спине
+    ctx.save();
+    ctx.translate(-39, -117);
+    ctx.rotate(-0.18);
+    const pts = [];
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 3;
+      pts.push([Math.cos(a) * 43, Math.sin(a) * 43]);
+    }
+    polygon(ctx, pts, 'rgba(10,4,8,0.95)', hexA(col, 0.85), 2.4);
+    polygon(ctx, pts.map(([x, y]) => [x * 0.62, y * 0.62]), 'rgba(20,8,12,0.8)', hexA(accent, 0.6), 1.4);
+    ctx.restore();
+  } else if (style === 'mira') {
+    // ледяной посох с кристаллом
+    ctx.beginPath();
+    ctx.moveTo(20, -44);
+    ctx.lineTo(54, -238);
+    ctx.strokeStyle = 'rgba(4,12,16,0.95)';
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.8);
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+    polygon(ctx, [[54, -262], [66, -242], [52, -222], [40, -242]], hexA(accent, 0.3), hexA(accent, 0.95), 1.6);
+  } else if (style === 'storm') {
+    // громовой трезубец
+    ctx.beginPath();
+    ctx.moveTo(15, -42);
+    ctx.lineTo(30, -238);
+    ctx.strokeStyle = 'rgba(8,6,2,0.95)';
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.85);
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+    for (const d of [-1, 0, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(30 + d * 15, -224);
+      ctx.lineTo(30 + d * 22, -258);
+      ctx.strokeStyle = hexA(accent, 0.85);
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+    }
+  } else {
+    // плазменное копьё Вольта
+    ctx.beginPath();
+    ctx.moveTo(-20, -70);
+    ctx.lineTo(92, -230);
+    ctx.strokeStyle = 'rgba(2,12,16,0.9)';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.85);
+    ctx.lineWidth = 2.6;
+    ctx.stroke();
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    polygon(ctx, [[92, -246], [101, -224], [84, -214]], hexA(accent, 0.28), hexA(accent, 0.95), 1.4);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawGearFront(ctx, f, col, accent, p) {
+  const style = f.style;
+  const plate = (pt, size, tilt) => {
+    ctx.save();
+    ctx.translate(pt[0], pt[1]);
+    ctx.rotate(tilt);
+    polygon(ctx, [
+      [-size, -size * 0.65], [size * 0.6, -size * 0.85],
+      [size, size * 0.35], [0, size * 0.72], [-size * 0.85, size * 0.3]
+    ], 'rgba(8,4,13,0.95)', hexA(col, 0.8), 2);
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.5, -size * 0.1);
+    ctx.lineTo(size * 0.4, -size * 0.2);
+    ctx.strokeStyle = hexA(accent, 0.7);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  if (style === 'heavy') {
+    plate(p.shF, 19, 0.16);
+    plate(p.shB, 17, -0.18);
+    // наручи
+    for (const [pt, a] of [[p.elF, 0.9], [p.elB, 0.55]]) {
+      ctx.beginPath();
+      ctx.arc(pt[0], pt[1], 8.5, 0, TAU);
+      ctx.fillStyle = 'rgba(12,5,8,0.9)';
+      ctx.fill();
+      ctx.strokeStyle = hexA(col, 0.75 * a);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  } else if (style === 'nyx') {
+    plate(p.shF, 11, 0.18);
+    plate(p.shB, 10, -0.2);
+    // кинжалы у кистей
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const pt of [p.haF, p.haB]) {
+      ctx.beginPath();
+      ctx.moveTo(pt[0] + 4, pt[1] - 2);
+      ctx.lineTo(pt[0] + 26, pt[1] - 16);
+      ctx.strokeStyle = hexA(accent, 0.75);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (style === 'mira') {
+    plate(p.shF, 14, 0.14);
+    plate(p.shB, 12, -0.16);
+    // кристаллы на плече
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    polygon(ctx, [[p.shF[0], p.shF[1] - 16], [p.shF[0] + 6, p.shF[1] - 6], [p.shF[0], p.shF[1] + 4], [p.shF[0] - 6, p.shF[1] - 6]], hexA(accent, 0.25), hexA(accent, 0.9), 1.2);
+    ctx.restore();
+  } else if (style === 'storm') {
+    plate(p.shF, 16, 0.2);
+    plate(p.shB, 14, -0.2);
+    // молнии на плече
+    ctx.beginPath();
+    ctx.moveTo(p.shF[0] - 8, p.shF[1] - 14);
+    ctx.lineTo(p.shF[0] + 2, p.shF[1] - 8);
+    ctx.lineTo(p.shF[0] - 3, p.shF[1] - 1);
+    ctx.lineTo(p.shF[0] + 8, p.shF[1] + 6);
+    ctx.strokeStyle = hexA(accent, 0.85);
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  } else {
+    plate(p.shF, 14, 0.16);
+    plate(p.shB, 12, -0.18);
+    // плазменный сердечник
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.beginPath();
+    ctx.arc(0, -132, 6, 0, TAU);
+    ctx.fillStyle = hexA(accent, 0.85);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawHeadGear(ctx, f, p.head[0], p.head[1], col, accent);
+}
+function clothLimb(ctx, pts, width, col, accent, alpha = 1) {
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.strokeStyle = `rgba(6,3,12,${0.94 * alpha})`;
+  ctx.lineWidth = width + 4;
+  ctx.stroke();
+  ctx.strokeStyle = hexA(col, 0.28 * alpha);
+  ctx.lineWidth = width;
+  ctx.stroke();
+  ctx.strokeStyle = hexA(col, 0.82 * alpha);
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+  ctx.strokeStyle = hexA(accent, 0.5 * alpha);
+  ctx.lineWidth = 0.9;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCostumeLegs(ctx, f, col, accent, p) {
+  const style = f.style;
+  const heavy = style === 'heavy';
+  const w = heavy ? 17 : style === 'nyx' ? 12.5 : style === 'mira' ? 13 : 14;
+  clothLimb(ctx, [p.hipB, p.knB, p.ftB], w * 0.9, col, accent, 0.66);
+  clothLimb(ctx, [p.hipF, p.knF, p.ftF], w, col, accent, 0.98);
+
+  // наколенники / броня
+  for (const [pt, a] of [[p.knB, 0.6], [p.knF, 0.95]]) {
+    ctx.beginPath();
+    ctx.arc(pt[0], pt[1], heavy ? 7.5 : 5.2, 0, TAU);
+    ctx.fillStyle = 'rgba(7,4,12,0.9)';
+    ctx.fill();
+    ctx.strokeStyle = hexA(accent, 0.65 * a);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // бронированная юбка / пластины
+  if (style === 'heavy' || style === 'mira' || style === 'storm') {
+    const wdt = style === 'heavy' ? 25 : 21;
+    const drop = style === 'heavy' ? 28 : 34;
+    polygon(ctx, [
+      [p.hip[0] - wdt, p.hip[1] + 3],
+      [p.hip[0] + wdt, p.hip[1] + 3],
+      [p.hip[0] + wdt * 0.72, p.hip[1] + drop],
+      [p.hip[0], p.hip[1] + drop + 5],
+      [p.hip[0] - wdt * 0.72, p.hip[1] + drop]
+    ], 'rgba(6,3,12,0.9)', hexA(col, 0.55), 1.6);
+    ctx.beginPath();
+    ctx.moveTo(p.hip[0], p.hip[1] + 8);
+    ctx.lineTo(p.hip[0], p.hip[1] + drop);
+    ctx.strokeStyle = hexA(accent, 0.3);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // набедренные пластины
+  if (style === 'volt' || style === 'heavy' || style === 'storm') {
+    for (const [hipPt, kneePt, s] of [[p.hipB, p.knB, -1], [p.hipF, p.knF, 1]]) {
+      ctx.beginPath();
+      ctx.moveTo(hipPt[0] + s * 4, hipPt[1] + 2);
+      ctx.lineTo(kneePt[0] + s * 7, kneePt[1] + 4);
+      ctx.strokeStyle = hexA(col, 0.55);
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.strokeStyle = hexA(accent, 0.28);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+
+  // пояс
+  ctx.beginPath();
+  ctx.moveTo(p.hip[0] - 17, p.hip[1] + 4);
+  ctx.lineTo(p.hip[0] + 17, p.hip[1] + 4);
+  ctx.strokeStyle = hexA(col, 0.65);
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(p.hip[0], p.hip[1] + 4, 2.6, 0, TAU);
+  ctx.fillStyle = hexA(accent, 0.9);
+  ctx.fill();
+}
+
+function drawJacketDetails(ctx, f, col, accent, p) {
+  const style = f.style;
+  // воротник
+  ctx.beginPath();
+  ctx.moveTo(p.neck[0] - 7, p.neck[1] + 3);
+  ctx.lineTo(p.chest[0] - 10, p.chest[1] + 16);
+  ctx.moveTo(p.neck[0] + 7, p.neck[1] + 3);
+  ctx.lineTo(p.chest[0] + 10, p.chest[1] + 16);
+  ctx.strokeStyle = hexA(accent, 0.55);
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+
+  // грудная перевязь
+  ctx.beginPath();
+  ctx.moveTo(p.chest[0] - 14, p.chest[1] + 20);
+  ctx.lineTo(p.chest[0] + 13, p.chest[1] + 36);
+  ctx.moveTo(p.chest[0] + 13, p.chest[1] + 21);
+  ctx.lineTo(p.chest[0] - 2, p.chest[1] + 46);
+  ctx.strokeStyle = hexA(col, 0.65);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  if (style === 'heavy') {
+    ctx.beginPath();
+    ctx.moveTo(p.chest[0] - 19, p.chest[1] + 24);
+    ctx.lineTo(p.chest[0] + 19, p.chest[1] + 24);
+    ctx.strokeStyle = hexA(accent, 0.5);
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+  } else if (style === 'storm') {
+    ctx.beginPath();
+    ctx.moveTo(p.chest[0] - 4, p.chest[1] + 18);
+    ctx.lineTo(p.chest[0] + 5, p.chest[1] + 27);
+    ctx.lineTo(p.chest[0] - 2, p.chest[1] + 34);
+    ctx.strokeStyle = hexA(accent, 0.85);
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  }
+}
+
+function drawCostumeArms(ctx, f, col, accent, p) {
+  const style = f.style;
+  const heavy = style === 'heavy';
+  const w = heavy ? 13 : style === 'nyx' ? 8.5 : 9.5;
+  clothLimb(ctx, [p.shB, p.elB, p.haB], w * 0.82, col, accent, 0.62);
+  clothLimb(ctx, [p.shF, p.elF, p.haF], w, col, accent, 0.98);
+
+  // наручи
+  for (const [el, ha, a] of [[p.elB, p.haB, 0.6], [p.elF, p.haF, 0.95]]) {
+    ctx.beginPath();
+    ctx.moveTo(el[0], el[1]);
+    ctx.lineTo(ha[0], ha[1]);
+    ctx.strokeStyle = 'rgba(6,3,12,0.9)';
+    ctx.lineWidth = w + 2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.strokeStyle = hexA(col, 0.42 * a);
+    ctx.lineWidth = w * 0.72;
+    ctx.stroke();
+    ctx.strokeStyle = hexA(accent, 0.32 * a);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // манжеты
+  for (const [pt, a] of [[p.elB, 0.55], [p.elF, 0.9]]) {
+    ctx.beginPath();
+    ctx.arc(pt[0], pt[1], heavy ? 7 : 4.6, 0, TAU);
+    ctx.fillStyle = 'rgba(7,4,12,0.85)';
+    ctx.fill();
+    ctx.strokeStyle = hexA(accent, 0.55 * a);
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+  }
+}
+
+function drawFighterBody(ctx, f, col, accent) {
   const style = f.style;
   const heavy = style === 'heavy';
   const nyx = style === 'nyx';
   const mira = style === 'mira';
   const storm = style === 'storm';
-  const shadowW = (heavy ? 50 : nyx ? 42 : 46) * (f.scale || 1);
-  const shadowScale = 1 - Math.min(0.62, f.y / 360);
-  ctx.save();
-  ctx.globalAlpha = 0.5 * shadowScale;
-  ctx.fillStyle = '#000000';
-  ctx.beginPath();
-  ctx.ellipse(f.x, GROUND_Y + 5, shadowW * shadowScale + 10, (heavy ? 12 : 10) * shadowScale + 2, 0, 0, TAU);
-  ctx.fill();
-  ctx.restore();
-
-  const col = f.flash > 0.42 ? '#ffffff' : f.color;
-  const accent = f.flash > 0.42 ? '#ffffff' : f.accent;
-
-  ctx.save();
-  ctx.translate(f.x, GROUND_Y - f.y);
-  if (f.state === 'ko') {
-    const e = easeOut(Math.min(1, f.koTime * 1.5));
-    ctx.translate(-14 * e, -2 * e);
-    ctx.rotate(-1.5 * e);
-  }
-  const squash = f.landSquash || 0;
-  ctx.scale(f.facing * (f.scale || 1) * (1 + squash * 0.05), (f.scale || 1) * (1 - squash * 0.07));
-
   const p = buildPose(f);
 
   // аура при готовой супер-атаке
@@ -1780,6 +2221,8 @@ export function drawFighter(ctx, f) {
     ctx.restore();
   }
 
+  drawCostumeBack(ctx, f, col, accent, p);
+  drawGearBack(ctx, f, col, accent);
   drawScarf(ctx, f, col);
 
   // скоростные линии при рывке
@@ -1808,19 +2251,160 @@ export function drawFighter(ctx, f) {
   limb(ctx, [p.shB, p.elB, p.haB], col, armBackW, 0.62);
   // передняя нога
   limb(ctx, [p.hipF, p.knF, p.ftF], col, legW, 0.95);
+  drawCostumeLegs(ctx, f, col, accent, p);
   // торс
   drawTorso(ctx, f, col, p);
+  drawJacketDetails(ctx, f, col, accent, p);
   // голова
   drawHead(ctx, f, col, accent, p);
   // передняя рука
   limb(ctx, [p.shF, p.elF, p.haF], col, armW, 1);
+  drawCostumeArms(ctx, f, col, accent, p);
   // кулаки, клинки, кристаллы и ботинки
   drawExtremities(ctx, f, col, accent, p);
+
+  drawGearFront(ctx, f, col, accent, p);
 
   if (f.state === 'block') drawShield(ctx, f, col);
   drawSpecialOrb(ctx, f, col);
   drawStyleCharge(ctx, f, col, accent);
   drawAttackTrail(ctx, f, col);
 
+
+}
+
+export function drawFighter(ctx, f) {
+  const style = f.style;
+  const heavy = style === 'heavy';
+  const nyx = style === 'nyx';
+  const shadowW = (heavy ? 50 : nyx ? 42 : 46) * (f.scale || 1);
+  const shadowScale = 1 - Math.min(0.62, f.y / 360);
+  ctx.save();
+  ctx.globalAlpha = 0.5 * shadowScale;
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.ellipse(f.x, GROUND_Y + 5, shadowW * shadowScale + 10, (heavy ? 12 : 10) * shadowScale + 2, 0, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+
+  const col = f.flash > 0.42 ? '#ffffff' : f.color;
+  const accent = f.flash > 0.42 ? '#ffffff' : f.accent;
+  const pc = getPixelCanvas();
+
+  pc.clearRect(0, 0, pc.canvas.width, pc.canvas.height);
+  pc.save();
+  pc.scale(PIXEL_RES, PIXEL_RES);
+  pc.translate(PIXEL_ORIGIN_X, PIXEL_ORIGIN_Y);
+  if (f.state === 'ko') {
+    const e = easeOut(Math.min(1, f.koTime * 1.5));
+    pc.translate(-14 * e, -2 * e);
+    pc.rotate(-1.5 * e);
+  }
+  const squash = f.landSquash || 0;
+  pc.scale(f.facing * (f.scale || 1) * (1 + squash * 0.05), (f.scale || 1) * (1 - squash * 0.07));
+  drawFighterBody(pc, f, col, accent);
+  pc.restore();
+
+  const prevSmooth = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(
+    pc.canvas,
+    f.x - PIXEL_ORIGIN_X,
+    GROUND_Y - f.y - PIXEL_ORIGIN_Y,
+    PIXEL_VIEW_W,
+    PIXEL_VIEW_H
+  );
+  ctx.imageSmoothingEnabled = prevSmooth;
+}
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+export function drawFighterPortrait(ctx, f, x, y, size, flip = false) {
+  const col = f.color;
+  const accent = f.accent;
+  ctx.save();
+  roundRectPath(ctx, x, y, size, size, size * 0.12);
+  ctx.clip();
+
+  const bg = ctx.createLinearGradient(x, y, x, y + size);
+  bg.addColorStop(0, 'rgba(9,5,22,0.98)');
+  bg.addColorStop(1, 'rgba(3,1,9,0.98)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, size, size);
+
+  ctx.globalCompositeOperation = 'lighter';
+  const glow = ctx.createRadialGradient(x + size / 2, y + size * 0.58, 2, x + size / 2, y + size * 0.58, size * 0.65);
+  glow.addColorStop(0, hexA(col, 0.3));
+  glow.addColorStop(1, hexA(col, 0));
+  ctx.fillStyle = glow;
+  ctx.fillRect(x, y, size, size);
+  ctx.globalCompositeOperation = 'source-over';
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+  ctx.lineWidth = 1;
+  for (let i = -size; i < size * 2; i += 7) {
+    ctx.beginPath();
+    ctx.moveTo(x + i, y);
+    ctx.lineTo(x + i + size, y + size);
+    ctx.stroke();
+  }
+
+  ctx.translate(x + size / 2, y + size * 0.82);
+  if (flip) ctx.scale(-1, 1);
+  const sc = size / 100;
+  ctx.scale(sc, sc);
+
+  // плечи
+  ctx.beginPath();
+  ctx.moveTo(-46, 30);
+  ctx.quadraticCurveTo(-40, -2, -23, -7);
+  ctx.lineTo(23, -7);
+  ctx.quadraticCurveTo(40, -2, 46, 30);
+  ctx.closePath();
+  ctx.fillStyle = '#08040f';
+  ctx.fill();
+  ctx.strokeStyle = hexA(col, 0.75);
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-20, 0);
+  ctx.lineTo(18, 0);
+  ctx.strokeStyle = hexA(accent, 0.45);
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+
+  drawHead(ctx, f, col, accent, { head: [0, -30] });
+  drawHeadGear(ctx, f, 0, -30, col, accent);
+
+  ctx.restore();
+
+  roundRectPath(ctx, x, y, size, size, size * 0.12);
+  ctx.strokeStyle = hexA(col, 0.8);
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+
+  // неоновые уголки
+  ctx.save();
+  ctx.strokeStyle = hexA(accent, 0.9);
+  ctx.lineWidth = 2;
+  const c = size * 0.18;
+  for (const [cx, cy, dx, dy] of [
+    [x, y, 1, 1], [x + size, y, -1, 1],
+    [x, y + size, 1, -1], [x + size, y + size, -1, -1]
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * 2, cy + dy * c);
+    ctx.lineTo(cx + dx * 2, cy + dy * 2);
+    ctx.lineTo(cx + dx * c, cy + dy * 2);
+    ctx.stroke();
+  }
   ctx.restore();
 }

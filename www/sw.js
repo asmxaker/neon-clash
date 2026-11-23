@@ -1,4 +1,4 @@
-const CACHE = 'neon-clash-v14';
+const CACHE = 'neon-clash-v17';
 const ASSETS = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const ASSETS = [
   './js/ai.js',
   './js/fx.js',
   './js/audio.js',
+  './js/ending.js',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];

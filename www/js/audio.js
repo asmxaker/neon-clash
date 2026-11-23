@@ -64,6 +64,15 @@ const TRACKS = {
     arp: [36, null, 41, null, 43, null, 48, null, 43, null, 41, null, 36, null, 41, null],
     arpType: 'sine', arpVol: 0.03, pad: [12, 19, 24], padVol: 0.02
   },
+  ending: {
+    stepDur: 0.16, roots: [49, 55, 58.27, 43.65],
+    bass: [0, null, null, null, null, null, 0, null, 0, null, null, null, null, null, 0, null],
+    bassType: 'triangle', bassVol: 0.106, bassDur: 0.34,
+    kick: [0, 8], kickVol: 0.17, snare: [4, 12], snareVol: 0.28,
+    hat: [2, 6, 10, 14], hatVol: 0.018,
+    arp: [36, null, 43, null, 48, null, 43, null, 39, null, 43, null, 48, null, 51, null],
+    arpType: 'sine', arpVol: 0.027, pad: [12, 19, 24, 28], padVol: 0.022
+  },
   boss: {
     stepDur: 0.106, roots: [41.2, 41.2, 43.65, 38.89],
     bass: [0, null, -12, null, 0, null, -12, null, 0, null, -12, null, 0, null, -12, null],
@@ -73,6 +82,17 @@ const TRACKS = {
     arp: [24, 27, 30, 36, 30, 27, 24, 27, 30, 36, 39, 36, 30, 27, 24, 27],
     arpType: 'square', arpVol: 0.018, pad: [12, 15, 18], padVol: 0.016
   }
+};
+
+const MUSIC_FILES = {
+  menu: 'audio/menu.ogg',
+  stage_city: 'audio/battle_city.ogg',
+  stage_dojo: 'audio/battle_dojo.ogg',
+  stage_reactor: 'audio/battle_reactor.ogg',
+  stage_orbit: 'audio/battle_orbit.ogg',
+  stage_tundra: 'audio/battle_tundra.ogg',
+  boss: 'audio/battle_boss.ogg',
+  victory: 'audio/victory.ogg'
 };
 
 class AudioEngine {
@@ -88,6 +108,12 @@ class AudioEngine {
     this.nextTime = 0;
     this.musicTimer = null;
     this.trackId = 'menu';
+    this.musicToken = 0;
+    this.musicLoading = false;
+    this.fileSource = null;
+    this.fileGain = null;
+    this.musicBuffers = new Map();
+    this.musicRequests = new Map();
   }
 
   init() {
@@ -285,7 +311,8 @@ class AudioEngine {
   // ---- музыка ----
 
   setMusic(trackId) {
-    const next = TRACKS[trackId] ? trackId : 'menu';
+    const valid = TRACKS[trackId] || MUSIC_FILES[trackId];
+    const next = valid ? trackId : 'menu';
     if (this.trackId === next) return;
     this.trackId = next;
     if (this.ctx && !this.muted && this.ctx.state === 'running') this.restartMusic();
@@ -294,24 +321,102 @@ class AudioEngine {
   restartMusic() {
     this.stopMusic();
     if (!this.ctx || this.muted || this.ctx.state !== 'running') return;
-    this.step = 0;
-    this.nextTime = this.ctx.currentTime + 0.1;
-    this.musicTimer = setInterval(() => this.scheduleMusic(), 40);
+    if (MUSIC_FILES[this.trackId]) this.playFileTrack(this.trackId);
+    else this.startSynthMusic();
   }
 
-  startMusic() {
-    if (!this.ctx || this.muted || this.musicTimer) return;
-    if (this.ctx.state !== 'running') return;
+  startSynthMusic() {
+    if (!this.ctx || this.muted || this.musicTimer || this.ctx.state !== 'running') return;
     this.step = 0;
     this.nextTime = this.ctx.currentTime + 0.08;
     this.musicTimer = setInterval(() => this.scheduleMusic(), 40);
   }
 
+  startMusic() {
+    if (!this.ctx || this.muted || this.musicTimer || this.fileSource || this.musicLoading) return;
+    if (this.ctx.state !== 'running') return;
+    if (MUSIC_FILES[this.trackId]) this.playFileTrack(this.trackId);
+    else this.startSynthMusic();
+  }
+
   stopMusic() {
+    this.musicToken++;
+    this.musicLoading = false;
     if (this.musicTimer) {
       clearInterval(this.musicTimer);
       this.musicTimer = null;
     }
+    this.stopFile(0.12);
+  }
+
+  stopFile(fade = 0.15) {
+    const src = this.fileSource;
+    const gain = this.fileGain;
+    this.fileSource = null;
+    this.fileGain = null;
+    if (!src) return;
+    try {
+      const now = this.ctx.currentTime;
+      if (gain) {
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setTargetAtTime(0, now, 0.04);
+      }
+      src.stop(now + Math.max(0.05, fade));
+    } catch (e) { /* источник уже остановлен */ }
+  }
+
+  loadMusicBuffer(url) {
+    if (this.musicBuffers.has(url)) return Promise.resolve(this.musicBuffers.get(url));
+    if (this.musicRequests.has(url)) return this.musicRequests.get(url);
+    const req = fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error('music ' + res.status);
+        return res.arrayBuffer();
+      })
+      .then((buf) => this.ctx.decodeAudioData(buf))
+      .then((decoded) => {
+        this.musicBuffers.set(url, decoded);
+        this.musicRequests.delete(url);
+        return decoded;
+      })
+      .catch((err) => {
+        this.musicRequests.delete(url);
+        throw err;
+      });
+    this.musicRequests.set(url, req);
+    return req;
+  }
+
+  playFileTrack(trackId) {
+    const url = MUSIC_FILES[trackId];
+    if (!url || !this.ctx) return;
+    const token = ++this.musicToken;
+    this.stopFile(0.12);
+    this.musicLoading = true;
+    this.loadMusicBuffer(url).then((buffer) => {
+      if (token !== this.musicToken || this.muted || !this.ctx || this.ctx.state !== 'running') return;
+      if (this.trackId !== trackId) return;
+      this.musicLoading = false;
+      const src = this.ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+      const gain = this.ctx.createGain();
+      gain.gain.value = 0.55;
+      src.connect(gain);
+      gain.connect(this.musicBus);
+      this.fileSource = src;
+      this.fileGain = gain;
+      src.start();
+    }).catch(() => {
+      if (token !== this.musicToken || this.trackId !== trackId) return;
+      this.musicLoading = false;
+      // если OGG не загрузился — включаем синтезированный вариант
+      if (TRACKS[trackId]) this.startSynthMusic();
+      else {
+        this.trackId = 'menu';
+        this.startSynthMusic();
+      }
+    });
   }
 
   scheduleMusic() {
