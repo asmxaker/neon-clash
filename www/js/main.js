@@ -364,6 +364,7 @@ function openSelect(mode) {
   updateSelectUI();
   audio.unlock();
   audio.ui();
+  audio.setMusic('select');
   hideAllOverlays();
   select.classList.remove('hidden');
   stage.classList.remove('in-match');
@@ -374,6 +375,7 @@ function openSelect(mode) {
 function closeSelect() {
   select.classList.add('hidden');
   menu.classList.remove('hidden');
+  audio.setMusic('menu');
   audio.ui();
 }
 
@@ -563,6 +565,7 @@ function openLinkLobby(charId) {
   pauseBtn.classList.remove('hidden');
   game.toMenu();
   audio.unlock();
+  audio.setMusic('select');
   audio.ui();
 
   const mgr = link;
@@ -593,6 +596,7 @@ function closeLinkLobby() {
   sysBtns.classList.add('hidden');
   pauseBtn.classList.remove('hidden');
   game.toMenu();
+  audio.setMusic('menu');
   audio.ui();
 }
 
@@ -683,6 +687,7 @@ function handleLinkDisconnected(reason) {
     linkStatus.className = 'link-status error';
     btnHost.disabled = !link.available;
     btnJoin.disabled = !link.available;
+    audio.setMusic('select');
     audio.ui();
   } else {
     linkStatus.textContent = reason || t('link.connectionLost');

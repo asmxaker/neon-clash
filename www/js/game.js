@@ -1313,6 +1313,7 @@ export class Game {
   enterMenu() {
     this.screen = 'menu';
     this.stageId = 'city';
+    audio.setMusic('menu');
     this.phase = 'idle';
     this.paused = false;
     this.slowmo = 0;
@@ -1342,6 +1343,7 @@ export class Game {
     this._netPrev = null;
     this.p1CharId = p1CharId;
     this.p2CharId = p2CharId || otherCharacter(p1CharId).id;
+    audio.setMusic(this.p2CharId === 'boss' ? 'boss' : `stage_${this.stageId}`);
     this.screen = 'match';
     this.paused = false;
     this.matchEnded = false;
@@ -1370,6 +1372,7 @@ export class Game {
     const mirror = hostChar === guestChar;
     this.mode = 'link';
     this.stageId = 'city';
+    audio.setMusic('stage_city');
     this.netGuest = true;
     this.netHost = false;
     this.screen = 'match';
@@ -1478,7 +1481,10 @@ export class Game {
     this.roundWinner = s.rw;
     this.roundReason = s.rr;
     this.matchWinner = s.mw;
-    if (s.st && STAGE_IDS.includes(s.st)) this.stageId = s.st;
+    if (s.st && STAGE_IDS.includes(s.st) && s.st !== this.stageId) {
+      this.stageId = s.st;
+      if (this.netGuest) audio.setMusic(`stage_${this.stageId}`);
+    }
 
     this.projectiles = (s.p || []).map((p) => ({
       kind: p.k,

@@ -1,5 +1,80 @@
 // Небольшой синтезатор: все звуки генерируются через WebAudio, без файлов.
 
+// stepDur — длительность 1/16, roots — аккордовая сетка по тактам.
+const TRACKS = {
+  menu: {
+    stepDur: 0.148, roots: [55, 55, 43.65, 49],
+    bass: [0, null, 0, null, 0, null, 0, null, 0, null, 0, null, 0, null, 0, null],
+    bassType: 'sawtooth', bassVol: 0.11, bassDur: 0.26,
+    kick: [0, 4, 8, 12], kickVol: 0.28, hat: [1, 3, 5, 7, 9, 11, 13, 15], hatVol: 0.028,
+    arp: [null, null, 24, null, null, null, 27, null, null, null, 31, null, null, null, 27, null],
+    arpType: 'triangle', arpVol: 0.022, pad: [12, 16, 19], padVol: 0.016
+  },
+  select: {
+    stepDur: 0.134, roots: [49, 55, 58.27, 43.65],
+    bass: [0, null, null, 0, null, null, 0, null, 0, null, null, 0, null, null, 0, null],
+    bassType: 'triangle', bassVol: 0.10, bassDur: 0.22,
+    kick: [0, 4, 8, 12], kickVol: 0.22, snare: [4, 12], snareVol: 0.55,
+    hat: [1, 3, 5, 7, 9, 11, 13, 15], hatVol: 0.024,
+    arp: [null, 24, null, 28, null, 31, null, 36, null, 31, null, 28, null, 31, null, 36],
+    arpType: 'triangle', arpVol: 0.02, pad: [12, 16, 19], padVol: 0.014
+  },
+  stage_city: {
+    stepDur: 0.121, roots: [55, 55, 43.65, 49],
+    bass: [0, null, 0, null, 0, null, 0, null, 0, null, 0, null, 0, null, 0, null],
+    bassType: 'sawtooth', bassVol: 0.14, bassDur: 0.22,
+    kick: [0, 4, 8, 12], kickVol: 0.32, snare: [4, 12], snareVol: 0.8,
+    hat: [1, 3, 5, 7, 9, 11, 13, 15], hatVol: 0.04,
+    arp: [24, 27, 31, 36, 31, 27, 24, 27, 31, 36, 34, 31, 27, 24, 27, 31],
+    arpType: 'square', arpVol: 0.017, pad: [12, 16, 19], padVol: 0.015
+  },
+  stage_dojo: {
+    stepDur: 0.156, roots: [55, 49, 43.65, 49],
+    bass: [0, null, null, null, null, null, 0, null, 0, null, null, null, null, null, 0, null],
+    bassType: 'triangle', bassVol: 0.12, bassDur: 0.3,
+    kick: [0, 3, 6, 10, 12], kickVol: 0.24, snare: [4, 12, 15], snareVol: 0.5,
+    tom: [0, 3, 6, 10, 12], tomVol: 0.10,
+    hat: [2, 6, 10, 14], hatVol: 0.018,
+    arp: [null, 24, null, 27, null, 29, null, 31, null, 36, null, 31, null, 29, null, 27],
+    arpType: 'triangle', arpVol: 0.024, pad: [12, 15, 19], padVol: 0.018
+  },
+  stage_reactor: {
+    stepDur: 0.114, roots: [43.65, 43.65, 41.2, 49],
+    bass: [0, null, -12, null, 0, null, -12, null, 0, null, -12, null, 0, null, -12, null],
+    bassType: 'square', bassVol: 0.12, bassDur: 0.18,
+    kick: [0, 2, 4, 6, 8, 10, 12, 14], kickVol: 0.26, snare: [4, 12], snareVol: 0.6,
+    hat: [1, 5, 9, 13], hatVol: 0.035, metal: [3, 7, 11, 15], alarm: true,
+    arp: [24, null, null, null, 27, null, null, null, 24, null, null, null, 31, null, null, null],
+    arpType: 'sawtooth', arpVol: 0.014, pad: [12, 15, 18], padVol: 0.012
+  },
+  stage_orbit: {
+    stepDur: 0.178, roots: [55, 49, 43.65, 49],
+    bass: [0, null, null, null, null, null, null, null, 0, null, null, null, null, null, null, null],
+    bassType: 'sine', bassVol: 0.12, bassDur: 0.6,
+    kick: [0, 8], kickVol: 0.18, snare: [], hat: [4, 12], hatVol: 0.012,
+    arp: [36, null, null, null, 43, null, null, null, 39, null, null, null, 31, null, null, null],
+    arpType: 'sine', arpVol: 0.024, pad: [12, 19, 24, 28], padVol: 0.02
+  },
+  stage_tundra: {
+    stepDur: 0.163, roots: [58.27, 55, 49, 43.65],
+    bass: [0, null, null, null, null, null, 0, null, 0, null, null, null, null, null, 0, null],
+    bassType: 'triangle', bassVol: 0.10, bassDur: 0.32,
+    kick: [0, 4, 8, 12], kickVol: 0.20, snare: [4, 12], snareVol: 0.35,
+    hat: [1, 3, 5, 7, 9, 11, 13, 15], hatVol: 0.02,
+    arp: [36, null, 41, null, 43, null, 48, null, 43, null, 41, null, 36, null, 41, null],
+    arpType: 'sine', arpVol: 0.03, pad: [12, 19, 24], padVol: 0.02
+  },
+  boss: {
+    stepDur: 0.106, roots: [41.2, 41.2, 43.65, 38.89],
+    bass: [0, null, -12, null, 0, null, -12, null, 0, null, -12, null, 0, null, -12, null],
+    bassType: 'sawtooth', bassVol: 0.17, bassDur: 0.2,
+    kick: [0, 2, 4, 6, 8, 10, 12, 14], kickVol: 0.34, snare: [4, 12], snareVol: 0.9,
+    hat: [1, 3, 5, 7, 9, 11, 13, 15], hatVol: 0.04, metal: [7, 15], alarm: true,
+    arp: [24, 27, 30, 36, 30, 27, 24, 27, 30, 36, 39, 36, 30, 27, 24, 27],
+    arpType: 'square', arpVol: 0.018, pad: [12, 15, 18], padVol: 0.016
+  }
+};
+
 class AudioEngine {
   constructor() {
     this.ctx = null;
@@ -12,6 +87,7 @@ class AudioEngine {
     this.step = 0;
     this.nextTime = 0;
     this.musicTimer = null;
+    this.trackId = 'menu';
   }
 
   init() {
@@ -208,6 +284,21 @@ class AudioEngine {
 
   // ---- музыка ----
 
+  setMusic(trackId) {
+    const next = TRACKS[trackId] ? trackId : 'menu';
+    if (this.trackId === next) return;
+    this.trackId = next;
+    if (this.ctx && !this.muted && this.ctx.state === 'running') this.restartMusic();
+  }
+
+  restartMusic() {
+    this.stopMusic();
+    if (!this.ctx || this.muted || this.ctx.state !== 'running') return;
+    this.step = 0;
+    this.nextTime = this.ctx.currentTime + 0.1;
+    this.musicTimer = setInterval(() => this.scheduleMusic(), 40);
+  }
+
   startMusic() {
     if (!this.ctx || this.muted || this.musicTimer) return;
     if (this.ctx.state !== 'running') return;
@@ -225,44 +316,73 @@ class AudioEngine {
 
   scheduleMusic() {
     if (!this.ctx || this.ctx.state !== 'running') return;
+    const cfg = TRACKS[this.trackId] || TRACKS.menu;
+    const loop = cfg.roots.length * 16;
     const ahead = this.ctx.currentTime + 0.22;
     let guard = 0;
     while (this.nextTime < ahead && guard++ < 32) {
-      this.playStep(this.step, this.nextTime);
-      this.step = (this.step + 1) % 64;
-      this.nextTime += 0.145;
+      this.playStep(this.step, this.nextTime, cfg);
+      this.step = (this.step + 1) % loop;
+      this.nextTime += cfg.stepDur;
     }
   }
 
-  playStep(step, t) {
-    const bar = Math.floor(step / 16) % 4;
+  playStep(step, t, cfg) {
+    const bar = Math.floor(step / 16) % cfg.roots.length;
     const s = step % 16;
-    const roots = [55, 55, 43.65, 49]; // A1 A1 F1 G1
-    const root = roots[bar];
+    const root = cfg.roots[bar];
     const delay = Math.max(0, t - this.ctx.currentTime);
     const music = this.musicBus;
+    const semi = (n) => root * Math.pow(2, n / 12);
 
-    if (s % 2 === 0) {
-      this.tone({ freq: root, freqEnd: root * 0.98, dur: 0.26, type: 'sawtooth', vol: 0.13, delay, dest: music });
-    }
-    if (s === 0 || s === 4 || s === 8 || s === 12) this.kick(delay);
-    if (s % 2 === 1) {
-      this.noise({ dur: 0.028, vol: 0.038, type: 'highpass', freq: 7200, q: 1, delay, dest: music });
-    }
-    if (s === 0) {
-      [1, 1.1892, 1.4983].forEach((m, i) => {
-        this.tone({ freq: root * 4 * m, dur: 0.9, type: 'triangle', vol: 0.018, delay: delay + i * 0.004, dest: music });
+    if (cfg.bass && cfg.bass[s] != null) {
+      this.tone({
+        freq: semi(cfg.bass[s]), freqEnd: semi(cfg.bass[s]) * 0.985,
+        dur: cfg.bassDur || 0.24, type: cfg.bassType || 'sawtooth',
+        vol: cfg.bassVol || 0.12, delay, dest: music
       });
     }
-    if (s === 2 || s === 6 || s === 10 || s === 14) {
-      const arp = [4, 6, 9, 6][(step / 2 | 0) % 4];
-      this.tone({ freq: root * arp, dur: 0.16, type: 'triangle', vol: 0.022, delay, dest: music });
+    if (cfg.kick && cfg.kick.includes(s)) this.kick(delay, cfg.kickVol || 0.3);
+    if (cfg.snare && cfg.snare.includes(s)) this.snare(delay, (cfg.snareVol || 0.6) * 0.16);
+    if (cfg.hat && cfg.hat.includes(s)) this.hat(delay, cfg.hatVol || 0.03);
+    if (cfg.tom && cfg.tom.includes(s)) {
+      this.tone({ freq: semi(-12), freqEnd: semi(-12) * 0.8, dur: 0.18, type: 'sine', vol: cfg.tomVol || 0.1, delay, dest: music });
+    }
+    if (cfg.metal && cfg.metal.includes(s)) {
+      this.noise({ dur: 0.06, vol: 0.05, type: 'highpass', freq: 4200, q: 1.4, delay, dest: music });
+    }
+    if (cfg.alarm && s === 0 && bar % 2 === 0) {
+      this.tone({ freq: semi(36), freqEnd: semi(36) * 0.75, dur: 0.16, type: 'square', vol: 0.025, delay, dest: music });
+    }
+    if (cfg.pad && s === 0) {
+      for (let i = 0; i < cfg.pad.length; i++) {
+        this.tone({
+          freq: semi(cfg.pad[i]), dur: cfg.stepDur * 15, type: 'triangle',
+          vol: (cfg.padVol || 0.016) / (i * 0.35 + 1), delay: delay + i * 0.006, dest: music
+        });
+      }
+    }
+    if (cfg.arp && cfg.arp[s] != null) {
+      this.tone({
+        freq: semi(cfg.arp[s]), dur: cfg.stepDur * 0.9, type: cfg.arpType || 'triangle',
+        vol: cfg.arpVol || 0.02, delay, dest: music
+      });
     }
   }
 
-  kick(delay = 0) {
-    this.tone({ freq: 110, freqEnd: 42, dur: 0.14, type: 'sine', vol: 0.3, delay, dest: this.musicBus });
+  snare(delay = 0, vol = 0.1) {
+    this.noise({ dur: 0.11, vol, type: 'bandpass', freq: 1900, q: 1.1, delay, dest: this.musicBus });
+    this.tone({ freq: 190, freqEnd: 120, dur: 0.09, type: 'triangle', vol: vol * 0.8, delay, dest: this.musicBus });
   }
+
+  hat(delay = 0, vol = 0.03) {
+    this.noise({ dur: 0.028, vol, type: 'highpass', freq: 7600, q: 1, delay, dest: this.musicBus });
+  }
+
+  kick(delay = 0, vol = 0.3) {
+    this.tone({ freq: 110, freqEnd: 42, dur: 0.14, type: 'sine', vol, delay, dest: this.musicBus });
+  }
+
 }
 
 export const audio = new AudioEngine();
