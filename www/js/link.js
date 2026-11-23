@@ -43,6 +43,7 @@ export function buildGameSnapshot(game) {
   if (!g || g.screen !== 'match') return null;
   return {
     t: 'snap',
+    st: g.stageId || 'city',
     ph: g.phase,
     pt: Number(g.phaseT.toFixed(2)),
     tm: Number(g.timer.toFixed(2)),

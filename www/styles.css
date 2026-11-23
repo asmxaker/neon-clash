@@ -7,8 +7,8 @@
   --yellow: #ffd23f;
   --ink: #f4fbff;
   --panel: rgba(9, 5, 24, 0.92);
-  --btn: clamp(46px, 13.6vh, 76px);
-  --stick: clamp(78px, 23vh, 138px);
+  --btn: clamp(52px, 15.2vh, 88px);
+  --stick: clamp(92px, 26.5vh, 160px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
@@ -97,10 +97,10 @@ body {
   height: 100%;
   left: 0;
   pointer-events: none;
-  --btn: clamp(46px, 13.6vh, 76px);
-  --btn: clamp(46px, 13.6cqh, 76px);
-  --stick: clamp(78px, 23vh, 138px);
-  --stick: clamp(78px, 23cqh, 138px);
+  --btn: clamp(52px, 15.2vh, 88px);
+  --btn: clamp(52px, 15.2cqh, 88px);
+  --stick: clamp(92px, 26.5vh, 160px);
+  --stick: clamp(92px, 26.5cqh, 160px);
 }
 
 #pad2 { display: none; }
@@ -156,7 +156,7 @@ body {
   background: rgba(7, 13, 26, 0.84);
   color: rgba(190, 250, 255, 0.9);
   font-family: inherit;
-  font-size: clamp(8px, 2.1cqh, 13px);
+  font-size: clamp(9px, 2.4cqh, 14px);
   line-height: 1;
   box-shadow: inset 0 0 12px rgba(53, 240, 255, 0.08);
   transition: background .06s, border-color .06s, box-shadow .06s, transform .06s;
@@ -233,8 +233,8 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.32);
   color: var(--ink);
   font-family: inherit;
-  font-size: clamp(8px, 1.35vh, 12px);
-  font-size: clamp(8px, 2.35cqh, 12px);
+  font-size: clamp(9px, 1.6vh, 14px);
+  font-size: clamp(9px, 2.8cqh, 14px);
   font-weight: 900;
   letter-spacing: .06em;
   text-shadow: 0 1px 4px #000;
@@ -262,10 +262,10 @@ body {
 
 /* 2 players: slightly smaller controls */
 #stage.two-p .pad {
-  --btn: clamp(40px, 11.6vh, 64px);
-  --btn: clamp(40px, 11.9cqh, 64px);
-  --stick: clamp(70px, 19.5vh, 112px);
-  --stick: clamp(70px, 20cqh, 112px);
+  --btn: clamp(46px, 13.2vh, 74px);
+  --btn: clamp(46px, 13.2cqh, 74px);
+  --stick: clamp(84px, 22.8vh, 136px);
+  --stick: clamp(84px, 22.8cqh, 136px);
 }
 #stage.two-p .btns { gap: clamp(6px, 1.1cqh, 9px); }
 

@@ -15,6 +15,7 @@ const STATES = ['idle', 'walk', 'jump', 'crouch', 'block', 'hit', 'attack', 'ko'
 const ATTACK_CODES = [null, 'punch', 'kick', 'airkick', 'special', 'shockwave', 'dash', 'fan', 'lightning'];
 const PROJ_CODES = [null, 'plasma', 'wave', 'shard', 'lightning'];
 const COMBO_CODES = [null, 'double', 'hook', 'switch', 'flurry'];
+const STAGE_CODES = ['city', 'dojo', 'reactor', 'orbit', 'tundra'];
 
 const TX_PROPS = {
   broadcast: false, read: false, writeWithoutResponse: false, write: false,
@@ -29,6 +30,7 @@ function buildBleSnapshot(game) {
   if (!game || game.screen !== 'match') return null;
   return {
     t: 'snap',
+    sg: Math.max(0, STAGE_CODES.indexOf(game.stageId)),
     ph: Math.max(0, PHASES.indexOf(game.phase)),
     pt: Math.round(game.phaseT * 100),
     tm: Math.round(game.timer * 10),
@@ -69,6 +71,7 @@ function expandBleSnapshot(s) {
   if (!s || !Array.isArray(s.f)) return null;
   return {
     t: 'snap',
+    st: STAGE_CODES[s.sg] || 'city',
     ph: PHASES[s.ph] || 'fight',
     pt: (s.pt || 0) / 100,
     tm: (s.tm || 0) / 10,
