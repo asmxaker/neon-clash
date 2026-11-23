@@ -449,7 +449,7 @@ guest → host: hello, input, rematch, bye
 ```bash
 npm install
 npm run dev          # локальный сервер
-npm run apk          # cap sync + Gradle + dist/NeonClash-MVP.apk
+npm run apk          # cap sync + Gradle + dist/NeonClash.apk
 ```
 
 `npm run apk`:
@@ -457,7 +457,7 @@ npm run apk          # cap sync + Gradle + dist/NeonClash-MVP.apk
 1. запускает `scripts/fix-ble-gradle.mjs`;
 2. `npx cap sync android`;
 3. `./gradlew assembleDebug`;
-4. копирует APK в `dist/NeonClash-MVP.apk`.
+4. копирует APK в `dist/NeonClash.apk`.
 
 После любых изменений в `www/` нужен `cap sync`, иначе APK соберётся со старым WebView-контентом.
 

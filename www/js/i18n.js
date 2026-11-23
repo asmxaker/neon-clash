@@ -19,7 +19,7 @@ const en = {
     arena: 'Neon Clash fight arena'
   },
   menu: {
-    tagline: 'NEON FIGHTING · MVP',
+    tagline: 'NEON FIGHTING',
     p1: '1 PLAYER', p1sub: 'vs AI',
     p2: '2 PLAYERS', p2sub: 'on one screen',
     link: 'VIA BLUETOOTH', linksub: 'play nearby',
@@ -204,7 +204,7 @@ const ru = {
     arena: 'Арена файтинга Neon Clash'
   },
   menu: {
-    tagline: 'НЕОНОВЫЙ ФАЙТИНГ · MVP',
+    tagline: 'НЕОНОВЫЙ ФАЙТИНГ',
     p1: '1 ИГРОК', p1sub: 'против ИИ',
     p2: '2 ИГРОКА', p2sub: 'на одном экране',
     link: 'ПО BLUETOOTH', linksub: 'игра рядом',
@@ -389,7 +389,7 @@ const es = {
     arena: 'Arena de lucha Neon Clash'
   },
   menu: {
-    tagline: 'LUCHA NEÓN · MVP',
+    tagline: 'LUCHA NEÓN',
     p1: '1 JUGADOR', p1sub: 'contra la IA',
     p2: '2 JUGADORES', p2sub: 'en una pantalla',
     link: 'POR BLUETOOTH', linksub: 'jugar cerca',
@@ -574,7 +574,7 @@ const pt = {
     arena: 'Arena de luta Neon Clash'
   },
   menu: {
-    tagline: 'LUTA NEON · MVP',
+    tagline: 'LUTA NEON',
     p1: '1 JOGADOR', p1sub: 'contra a IA',
     p2: '2 JOGADORES', p2sub: 'na mesma tela',
     link: 'POR BLUETOOTH', linksub: 'jogar perto',
@@ -759,7 +759,7 @@ const fr = {
     arena: 'Arène de combat Neon Clash'
   },
   menu: {
-    tagline: 'COMBAT NÉON · MVP',
+    tagline: 'COMBAT NÉON',
     p1: '1 JOUEUR', p1sub: 'contre l’IA',
     p2: '2 JOUEURS', p2sub: 'sur un écran',
     link: 'PAR BLUETOOTH', linksub: 'jouer à proximité',
@@ -944,7 +944,7 @@ const de = {
     arena: 'Neon Clash Kampfarena'
   },
   menu: {
-    tagline: 'NEON-KAMPF · MVP',
+    tagline: 'NEON-KAMPF',
     p1: '1 SPIELER', p1sub: 'gegen KI',
     p2: '2 SPIELER', p2sub: 'auf einem Bildschirm',
     link: 'ÜBER BLUETOOTH', linksub: 'in der Nähe spielen',
@@ -1129,7 +1129,7 @@ const zh = {
     arena: 'Neon Clash 格斗场'
   },
   menu: {
-    tagline: '霓虹格斗 · MVP',
+    tagline: '霓虹格斗',
     p1: '单人', p1sub: '对战 AI',
     p2: '双人', p2sub: '同一屏幕',
     link: '蓝牙对战', linksub: '附近联机',
@@ -1314,7 +1314,7 @@ const ja = {
     arena: 'Neon Clash 格闘アリーナ'
   },
   menu: {
-    tagline: 'ネオン格闘 · MVP',
+    tagline: 'ネオン格闘',
     p1: '1人プレイ', p1sub: 'AI と対戦',
     p2: '2人プレイ', p2sub: '同じ画面で',
     link: 'Bluetooth対戦', linksub: '近くの友達と',

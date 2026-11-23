@@ -23,6 +23,6 @@ npx cap sync android
 (cd android && ./gradlew assembleDebug)
 
 mkdir -p dist
-cp android/app/build/outputs/apk/debug/app-debug.apk dist/NeonClash-MVP.apk
+cp android/app/build/outputs/apk/debug/app-debug.apk dist/NeonClash.apk
 echo
-echo "Готово: $ROOT/dist/NeonClash-MVP.apk"
+echo "Готово: $ROOT/dist/NeonClash.apk"

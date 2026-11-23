@@ -194,6 +194,6 @@ Manifest лежит **в папке персонажа**:
 2. Обновить код/манифест ассетов.
 3. Проверить размер APK.
 4. `npm run apk`.
-5. Установить `dist/NeonClash-MVP.apk`.
+5. Установить `dist/NeonClash.apk`.
 
 `android/app/src/main/assets/public/` генерируется Capacitor и не редактируется вручную.

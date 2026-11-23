@@ -24,7 +24,7 @@
 ```bash
 npm install
 npm run dev          # http://127.0.0.1:5180
-npm run apk          # debug APK в dist/NeonClash-MVP.apk
+npm run apk          # debug APK в dist/NeonClash.apk
 ```
 
 Требования для APK:
@@ -69,7 +69,7 @@ scripts/
   notify.mjs                 личный вспомогательный скрипт, НЕ КОММИТИТЬ без запроса
 android/                     нативный проект Capacitor
 capacitor.config.json
-dist/NeonClash-MVP.apk       собранный APK (dist/ в .gitignore)
+dist/NeonClash.apk           собранный APK (dist/ в .gitignore)
 ```
 
 ## 4. Жёсткие правила
@@ -209,7 +209,7 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 $ANDROID_HOME/emulator/emulator -avd Pixel_7 -no-snapshot-save -no-boot-anim \
   -gpu swiftshader_indirect &
 
-adb install -r dist/NeonClash-MVP.apk
+adb install -r dist/NeonClash.apk
 adb shell am force-stop com.neonclash.game
 adb shell am start -n com.neonclash.game/.MainActivity
 ```
