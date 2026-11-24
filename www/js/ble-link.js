@@ -10,7 +10,7 @@ const CHAR_TX = '6e6f6e65-636c-6173-6801-000000000003'; // хост → гост
 const CHUNK = 180;
 const SNAP_MS = 120;
 
-const PHASES = ['idle', 'intro', 'fight', 'roundEnd', 'matchEnd'];
+const PHASES = ['idle', 'intro', 'fight', 'roundEnd', 'matchEnd', 'vs'];
 const STATES = ['idle', 'walk', 'jump', 'crouch', 'block', 'hit', 'attack', 'ko', 'win'];
 const ATTACK_CODES = [null, 'punch', 'kick', 'airkick', 'special', 'shockwave', 'dash', 'fan', 'lightning'];
 const PROJ_CODES = [null, 'plasma', 'wave', 'shard', 'lightning'];

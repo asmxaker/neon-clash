@@ -311,6 +311,12 @@ class AudioEngine {
     this.tone({ freq: 196, dur: 0.3, type: 'square', vol: 0.07, delay: 0.02 });
   }
 
+  vs() {
+    this.tone({ freq: 196, freqEnd: 392, dur: 0.24, type: 'sawtooth', vol: 0.06 });
+    this.tone({ freq: 392, freqEnd: 784, dur: 0.18, type: 'triangle', vol: 0.05, delay: 0.20 });
+    this.tone({ freq: 784, dur: 0.12, type: 'square', vol: 0.03, delay: 0.38 });
+  }
+
   win() {
     const notes = [392, 523, 659, 784];
     notes.forEach((f, i) => this.tone({ freq: f, dur: 0.22, type: 'triangle', vol: 0.12, delay: i * 0.11 }));

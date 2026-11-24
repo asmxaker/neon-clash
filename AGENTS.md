@@ -175,6 +175,7 @@ dist/NeonClash.apk           собранный APK (dist/ в .gitignore)
   - `buildGameSnapshot` / `applyNetSnapshot` для Nearby;
   - `buildBleSnapshot` / `expandBleSnapshot` для BLE.
 - Гость не должен симулировать бой.
+- При добавлении фазы обновляй `PHASES` в `ble-link.js` (в конец, чтобы не сдвигать существующие индексы); фаза `vs` уже добавлена.
 - Арена и label комбо синхронизируются в снапшоте.
 - Проверь авто-реконнект и паузу на обрыве.
 

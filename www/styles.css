@@ -90,6 +90,9 @@ body {
 
 #stage:not(.in-match) #touch { opacity: 0; pointer-events: none; }
 
+#stage.in-vs #touch,
+#stage.in-vs #sysBtns { opacity: 0; visibility: hidden; pointer-events: none; transition: none; }
+
 .pad {
   position: absolute;
   bottom: 0;

@@ -10,11 +10,12 @@ const ATTACK_BY_KIND = Object.values(ATTACKS).reduce((map, a) => {
 import { FX } from './fx.js';
 import { audio } from './audio.js';
 import { isImageStage, drawArenaBackground } from './arenas.js';
-import { t as tr, hitsText } from './i18n.js';
+import { t as tr, charText, hitsText } from './i18n.js';
 
 const W = 1280;
 const H = 720;
 const CAM_START = (WORLD_W - W) / 2;
+const VS_TIME = 1.9;
 const ROUND_TIME = 75;
 const WINS_NEEDED = 2;
 const TAU = Math.PI * 2;
@@ -32,6 +33,16 @@ function hexA(hex, a) {
 }
 
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+function vsRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
 
 // Гость рендерит не последний снапшот, а точку между двумя последними.
 // Это убирает рывки при неравномерной доставке пакетов (jitter buffer).
@@ -1409,6 +1420,10 @@ export class Game {
     ];
     this.applyHitTarget();
     this.startRound(true);
+    this._vsPortraits = null;
+    this.phase = 'vs';
+    this.phaseT = 0;
+    audio.vs();
   }
 
   startGuestMatch(hostChar, guestChar) {
@@ -1425,8 +1440,9 @@ export class Game {
     this.round = 1;
     this.wins = [0, 0];
     this.timer = ROUND_TIME;
-    this.phase = 'intro';
+    this.phase = 'vs';
     this.phaseT = 0;
+    this._vsPortraits = null;
     this.roundWinner = -1;
     this.roundReason = '';
     this.matchWinner = -1;
@@ -1446,6 +1462,7 @@ export class Game {
     ];
     this.fighters.forEach(f => { f.locked = true; f.controller = null; });
     this.applyHitTarget();
+    audio.vs();
   }
 
   applyHitTarget() {
@@ -1689,6 +1706,14 @@ export class Game {
 
     this.fx.update(dt);
     this.phaseT += dt;
+
+    if (this.phase === 'vs') {
+      if (this.phaseT >= VS_TIME) {
+        this._vsPortraits = null;
+        this.startRound(false);
+      }
+      return;
+    }
 
     const scale = this.slowmo > 0 ? 0.3 : 1;
     if (this.slowmo > 0) this.slowmo = Math.max(0, this.slowmo - dt);
@@ -2155,6 +2180,156 @@ export class Game {
   // Отрисовка
   // -------------------------------------------------------------------------
 
+  buildVsPortraits() {
+    const make = (f) => {
+      const PW = 480, PH = 560, dpr = 2, scale = 2.4;
+      const cv = document.createElement('canvas');
+      cv.width = PW * dpr;
+      cv.height = PH * dpr;
+      const c = cv.getContext('2d');
+      const temp = new Fighter({
+        charId: f.charId,
+        variant: f.variant,
+        x: 0,
+        facing: f.index === 0 ? 1 : -1,
+        index: f.index
+      });
+      temp.locked = true;
+      temp.state = 'idle';
+      temp.animT = 1.4 + f.index * 0.6;
+      temp.meter = 0;
+      c.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * PW / 2, dpr * (PH - 10));
+      c.translate(0, -GROUND_Y);
+      drawFighter(c, temp);
+      return cv;
+    };
+    return [make(this.fighters[0]), make(this.fighters[1])];
+  }
+
+  drawVs(ctx) {
+    const t = this.phaseT;
+    const fade = 1 - clamp((t - (VS_TIME - 0.22)) / 0.22, 0, 1);
+    const enter = 1 - Math.pow(1 - clamp(t / 0.5, 0, 1), 3);
+    const p1 = this.fighters[0];
+    const p2 = this.fighters[1];
+    if (!p1 || !p2) return;
+    const c1 = charText(p1.charId);
+    const c2 = charText(p2.charId);
+    if (!this._vsPortraits) this._vsPortraits = this.buildVsPortraits();
+    const [img1, img2] = this._vsPortraits;
+
+    const PW = 480, PH = 560, PY = 54;
+    const leftFinal = 90;
+    const rightFinal = W - 90 - PW;
+    const leftX = -PW - 50 + (leftFinal + PW + 50) * enter;
+    const rightX = W + 50 - (W + 50 - rightFinal) * enter;
+    const cx1 = leftX + PW / 2;
+    const cx2 = rightX + PW / 2;
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+
+    ctx.fillStyle = 'rgba(2, 1, 8, 0.78)';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glow = (x, color) => {
+      const g = ctx.createRadialGradient(x, 330, 30, x, 330, 520);
+      g.addColorStop(0, hexA(color, 0.30));
+      g.addColorStop(1, hexA(color, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    };
+    glow(cx1, p1.color);
+    glow(cx2, p2.color);
+    const beam = ctx.createLinearGradient(0, 0, W, H);
+    beam.addColorStop(0, 'rgba(53, 240, 255, 0)');
+    beam.addColorStop(0.46, 'rgba(53, 240, 255, 0.06)');
+    beam.addColorStop(0.5, 'rgba(255, 255, 255, 0.12)');
+    beam.addColorStop(0.54, 'rgba(255, 62, 165, 0.06)');
+    beam.addColorStop(1, 'rgba(255, 62, 165, 0)');
+    ctx.fillStyle = beam;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    const side = (img, f, c, x, cx, isP2) => {
+      vsRect(ctx, x - 10, PY - 10, PW + 20, PH + 20, 18);
+      ctx.fillStyle = 'rgba(3, 2, 10, 0.46)';
+      ctx.fill();
+      ctx.strokeStyle = hexA(f.color, 0.36);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.drawImage(img, x, PY, PW, PH);
+
+      vsRect(ctx, x, PY + PH + 12, PW, 66, 14);
+      ctx.fillStyle = 'rgba(3, 2, 10, 0.74)';
+      ctx.fill();
+      ctx.strokeStyle = hexA(f.accent, 0.30);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      setFont(ctx, 30);
+      ctx.shadowColor = f.color;
+      ctx.shadowBlur = 22;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(c.name, cx, PY + PH + 34, PW - 30);
+      ctx.shadowBlur = 0;
+      ctx.font = '700 13px "Segoe UI", system-ui, sans-serif';
+      ctx.fillStyle = '#cfd8ff';
+      ctx.fillText(c.tagline, cx, PY + PH + 55, PW - 36);
+      ctx.font = '900 11px "Arial Black", system-ui, sans-serif';
+      ctx.fillStyle = hexA(f.accent, 0.92);
+      ctx.fillText(`[ ${c.badge} ]`, cx, PY + PH + 72, PW - 40);
+
+      ctx.font = '900 13px "Arial Black", system-ui, sans-serif';
+      ctx.fillStyle = hexA(f.accent, 0.85);
+      const label = isP2 ? ((this.mode === '2p' || this.mode === 'link') ? 'P2' : 'AI') : 'P1';
+      ctx.fillText(label, cx, 30);
+    };
+
+    side(img1, p1, c1, leftX, cx1, false);
+    side(img2, p2, c2, rightX, cx2, true);
+
+    const pop = clamp((t - 0.3) / 0.35, 0, 1);
+    if (pop > 0.01) {
+      ctx.save();
+      ctx.translate(W / 2, 330);
+      const ps = 0.82 + 0.18 * pop;
+      ctx.scale(ps, ps);
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI / 3 * i + Math.PI / 6;
+        const px = Math.cos(a) * 96;
+        const py = Math.sin(a) * 96;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(3, 2, 10, 0.90)';
+      ctx.fill();
+      ctx.strokeStyle = hexA(CYAN, 0.85);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
+      banner(ctx, 'VS', W / 2 - 5, 330, 132, CYAN, 0.7 * pop * fade, 1, 4);
+      banner(ctx, 'VS', W / 2 + 5, 330, 132, PINK, 0.7 * pop * fade, 1, 4);
+      banner(ctx, 'VS', W / 2, 330, 132, '#ffffff', pop * fade, 1, 4);
+    }
+
+    banner(ctx, tr('hud.round', { n: this.round }), W / 2, 32, 22, CYAN, 0.75 * fade, 1, 6);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.10)';
+    ctx.fillRect(W / 2 - 300, 710, 600, 2);
+    ctx.fillStyle = hexA(CYAN, 0.9);
+    ctx.fillRect(W / 2 - 300, 710, 600 * clamp(t / VS_TIME, 0, 1), 2);
+
+    ctx.restore();
+  }
+
   updateCamera(now) {
     let target = CAM_START;
     if (this.fighters.length >= 2) {
@@ -2177,8 +2352,12 @@ export class Game {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
 
+    const vs = this.screen === 'match' && this.phase === 'vs';
     // Страховка: сенсорное управление видно во всех режимах боя.
-    if (this.stageEl) this.stageEl.classList.toggle('in-match', this.screen === 'match');
+    if (this.stageEl) {
+      this.stageEl.classList.toggle('in-match', this.screen === 'match' && !vs);
+      this.stageEl.classList.toggle('in-vs', vs);
+    }
 
     const t = this.time;
     const camX = this.updateCamera(now);
@@ -2207,13 +2386,19 @@ export class Game {
     ctx.restore();
 
     if (this.screen === 'match' && this.fighters.length === 2) {
-      drawHUD(ctx, this);
-      this.drawBanners(ctx);
+      if (vs) {
+        this.drawVs(ctx);
+      } else {
+        drawHUD(ctx, this);
+        this.drawBanners(ctx);
+      }
     }
 
-    drawLowHealth(ctx, this);
-    ctx.drawImage(this.vignette, 0, 0, W, H);
-    this.fx.renderFlash(ctx, W, H);
+    if (!vs) {
+      drawLowHealth(ctx, this);
+      ctx.drawImage(this.vignette, 0, 0, W, H);
+      this.fx.renderFlash(ctx, W, H);
+    }
   }
 
   drawProjectile(ctx, p) {
